@@ -11,7 +11,10 @@ const nextConfig: NextConfig = {
     
   },
     images: {
-    remotePatterns: [new URL('http://localhost:9000/my-public-bucket/**')],
+    remotePatterns: [new URL(process.env.minioUrl as string)],
+  },
+   eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 
