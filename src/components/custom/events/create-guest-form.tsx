@@ -93,7 +93,7 @@ export function CreateGuestForm({ onAddGuest, onClose }: CreateGuestFormProps) {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="guestPhone" className="text-foreground">
-          Phone (Optional)
+          Phone
         </Label>
         <Input
           id="guestPhone"
@@ -102,6 +102,7 @@ export function CreateGuestForm({ onAddGuest, onClose }: CreateGuestFormProps) {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           className="border-border focus:ring-primary focus:border-primary"
+          required
         />
       </div>
       {/* Removed Seat Number and Is Assigned fields */}
