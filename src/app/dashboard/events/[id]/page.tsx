@@ -14,11 +14,13 @@ import { Guest, Vendor } from "@/@types/events-details";
 import WeddingPlanner, {
   WeddingPlannerWrapper,
 } from "@/component/table-charts/wedding-planner";
+import { useStore } from "@/zustan-fn/save-alert";
+import { toast } from "sonner";
 
 export default function EventDetailsPage() {
   const params = useParams();
   const eventSlug = params.slug as string;
-
+  const [tab, setTab] = useState("guests");
   // Static data for demonstration
   const [guests, setGuests] = useState<Guest[]>([
     {
@@ -195,7 +197,14 @@ export default function EventDetailsPage() {
   const handleDeleteVendor = (vendorId: string) => {
     setVendors((prev) => prev.filter((v) => v.id !== vendorId));
   };
-
+  const dataLength = useStore((state) => state.dataLength);
+  const handleTabChange = (nextTab: string) => {
+    if (dataLength > 0) {
+      toast.error("Please save your changes before switching tabs!");
+      return;
+    }
+    setTab(nextTab);
+  };
   return (
     <section className=" bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-dvh">
       <div className="container mx-auto py-8 px-4 md:px-6 space-y-8">
@@ -208,7 +217,12 @@ export default function EventDetailsPage() {
           <CardContent className="p-0">
             {" "}
             {/* Remove padding from CardContent to allow TabsList to be flush */}
-            <Tabs defaultValue="guests" className="w-full">
+            <Tabs
+              value={tab}
+              onValueChange={handleTabChange}
+              defaultValue="guests"
+              className="w-full"
+            >
               <TabsList className="sticky top-0 z-10 grid w-full grid-cols-3 border-b border-border bg-transparent rounded-none p-0 h-auto">
                 <TabsTrigger
                   value="guests"

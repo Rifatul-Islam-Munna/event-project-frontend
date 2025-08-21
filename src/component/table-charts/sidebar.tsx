@@ -49,6 +49,13 @@ export function Sidebar({
     event.dataTransfer.effectAllowed = "move";
   };
 
+  const [seachUser, setSeachUser] = useState("");
+  const getSeachUser = guests.filter(
+    (guest) =>
+      guest.name.toLowerCase().includes(seachUser.toLowerCase()) ||
+      guest.email.toLowerCase().includes(seachUser.toLowerCase())
+  );
+
   return (
     <div
       className={`fixed inset-y-0 left-0 z-30 w-80 bg-gradient-to-r from-gray-50/30 to-gray-50 mt-11 md:mt-0 border-r p-4 flex flex-col h-full transition-transform duration-300 ease-in-out
@@ -154,15 +161,9 @@ export function Sidebar({
       <h2 className="text-lg font-semibold mb-4">Guests</h2>
       <div className="flex gap-2 mb-4">
         <Input
-          placeholder="Add new guest"
-          value={newGuestName}
-          onChange={(e) => setNewGuestName(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === "Enter") {
-              onAddGuest(newGuestName);
-              setNewGuestName("");
-            }
-          }}
+          placeholder="Search Guests"
+          value={seachUser}
+          onChange={(e) => setSeachUser(e.target.value)}
         />
         <AddUser />
       </div>
@@ -170,10 +171,10 @@ export function Sidebar({
         <div className="flex flex-col gap-2">
           {" "}
           {/* Changed to flex-col */}
-          {guests?.filter((guest) => !guest.isAssigned).length === 0 && (
+          {getSeachUser?.filter((guest) => !guest.isAssigned).length === 0 && (
             <p className="text-sm text-gray-500">No unassigned guests.</p>
           )}
-          {guests
+          {getSeachUser
             ?.filter((guest) => !guest.isAssigned)
             .map((guest) => (
               <Card

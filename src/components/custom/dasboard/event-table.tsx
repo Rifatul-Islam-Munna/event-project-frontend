@@ -374,7 +374,7 @@ export function EventTable({
                   <Input
                     id="shareLink"
                     readOnly
-                    value={`${window.location.origin}/events/${sharingEvent.slug}`}
+                    value={`${window.location.origin}/public-view/event/${sharingEvent._id}`}
                     className="border-border focus:ring-primary focus:border-primary"
                   />
                   <Button
@@ -382,7 +382,7 @@ export function EventTable({
                     size="icon"
                     onClick={() =>
                       navigator.clipboard.writeText(
-                        `${window.location.origin}/events/${sharingEvent.slug}`
+                        `${window.location.origin}/public-view/event/${sharingEvent._id}`
                       )
                     }
                     className="border-border text-muted-foreground hover:bg-muted hover:text-primary"
@@ -412,7 +412,7 @@ export function EventTable({
                 <div className="p-4 bg-white rounded-md border border-border flex justify-center">
                   {/* Use a canvas element for QR code rendering */}
                   <QRCodeCanvas
-                    value={`${window.location.origin}/events/${sharingEvent.slug}`}
+                    value={`${window.location.origin}/public-view/event/${sharingEvent._id}`}
                     ref={qrCodeCanvasRef}
                     size={256}
                     level="H"

@@ -46,6 +46,7 @@ import {
   updateSeatPlan,
 } from "@/actions/fetch-action";
 import { useIdleTimer } from "react-idle-timer";
+import { useStore } from "@/zustan-fn/save-alert";
 
 // Define types for custom node data and guest data
 export type TableType =
@@ -212,6 +213,8 @@ function WeddingPlanner() {
     guest: [],
     node: [],
   });
+  const setDataLength = useStore((state) => state.setDataAll);
+  const dataLength = useStore((state) => state.setDataLength);
   const pathName = usePathname();
   const [isAddTableDialogOpen, setIsAddTableDialogOpen] = useState(false);
   const [newTableType, setNewTableType] = useState<TableType | null>(null);
@@ -264,6 +267,7 @@ function WeddingPlanner() {
         return toast.error(data?.error.message);
       }
       setChangedObjects((prev) => ({ ...prev, node: [] }));
+      dataLength(0);
     },
   });
 
@@ -275,6 +279,7 @@ function WeddingPlanner() {
         return toast.error(data?.error.message);
       }
       setChangedObjects((prev) => ({ ...prev, guest: [] }));
+      dataLength(0);
     },
   });
 
@@ -288,12 +293,14 @@ function WeddingPlanner() {
       setChangedObjects((prev) => {
         if (type === "guest") {
           const filteredGuests = prev.guest.filter((guest) => guest._id !== id);
+          setDataLength(filteredGuests.length);
           return {
             ...prev,
             guest: [...filteredGuests, data],
           };
         } else {
           const filteredNodes = prev.node.filter((node: any) => node.id !== id);
+          setDataLength(filteredNodes.length);
           return {
             ...prev,
             node: [...filteredNodes, data],
@@ -795,7 +802,7 @@ function WeddingPlanner() {
   };
 
   useIdleTimer({
-    timeout: 1000 * 10,
+    timeout: 1000 * 3,
     onIdle: handleOnIdle,
     debounce: 800,
   });

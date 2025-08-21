@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/tooltip";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip"; // Import TooltipPrimitive directly
 import { getRectangularSeatDistribution } from "../wedding-planner"; // Import the new helper
+import { cn } from "@/lib/utils";
 
 interface CustomTableNodeProps extends NodeProps<TableNodeData> {}
 
@@ -222,7 +223,7 @@ const TableNodeInner = ({
   };
 
   const seatsToRender = Array.isArray(seats) ? seats : [];
-
+  console.log(numSeats, seats);
   return (
     <div className="relative" style={{ width: width, height: height }}>
       <Handle
@@ -294,7 +295,15 @@ const TableNodeInner = ({
               </Tooltip>
             </TooltipProvider>
             {isOccupied && seat.occupiedByName && (
-              <div className="absolute w-max text-center text-xs font-medium text-gray-700 mt-1 -translate-x-1/2 left-1/2">
+              <div
+                className={cn(
+                  "absolute w-max text-center text-[7px] font-medium text-gray-700  -translate-x-1/2 left-1/2",
+                  {
+                    "mt-1": index % 2 === 0,
+                    "-mt-12": index % 2 !== 0,
+                  }
+                )}
+              >
                 {seat.occupiedByName}
               </div>
             )}
