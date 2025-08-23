@@ -12,6 +12,7 @@ import { LogOut, User2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getUserInfo, logoutUser } from "@/actions/auth";
 import { User } from "@/@types/user-types";
+import Link from "next/link";
 
 export function UserInfoCard() {
   const [user, setUser] = useState<User | null>(null);
@@ -48,6 +49,17 @@ export function UserInfoCard() {
           <div>
             <p className="text-lg font-medium text-foreground">{user?.name}</p>
             <p className="text-sm text-muted-foreground">{user?.email}</p>
+            {user?.type === "admin" && (
+              <Link href={"/admin/dashboard"}>
+                <Button
+                  size={"sm"}
+                  variant={"outline"}
+                  className=" mt-3 shadow-none"
+                >
+                  Admin Dashboard
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
         <CardDescription className="text-sm text-muted-foreground">

@@ -4,6 +4,8 @@ import { EventList, Vendor } from "@/@types/events-details";
 import { DeleteAxios, GetRequestAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
 import * as XLSX from 'xlsx';
 import { Guest as Gu } from "@/@types/events-details";
+import { SubscriptionFilters, SubscriptionResponse } from "@/@types/admin";
+import { getUserInfo } from "./auth";
 export const postEvent = async (from:FormData)=>{
      
         const [data,error]  = await PostRequestAxios(`/events`,from);
@@ -212,4 +214,42 @@ export const postSeatPlan  = async (payload:Record<string,unknown>)=>{
     const [data,error] = await PostRequestAxios(`/seat-plan`,payload);
     console.log("vendor-data->",data,"vendor-error->",error);
     return {data,error}
+}
+
+
+export const getSubScribeDataAdmin =  async(quert:string)=>{
+  
+
+  const [data,error] = await GetRequestNormal<SubscriptionResponse>(`/subscription/admin-pagination?${quert}`);
+    console.log("guest-data->",data,"guest-error->",error);
+    return {data,error}
+}
+
+export const updateSubScribe = async (payload:Record<string,unknown>)=>{
+     console.log("seat-plan-data->",{data:payload});
+    const [data ,error] = await PatchRequestAxios(`/subscription/update-sub`,payload);
+    
+
+    return {data,error}
+}
+
+export const deleteSubScribe = async (id:string) =>{
+    const [data,error] = await DeleteAxios(`/subscription/delete-sub?id=${id}`);
+    console.log("guest-data-update->",data,"guest-error-update->",error);
+    return {data,error}
+}
+
+export const subScript = async (sub:string)=>{
+  const user  = await getUserInfo();
+  const payload = {userId:user?._id,subscriptionType:sub}
+   const [data,error] = await PostRequestAxios(`/subscription/create-sub`,payload);
+    console.log("vendor-data->",data,"vendor-error->",error);
+    return {data,error}
+}
+ 
+
+export const getSubTokenFirst = async (sub:string)=>{
+  const [data,error] = await GetRequestNormal<Record<string,unknown>>(`/subscription/create-payment?paymentIntentId=${sub}`);
+  return {data,error}
+
 }
