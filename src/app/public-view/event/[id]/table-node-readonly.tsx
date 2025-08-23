@@ -18,14 +18,23 @@ import {
   TableType,
 } from "@/component/table-charts/wedding-planner";
 
-interface CustomTableNodeProps extends NodeProps<TableNodeData> {}
+interface CustomTableNodeProps
+  extends NodeProps<TableNodeData & { searchQuery?: string }> {}
 
 const ReadOnlyTableNodeInner = ({
   id,
   data,
   isConnectable,
 }: CustomTableNodeProps) => {
-  const { label, type, seats, width, height, numSeats } = data;
+  const { label, type, seats, width, height, numSeats, searchQuery } = data;
+
+  const isNameHighlighted = (name: string) => {
+    return (
+      searchQuery &&
+      searchQuery.trim() &&
+      name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
 
   const getSeatPosition = (
     index: number,
@@ -166,6 +175,11 @@ const ReadOnlyTableNodeInner = ({
       {seatsToRender.map((seat, index) => {
         const isOccupied = seat.occupiedBy !== null;
         const position = getSeatPosition(index, numSeats, type, width, height);
+        const isHighlighted =
+          isOccupied &&
+          seat.occupiedByName &&
+          isNameHighlighted(seat.occupiedByName);
+
         return (
           <div
             key={seat.id}
@@ -176,14 +190,14 @@ const ReadOnlyTableNodeInner = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
-                    className={
-                      `w-8 h-8 rounded-full border border-black flex items-center justify-center transition-colors duration-200
+                    className={`w-8 h-8 rounded-full border border-black flex items-center justify-center transition-colors duration-200
                                   ${
                                     isOccupied
-                                      ? "bg-purple-200 text-purple-800"
+                                      ? isHighlighted
+                                        ? "bg-yellow-300 text-yellow-900 border-yellow-500 border-2" // Highlighted style
+                                        : "bg-purple-200 text-purple-800"
                                       : "bg-gray-200 text-gray-600"
-                                  }` // Removed hover effects and drag functionality
-                    }
+                                  }`}
                   >
                     {isOccupied && <User className="w-4 h-4" />}
                   </div>
@@ -205,7 +219,8 @@ const ReadOnlyTableNodeInner = ({
                   {
                     "mt-1": index % 2 === 0,
                     "-mt-12": index % 2 !== 0,
-                  }
+                  },
+                  isHighlighted && "bg-yellow-200 px-1 py-0.5 rounded font-bold"
                 )}
               >
                 {seat.occupiedByName}
