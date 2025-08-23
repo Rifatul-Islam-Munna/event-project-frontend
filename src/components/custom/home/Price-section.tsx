@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
+import Link from "next/link";
 
 export function PricingSection() {
   const plans = [
@@ -115,12 +116,14 @@ export function PricingSection() {
                     </li>
                   ))}
                 </ul>
-                <Button
-                  className={`w-full bg-gradient-to-r ${plan.buttonGradient} text-white hover:opacity-90 hover:scale-105 transition-all duration-300 rounded-2xl py-6 text-base font-medium`}
-                  size="lg"
-                >
-                  Get Started
-                </Button>
+                <Link href={"/payment"}>
+                  <Button
+                    className={`w-full bg-gradient-to-r ${plan.buttonGradient} text-white hover:opacity-90 hover:scale-105 transition-all duration-300 rounded-2xl py-6 text-base font-medium`}
+                    size="lg"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}
