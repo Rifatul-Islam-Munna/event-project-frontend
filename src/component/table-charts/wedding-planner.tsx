@@ -223,6 +223,7 @@ function WeddingPlanner() {
   const [showSidebar, setShowSidebar] = useState(true);
   const { screenToFlowPosition, setViewport, getNodes, fitView, getViewport } =
     useReactFlow();
+  console.log("changes", changedObjects);
 
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
@@ -266,6 +267,7 @@ function WeddingPlanner() {
       if (data?.error) {
         return toast.error(data?.error.message);
       }
+      toast.success("Guest sit Plan updated successfully");
       setChangedObjects((prev) => ({ ...prev, node: [] }));
       dataLength(0);
     },
@@ -278,6 +280,9 @@ function WeddingPlanner() {
       if (data?.error) {
         return toast.error(data?.error.message);
       }
+
+      toast.success("Guest updated successfully");
+
       setChangedObjects((prev) => ({ ...prev, guest: [] }));
       dataLength(0);
     },
@@ -310,7 +315,11 @@ function WeddingPlanner() {
     },
     []
   );
-
+  useEffect(() => {
+    const totalLength =
+      changedObjects.guest.length + changedObjects.node.length;
+    setDataLength(totalLength);
+  }, [changedObjects.guest.length, changedObjects.node.length]);
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
@@ -794,15 +803,15 @@ function WeddingPlanner() {
 
   const handleOnIdle = () => {
     if (changedObjects.guest.length > 0) {
-      return updateAllguest(changedObjects.guest);
+      updateAllguest(changedObjects.guest);
     }
     if (changedObjects.node.length > 0) {
-      return updateSeatAll(changedObjects.node);
+      updateSeatAll(changedObjects.node);
     }
   };
 
   useIdleTimer({
-    timeout: 1000 * 3,
+    timeout: 1000 * 5,
     onIdle: handleOnIdle,
     debounce: 800,
   });

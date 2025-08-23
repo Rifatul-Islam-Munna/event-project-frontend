@@ -199,6 +199,7 @@ export default function EventDetailsPage() {
   };
   const dataLength = useStore((state) => state.dataLength);
   const handleTabChange = (nextTab: string) => {
+    console.log("dataLength->", dataLength);
     if (dataLength > 0) {
       toast.error("Please save your changes before switching tabs!");
       return;
