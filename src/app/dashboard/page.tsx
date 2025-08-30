@@ -129,9 +129,11 @@ export default function DashboardPage() {
     mutate(eventId);
   };
   const router = useRouter();
-  const handleManageEvent = (eventSlug: string) => {
-    console.log(`Navigating to manage event: /dashboard/events/${eventSlug}`);
-    router.push(`/dashboard/events/${eventSlug}`);
+  const handleManageEvent = (eventSlug: string, name: string, logo: string) => {
+    console.log(
+      `Navigating to manage event: /dashboard/events/${eventSlug}?name=${name}&logo=${logo}`
+    );
+    router.push(`/dashboard/events/${eventSlug}?name=${name}&logo=${logo}`);
   };
 
   return (

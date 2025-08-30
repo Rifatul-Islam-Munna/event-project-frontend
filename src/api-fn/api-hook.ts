@@ -1,6 +1,6 @@
 
 import { fetchError } from "@/@types/user-types"
-import { getToken } from "@/actions/auth"
+import { getSubToken, getToken } from "@/actions/auth"
 import axios from "axios"
 import { AxiosError } from "axios"
 import { isRedirectError } from "next/dist/client/components/redirect-error"
@@ -38,10 +38,13 @@ function parseAxiosError(error:  AxiosError<ApiErrorResponse>): { message: strin
 
 export const PostRequestAxios = async <T>(url: string, payload: Record<string, unknown> | FormData  ) : Promise<[T | null, { message: string; statusCode: number } | null]> => {
     const {access_token} = await getToken()
+    const {sub_token}  = await getSubToken()
     try{
         const {data} = await axios.post(`${baseUrl}${url}`, payload,{
             headers:{
                 access_token:access_token,
+                sub_token:sub_token,
+               
             
             }
             
@@ -68,11 +71,12 @@ export const PostRequestAxios = async <T>(url: string, payload: Record<string, u
 }
 export const PatchRequestAxios = async <T>(url: string, payload: Record<string, unknown> | FormData) : Promise<[T | null, { message: string; statusCode: number } | null]> => {
     const {access_token} = await getToken()
+       const {sub_token}  = await getSubToken()
     try{
         const {data} = await axios.patch<T>(`${baseUrl}${url}`, payload,{
             headers:{
                 access_token:access_token,
-            
+                sub_token:sub_token,
             }
             
         })
@@ -111,11 +115,13 @@ export const GetRequestAxios = async <T>(url: string, ) : Promise<[T | null, Axi
 }
 export const GetRequestNormal = async <T>(url: string,revalidate=1 ,revalidateTags="t") : Promise<[T | null, fetchError | null]> => {
     const {access_token} = await getToken()
+       const {sub_token}  = await getSubToken()
     
     try{
         const response = await fetch(`${baseUrl}${url}`,{cache:"no-store",headers:{
                
                 access_token:access_token ? access_token : '',
+                 sub_token:sub_token,
                 
                
 
@@ -163,11 +169,12 @@ export const GetRequestNormal = async <T>(url: string,revalidate=1 ,revalidateTa
 
 export const DeleteAxios = async <T>(url: string) : Promise<[T | null, { message: string; statusCode: number } | null]> => {
     const {access_token} = await getToken()
+     const {sub_token}  = await getSubToken()
     try{
         const {data} = await axios.delete(`${baseUrl}${url}`,{
             headers:{
                 access_token:access_token,
-            
+                sub_token:sub_token,
             }
             
         })

@@ -169,8 +169,8 @@ export default function ReturnPage() {
         <p className="text-gray-600 mb-2">{statusDisplay.message}</p>
 
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <p className="text-sm text-gray-500 mb-1">Plan Selected</p>
-          <p className="font-semibold text-gray-900 capitalize">{plan}</p>
+          {/*   <p className="text-sm text-gray-500 mb-1">Plan Selected</p>
+          <p className="font-semibold text-gray-900 capitalize">{plan}</p> */}
         </div>
 
         <div className="space-y-3">

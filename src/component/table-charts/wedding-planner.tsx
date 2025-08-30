@@ -34,7 +34,7 @@ import { Menu, FileText, Database } from "lucide-react";
 import * as htmlToImage from "html-to-image";
 import { jsPDF } from "jspdf";
 import type { Guest } from "@/@types/events-details";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   deleteGuest,
@@ -208,6 +208,7 @@ function WeddingPlanner() {
   const [nodes, setNodes, onNodesChange] = useNodesState<TableNodeData>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [guests, setGuests] = useState<Guest[]>([]);
+  const Query = useSearchParams();
 
   const [changedObjects, setChangedObjects] = useState<ChangedObjects>({
     guest: [],
@@ -736,69 +737,109 @@ function WeddingPlanner() {
       setNodes(nodesWithCallbacks);
     }
   }, [seatPlandata?.data]); // Only depend on the actual data
+  const HEADER_H = 100; // space for logo + title
+  const MARGIN = 10; // left/right padding
 
+  function loadImage(src: string) {
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+      const im = new Image();
+      im.crossOrigin = "anonymous"; // needed for remote URLs
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = src;
+    });
+  }
   const handleDownloadPdf = useCallback(() => {
-    if (reactFlowWrapper.current) {
-      const reactFlowPane = reactFlowWrapper.current.querySelector(
-        ".react-flow__pane"
-      ) as HTMLElement;
-      const reactFlowControls = reactFlowWrapper.current.querySelector(
-        ".react-flow__controls"
-      ) as HTMLElement;
-      const reactFlowMiniMap = reactFlowWrapper.current.querySelector(
-        ".react-flow__minimap"
-      ) as HTMLElement;
+    const eventName = (Query.get("name") as string) || "Wedding Planner";
+    const eventLogo = Query.get("logo") as string;
 
-      if (reactFlowPane) {
-        const initialViewport = getViewport();
-
-        if (reactFlowControls) reactFlowControls.style.display = "none";
-        if (reactFlowMiniMap) reactFlowMiniMap.style.display = "none";
-
-        fitView({ padding: 0.1, includeHiddenNodes: true });
-
-        setTimeout(() => {
-          htmlToImage
-            .toPng(reactFlowPane, {
-              quality: 0.95,
-              pixelRatio: 2,
-              backgroundColor: "#ffffff",
-            })
-            .then((dataUrl) => {
-              const img = new Image();
-              img.src = dataUrl;
-
-              img.onload = () => {
-                const pdf = new jsPDF({
-                  orientation:
-                    img.width > img.height ? "landscape" : "portrait",
-                  unit: "px",
-                  format: [img.width, img.height],
-                });
-
-                pdf.addImage(dataUrl, "PNG", 0, 0, img.width, img.height);
-                pdf.save("wedding-layout.pdf");
-                toast.success("Layout downloaded as PDF!");
-
-                setViewport(initialViewport);
-                if (reactFlowControls) reactFlowControls.style.display = "";
-                if (reactFlowMiniMap) reactFlowMiniMap.style.display = "";
-              };
-            })
-            .catch((error) => {
-              console.error("oops, something went wrong!", error);
-              toast.error("Failed to download PDF.");
-              setViewport(initialViewport);
-              if (reactFlowControls) reactFlowControls.style.display = "";
-              if (reactFlowMiniMap) reactFlowMiniMap.style.display = "";
-            });
-        }, 100);
-      } else {
-        toast.error("React Flow pane not found for PDF capture.");
-      }
-    } else {
+    if (!reactFlowWrapper.current) {
       toast.error("React Flow container not found for PDF capture.");
+      return;
     }
+
+    const reactFlowPane = reactFlowWrapper.current.querySelector(
+      ".react-flow__pane"
+    ) as HTMLElement;
+    const reactFlowControls = reactFlowWrapper.current.querySelector(
+      ".react-flow__controls"
+    ) as HTMLElement;
+    const reactFlowMiniMap = reactFlowWrapper.current.querySelector(
+      ".react-flow__minimap"
+    ) as HTMLElement;
+
+    if (!reactFlowPane) {
+      toast.error("React Flow pane not found for PDF capture.");
+      return;
+    }
+
+    const initialViewport = getViewport();
+    if (reactFlowControls) reactFlowControls.style.display = "none";
+    if (reactFlowMiniMap) reactFlowMiniMap.style.display = "none";
+
+    fitView({ padding: 0.1, includeHiddenNodes: true });
+
+    setTimeout(async () => {
+      try {
+        const dataUrl = await htmlToImage.toPng(reactFlowPane, {
+          quality: 0.95,
+          pixelRatio: 2,
+          backgroundColor: "#ffffff",
+        });
+
+        const img = await loadImage(dataUrl);
+        const pageW = img.width + MARGIN * 2;
+        const pageH = HEADER_H + img.height + MARGIN * 2;
+
+        const pdf = new jsPDF({
+          orientation: img.width > img.height ? "landscape" : "portrait",
+          unit: "px",
+          format: [pageW, pageH],
+        });
+
+        // Header: logo (optional) + event name
+        let logoW = 80,
+          logoH = 80,
+          logoX = MARGIN,
+          logoY = MARGIN;
+        if (eventLogo) {
+          try {
+            const logoImg = await loadImage(eventLogo);
+            // keep aspect ratio within 80x80 box
+            const scale = Math.min(
+              logoW / logoImg.width,
+              logoH / logoImg.height,
+              1
+            );
+            const w = logoImg.width * scale;
+            const h = logoImg.height * scale;
+            pdf.addImage(logoImg, "PNG", logoX, logoY, w, h);
+            logoW = w;
+            logoH = h;
+          } catch {
+            // ignore logo load failure
+          }
+        }
+
+        pdf.setFontSize(24);
+        pdf.text(eventName || "", logoX + logoW + 16, MARGIN + 40);
+
+        // Diagram below header with left/right padding
+        const diagramX = MARGIN;
+        const diagramY = HEADER_H;
+        pdf.addImage(img, "PNG", diagramX, diagramY, img.width, img.height);
+
+        pdf.save("wedding-layout.pdf");
+        toast.success("Layout downloaded as PDF!");
+      } catch (error) {
+        console.error("PDF generation error:", error);
+        toast.error("Failed to download PDF.");
+      } finally {
+        setViewport(initialViewport);
+        if (reactFlowControls) reactFlowControls.style.display = "";
+        if (reactFlowMiniMap) reactFlowMiniMap.style.display = "";
+      }
+    }, 100);
   }, [fitView, getViewport, setViewport]);
 
   const handleOnIdle = () => {

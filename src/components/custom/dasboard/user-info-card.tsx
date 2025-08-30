@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { getUserInfo, logoutUser } from "@/actions/auth";
 import { User } from "@/@types/user-types";
 import Link from "next/link";
+import { format, isValid, parseISO } from "date-fns";
 
 export function UserInfoCard() {
   const [user, setUser] = useState<User | null>(null);
@@ -49,6 +50,17 @@ export function UserInfoCard() {
           <div>
             <p className="text-lg font-medium text-foreground">{user?.name}</p>
             <p className="text-sm text-muted-foreground">{user?.email}</p>
+            {user?.subscription?.endDate && (
+              <p className="text-sm text-muted-foreground">
+                {" "}
+                Subscription Expire at:{" "}
+                {format(
+                  parseISO(user?.subscription?.endDate ?? ""),
+                  "d MMMM yyyy"
+                )}
+              </p>
+            )}
+
             {user?.type === "admin" && (
               <Link href={"/admin/dashboard"}>
                 <Button

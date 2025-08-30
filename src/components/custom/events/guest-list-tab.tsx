@@ -3,7 +3,7 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +34,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteGuest, getAllGuest } from "@/actions/fetch-action";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
+import { User } from "@/@types/user-types";
+import { getUserInfo } from "@/actions/auth";
 
 type GuestListTabProps = {
   guests: Guest[];
@@ -53,7 +55,14 @@ export function GuestListTab({
   const [isViewGuestModalOpen, setIsViewGuestModalOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [user, SetUser] = useState<User | null>(null);
+  useEffect(() => {
+    const getuserInfo = async () => {
+      const info = await getUserInfo();
+      SetUser(info);
+    };
+    getuserInfo();
+  }, []);
   const query = useQueryClient();
 
   const handleEditClick = (guest: Guest) => {
@@ -143,12 +152,14 @@ export function GuestListTab({
                   >
                     <UserPlus className="h-4 w-4" /> Manual Entry
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="csv"
-                    className="flex items-center data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0  gap-2 text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-[hsl(185_70%_40%)] rounded-none py-3 px-4"
-                  >
-                    <Upload className="h-4 w-4" /> Upload CSV
-                  </TabsTrigger>
+                  {user?.plan?.permissions?.includes("csv.import") ? (
+                    <TabsTrigger
+                      value="csv"
+                      className="flex items-center data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0  gap-2 text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-[hsl(185_70%_40%)] rounded-none py-3 px-4"
+                    >
+                      <Upload className="h-4 w-4" /> Upload CSV
+                    </TabsTrigger>
+                  ) : null}
                 </TabsList>
                 <TabsContent value="manual" className="mt-4">
                   <CreateGuestForm

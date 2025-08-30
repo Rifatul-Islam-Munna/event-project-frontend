@@ -9,14 +9,25 @@ export const getToken = async ()=>{
   
     return {access_token}
 }
+
+export const getSubToken = async ()=>{
+    const sub_token = (await cookies()).get("sub_token")?.value
+  
+    return {sub_token}
+}
 export const loginUser = async (email:string,password:string)=>{
     const payload ={email,password}
     const [data,error] = await PostRequestAxios<LoginResponse>(`/user/login-user`,payload);
     console.log("data-user-login->",data,"error-user-login->",error);
     if(data?.access_token){
      const coookies = await cookies()
-      coookies.set("access_token",data?.access_token,{maxAge:60*60*24*60,path:'/'});
-      coookies.set("user_info",JSON.stringify(data?.data),{maxAge:60*60*24*60,path:'/'})
+      coookies.set("access_token",data?.access_token,{maxAge:60*60*24,path:'/',httpOnly:true});
+      coookies.set("user_info",JSON.stringify(data?.data),{maxAge:60*60*24,path:'/',httpOnly:true})
+      if(data?.sub_token){
+
+          coookies.set("sub_token",data?.sub_token,{maxAge:60*60*1,path:'/',httpOnly:true})
+      }
+
    
     
     }
@@ -51,6 +62,7 @@ export const logoutUser = async ()=>{
     const coookies = await cookies()
     coookies.delete("access_token");
     coookies.delete("user_info");
+    coookies.delete("sub_token");
     redirect('/login')
 }
 

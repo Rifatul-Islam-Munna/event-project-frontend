@@ -31,9 +31,11 @@ const stripePromise = loadStripe(
 function Checkout({
   clientSecret,
   plan,
+  price,
 }: {
   clientSecret: string;
   plan: string;
+  price: number;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -139,7 +141,7 @@ function Checkout({
               ) : (
                 <>
                   <CreditCard className="mr-2 h-5 w-5" />
-                  Complete Payment • {planDetails.price}
+                  Complete Payment • ${price}
                 </>
               )}
             </Button>
@@ -153,7 +155,7 @@ function Checkout({
           </form>
         </CardContent>
       </Card>
-
+      {/* 
       <Card className="border-2">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -174,31 +176,13 @@ function Checkout({
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-primary">
-                {planDetails.price}
+                {price ?? 0}
               </div>
               <div className="text-sm text-muted-foreground">per month</div>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <h4 className="font-medium flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              What's included:
-            </h4>
-            <ul className="space-y-1 ml-6">
-              {planDetails.features.map((feature, index) => (
-                <li
-                  key={index}
-                  className="text-sm text-muted-foreground flex items-center gap-2"
-                >
-                  <div className="h-1.5 w-1.5 bg-primary rounded-full" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }
@@ -206,6 +190,7 @@ function Checkout({
 export default function BillingPage() {
   const params = useSearchParams();
   const plan = params.get("plan") ?? "basic";
+  const total = (params.get("price") as number | null) ?? 0;
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["create-intent", plan],
@@ -286,7 +271,11 @@ export default function BillingPage() {
         </div>
 
         <Elements stripe={stripePromise!} options={{ clientSecret }}>
-          <Checkout clientSecret={clientSecret} plan={plan} />
+          <Checkout
+            clientSecret={clientSecret}
+            plan={plan}
+            price={total / 100}
+          />
         </Elements>
       </div>
     </div>

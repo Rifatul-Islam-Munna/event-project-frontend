@@ -17,7 +17,7 @@ export function HeroSection() {
               QR Code for guests to search and find their seat.
             </p>
           </div>
-          <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center lg:justify-start">
+          {/* <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center lg:justify-start">
             <Button
               size="lg"
               asChild
@@ -25,7 +25,7 @@ export function HeroSection() {
             >
               <Link href="/get-started">Get Started</Link>
             </Button>
-          </div>
+          </div> */}
         </div>
         <div className="relative h-[300px] w-full lg:h-[400px] xl:h-[500px] rounded-2xl overflow-hidden ">
           <Image

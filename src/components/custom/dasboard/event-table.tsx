@@ -49,6 +49,8 @@ import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllEvent } from "@/actions/fetch-action";
 import { EventItem } from "@/@types/events-details";
+import { User } from "@/@types/user-types";
+import { getUserInfo } from "@/actions/auth";
 type EventTableProps = {
   events: Event[];
   onAddEvent: (event: {
@@ -86,7 +88,14 @@ export function EventTable({
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentEvents = events.slice(startIndex, endIndex);
-
+  const [user, SetUser] = useState<User | null>(null);
+  useEffect(() => {
+    const getuserInfo = async () => {
+      const info = await getUserInfo();
+      SetUser(info);
+    };
+    getuserInfo();
+  }, []);
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -128,7 +137,8 @@ export function EventTable({
     queryKey: ["get-all-events", currentPage],
     queryFn: () => getAllEvent(currentPage, 10),
   });
-  console.log(data);
+
+  console.log(user);
   return (
     <Card className="border border-gray-200/10  bg-transparent p-6 shadow-none  ">
       <div className="flex items-center justify-between mb-6   w-full">
@@ -217,40 +227,46 @@ export function EventTable({
                     <Button
                       variant="default"
                       size="sm"
-                      onClick={() => onManageEvent(event?._id)}
+                      onClick={() =>
+                        onManageEvent(event?._id, event?.name, event?.logo_path)
+                      }
                       className=" text-primary-foreground hover:bg-primary/90 transition-colors bg-gradient-to-br from-blue-400 to-blue-500 rounded-full text-xs cursor-pointer "
                     >
                       Manage
                     </Button>
                   </TableCell>
                   <TableCell className="text-right flex gap-2 justify-end py-3">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleShareClick(event)}
-                      className="text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
-                      aria-label={`Share ${event.name}`}
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditClick(event)}
-                      className="text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
-                      aria-label={`Edit ${event.name}`}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(event)}
-                      className="text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
-                      aria-label={`Delete ${event.name}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {user?.plan?.permissions?.includes("qr.live") ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleShareClick(event)}
+                          className="text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
+                          aria-label={`Share ${event.name}`}
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditClick(event)}
+                          className="text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
+                          aria-label={`Edit ${event.name}`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteClick(event)}
+                          className="text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
+                          aria-label={`Delete ${event.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))

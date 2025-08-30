@@ -4,8 +4,10 @@ import { EventList, Vendor } from "@/@types/events-details";
 import { DeleteAxios, GetRequestAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
 import * as XLSX from 'xlsx';
 import { Guest as Gu } from "@/@types/events-details";
-import { SubscriptionFilters, SubscriptionResponse } from "@/@types/admin";
-import { getUserInfo } from "./auth";
+import { SubscriptionFilters, SubscriptionResponse, User } from "@/@types/admin";
+import { getToken, getUserInfo } from "./auth";
+import { PricingPlan } from "@/@types/pricing";
+import { cookies } from "next/headers";
 export const postEvent = async (from:FormData)=>{
      
         const [data,error]  = await PostRequestAxios(`/events`,from);
@@ -151,8 +153,18 @@ export const deleteGuest = async (id:string)=>{
     return {data,error}
 }
 export const postVendor  = async (payload:Record<string,unknown>)=>{
+   const user = await getUserInfo();
 
-    const [data,error] = await PostRequestAxios(`/vendor`,payload);
+  const dataofPayload ={
+    ...payload,
+    ...(user?.plan?.permissions?.includes("email.send") && {isEmail:true}),
+    ...(user?.plan?.permissions?.includes("whatsapp.send") && {isWhatsapp:true}),
+    ...(user?.plan?.permissions?.includes("message.send") && {isMessage:true}),
+
+
+  }
+
+    const [data,error] = await PostRequestAxios(`/vendor`,dataofPayload);
     console.log("vendor-data->",data,"vendor-error->",error);
     return {data,error}
 }
@@ -247,9 +259,48 @@ export const subScript = async (sub:string)=>{
     return {data,error}
 }
  
+interface AuthResponse {
+  success: boolean;
+  user: User;
+  access_token: string;
+  subToken: string;
+}
 
 export const getSubTokenFirst = async (sub:string)=>{
-  const [data,error] = await GetRequestNormal<Record<string,unknown>>(`/subscription/create-payment?paymentIntentId=${sub}`);
-  return {data,error}
+  const [data,error] = await GetRequestNormal<AuthResponse>(`/subscription/create-payment?paymentIntentId=${sub}`);
+   if(data?.success){
+     const coookies = await cookies();
+       coookies.set("access_token",data?.access_token,{maxAge:60*60*24,path:'/',httpOnly:true});
+      coookies.set("user_info",JSON.stringify(data?.user),{maxAge:60*60*24,path:'/',httpOnly:true})
+      coookies.set("sub_token",data?.subToken,{maxAge:60*60*24,path:'/',httpOnly:true})
+   }
+   const r = {success:true}
+  
+  return {r,error}
 
+}
+
+export const getAllThePlans = async ()=>{
+  const [data,error] = await GetRequestNormal<PricingPlan[]>(`/subscription/find-all-plans`);
+  return {data,error}
+}
+
+export const createPlan =  async(payload:Record<string,unknown>)=>{
+    const [data,error] = await PostRequestAxios(`/subscription/create-plan`,payload);
+    console.log("vendor-data->",data,"vendor-error->",error);
+    return {data,error}
+}
+
+export const deletePlan = async (id:string) =>{
+    const [data,error] = await DeleteAxios(`/subscription/delete-plans?id=${id}`);
+    console.log("guest-data-update->",data,"guest-error-update->",error);
+    return {data,error}
+}
+
+export const updatePlans = async ( id:string,payload:Record<string,unknown>)=>{
+     console.log("seat-plan-data->",{data:payload});
+    const [data ,error] = await PatchRequestAxios(`/subscription/update-plans?id=${id}`,payload);
+    
+
+    return {data,error}
 }

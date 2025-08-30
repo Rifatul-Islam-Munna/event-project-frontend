@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, LayoutGrid, Truck } from "lucide-react"; // Icons for tabs
@@ -16,11 +16,21 @@ import WeddingPlanner, {
 } from "@/component/table-charts/wedding-planner";
 import { useStore } from "@/zustan-fn/save-alert";
 import { toast } from "sonner";
+import { User } from "@/@types/user-types";
+import { getUserInfo } from "@/actions/auth";
 
 export default function EventDetailsPage() {
   const params = useParams();
   const eventSlug = params.slug as string;
   const [tab, setTab] = useState("guests");
+  const [user, SetUser] = useState<User | null>(null);
+  useEffect(() => {
+    const getuserInfo = async () => {
+      const info = await getUserInfo();
+      SetUser(info);
+    };
+    getuserInfo();
+  }, []);
   // Static data for demonstration
   const [guests, setGuests] = useState<Guest[]>([
     {
@@ -237,12 +247,14 @@ export default function EventDetailsPage() {
                 >
                   <LayoutGrid className="h-4 w-4" /> Seating Chart
                 </TabsTrigger>
-                <TabsTrigger
-                  value="vendors"
-                  className="flex items-center gap-2 text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0  data-[state=active]:border-b-2 data-[state=active]:border-[hsl(185_70%_40%)] rounded-none py-3 px-4"
-                >
-                  <Truck className="h-4 w-4" /> Vendors
-                </TabsTrigger>
+                {user?.plan?.permissions?.includes("vendor.manage") ? (
+                  <TabsTrigger
+                    value="vendors"
+                    className="flex items-center gap-2 text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0  data-[state=active]:border-b-2 data-[state=active]:border-[hsl(185_70%_40%)] rounded-none py-3 px-4"
+                  >
+                    <Truck className="h-4 w-4" /> Vendors
+                  </TabsTrigger>
+                ) : null}
               </TabsList>
               <TabsContent
                 value="guests"
