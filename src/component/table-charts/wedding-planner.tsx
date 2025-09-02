@@ -12,6 +12,7 @@ import ReactFlow, {
   type Connection,
   ReactFlowProvider,
   useReactFlow,
+  useViewport,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { v4 as uuidv4 } from "uuid";
@@ -32,6 +33,7 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import { Menu, FileText, Database } from "lucide-react";
 import * as htmlToImage from "html-to-image";
+import { toSvg } from "html-to-image";
 import { jsPDF } from "jspdf";
 import type { Guest } from "@/@types/events-details";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -41,6 +43,7 @@ import {
   deleteSeatPlan,
   getAllGuest,
   getAllSeatPlan,
+  getHeader,
   postSeatPlan,
   updateBulkGuest,
   updateSeatPlan,
@@ -75,8 +78,8 @@ export interface TableNodeData {
   width: number;
   height: number;
   numSeats: number;
-  measurementType: string; // Add this
-  widthTable: number; // Add this
+  measurementType: string;
+  widthTable: number;
   heightTable: number;
   onGuestDrop: (event: React.DragEvent, nodeId: string, seatId: string) => void;
   onRemoveGuestFromSeat: (
@@ -214,11 +217,103 @@ const calculateTableDimensions = (
   }
 };
 
+// IMPROVED: Zoom-responsive venue boundary component with better scaling
+const ZoomResponsiveBoundary = ({ venueWidth, venueHeight, SCALE_FACTOR }) => {
+  const { x, y, zoom } = useViewport();
+
+  // FIXED: Better scaling that shows more realistic venue size
+  const scaledWidth = venueWidth * SCALE_FACTOR * zoom * 7; // Your multiplier
+  const scaledHeight = venueHeight * SCALE_FACTOR * zoom * 7; // Your multiplier
+
+  // Calculate position based on current viewport
+  const boundaryX = x;
+  const boundaryY = y;
+
+  return (
+    <div
+      className="absolute pointer-events-none z-10"
+      style={{
+        left: `${boundaryX}px`,
+        top: `${boundaryY}px`,
+        width: `${scaledWidth}px`,
+        height: `${scaledHeight}px`,
+        border: `${Math.max(2, 3 * zoom)}px dashed #94a3b8`,
+        borderRadius: `${8 * zoom}px`,
+        backgroundColor: "transparent",
+        transform: "translate3d(0, 0, 0)",
+      }}
+    >
+      {/* Venue Label - scales with zoom */}
+      <div
+        className="absolute bg-white/90 px-3 py-1 rounded-lg shadow-sm border"
+        style={{
+          top: `${-40 * zoom}px`,
+          left: 0,
+          transform: `scale(${Math.max(0.8, zoom)})`,
+          transformOrigin: "left top",
+        }}
+      >
+        <span className="text-sm font-semibold text-slate-700">
+          Venue: {venueWidth}m × {venueHeight}m
+        </span>
+      </div>
+
+      {/* Corner markers - scale with zoom */}
+      <div
+        className="absolute border-l-2 border-t-2 border-slate-400"
+        style={{
+          top: `${2 * zoom}px`,
+          left: `${2 * zoom}px`,
+          width: `${4 * zoom}px`,
+          height: `${4 * zoom}px`,
+        }}
+      ></div>
+      <div
+        className="absolute border-r-2 border-t-2 border-slate-400"
+        style={{
+          top: `${2 * zoom}px`,
+          right: `${2 * zoom}px`,
+          width: `${4 * zoom}px`,
+          height: `${4 * zoom}px`,
+        }}
+      ></div>
+      <div
+        className="absolute border-l-2 border-b-2 border-slate-400"
+        style={{
+          bottom: `${2 * zoom}px`,
+          left: `${2 * zoom}px`,
+          width: `${4 * zoom}px`,
+          height: `${4 * zoom}px`,
+        }}
+      ></div>
+      <div
+        className="absolute border-r-2 border-b-2 border-slate-400"
+        style={{
+          bottom: `${2 * zoom}px`,
+          right: `${2 * zoom}px`,
+          width: `${4 * zoom}px`,
+          height: `${4 * zoom}px`,
+        }}
+      ></div>
+    </div>
+  );
+};
+
 function WeddingPlanner() {
   const [nodes, setNodes, onNodesChange] = useNodesState<TableNodeData>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [guests, setGuests] = useState<Guest[]>([]);
   const Query = useSearchParams();
+
+  // Venue dimensions from URL
+  const venueWidth = parseFloat(Query.get("venueWidth") || "50"); // meters
+  const venueHeight = parseFloat(Query.get("venueHeight") || "30"); // meters
+  const SCALE_FACTOR = 5; // 1 meter = 5 pixels
+  const venueWidthPx = venueWidth * SCALE_FACTOR * 5; // Applied your multiplier
+  const venueHeightPx = venueHeight * SCALE_FACTOR * 5; // Applied your multiplier
+
+  // Calculate realistic table capacity
+  const estimatedCapacity = Math.floor((venueWidth * venueHeight) / 25); // ~25m² per table including circulation
 
   const [changedObjects, setChangedObjects] = useState<ChangedObjects>({
     guest: [],
@@ -237,7 +332,6 @@ function WeddingPlanner() {
   const [tHeight, setTHeight] = useState(0);
   const { screenToFlowPosition, setViewport, getNodes, fitView, getViewport } =
     useReactFlow();
-  console.log("changes", changedObjects);
 
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
@@ -248,6 +342,85 @@ function WeddingPlanner() {
     handleDeleteTable: null as any,
     handleEditTable: null as any,
   });
+
+  // IMPROVED: Calculate initial centered viewport
+  const getInitialViewport = useCallback(() => {
+    const containerWidth =
+      reactFlowWrapper.current?.offsetWidth || window.innerWidth - 300;
+    const containerHeight =
+      reactFlowWrapper.current?.offsetHeight || window.innerHeight;
+
+    // Calculate optimal zoom to fit venue with padding
+    const zoomX = (containerWidth * 0.6) / venueWidthPx;
+    const zoomY = (containerHeight * 0.6) / venueHeightPx;
+    const optimalZoom = Math.min(zoomX, zoomY, 1.0);
+
+    // Center the venue in the viewport
+    const centerX = (containerWidth - venueWidthPx * optimalZoom) / 2;
+    const centerY = (containerHeight - venueHeightPx * optimalZoom) / 2;
+
+    return {
+      x: centerX,
+      y: centerY,
+      zoom: Math.max(0.1, optimalZoom),
+    };
+  }, [venueWidthPx, venueHeightPx]);
+
+  // IMPROVED: More lenient viewport constraints
+  const constrainViewport = useCallback(
+    (viewport: any) => {
+      const { x, y, zoom } = viewport;
+
+      // Get container dimensions
+      const containerWidth =
+        reactFlowWrapper.current?.offsetWidth || window.innerWidth - 300;
+      const containerHeight =
+        reactFlowWrapper.current?.offsetHeight || window.innerHeight;
+
+      // Calculate scaled venue dimensions
+      const scaledVenueWidth = venueWidthPx * zoom;
+      const scaledVenueHeight = venueHeightPx * zoom;
+
+      // More generous padding for better UX
+      const padding = 200;
+      const maxPanX = Math.min(
+        padding,
+        containerWidth - scaledVenueWidth + padding
+      );
+      const maxPanY = Math.min(
+        padding,
+        containerHeight - scaledVenueHeight + padding
+      );
+
+      // Allow generous panning but prevent going too far
+      const constrainedX = Math.max(maxPanX - padding, Math.min(padding, x));
+      const constrainedY = Math.max(maxPanY - padding, Math.min(padding, y));
+
+      return {
+        x: constrainedX,
+        y: constrainedY,
+        zoom,
+      };
+    },
+    [venueWidthPx, venueHeightPx]
+  );
+
+  // IMPROVED: Less aggressive viewport correction
+  const onMoveEnd = useCallback(
+    (event: any, viewport: any) => {
+      const constrainedViewport = constrainViewport(viewport);
+
+      // Only correct if user has panned very far outside bounds
+      const threshold = 100;
+      if (
+        Math.abs(constrainedViewport.x - viewport.x) > threshold ||
+        Math.abs(constrainedViewport.y - viewport.y) > threshold
+      ) {
+        setViewport(constrainedViewport, { duration: 500 });
+      }
+    },
+    [constrainViewport, setViewport]
+  );
 
   const { data: seatPlandata, isLoading } = useQuery({
     queryKey: ["seat-plan", pathName.split("/").pop()],
@@ -329,11 +502,13 @@ function WeddingPlanner() {
     },
     []
   );
+
   useEffect(() => {
     const totalLength =
       changedObjects.guest.length + changedObjects.node.length;
     setDataLength(totalLength);
   }, [changedObjects.guest.length, changedObjects.node.length]);
+
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
@@ -626,6 +801,23 @@ function WeddingPlanner() {
     },
   });
 
+  // Helper function to constrain table positions within venue bounds
+  const constrainTablePosition = useCallback(
+    (x: number, y: number, tableWidth: number, tableHeight: number) => {
+      const margin = 20;
+      const constrainedX = Math.max(
+        margin,
+        Math.min(x, venueWidthPx - tableWidth - margin)
+      );
+      const constrainedY = Math.max(
+        margin,
+        Math.min(y, venueHeightPx - tableHeight - margin)
+      );
+      return { x: constrainedX, y: constrainedY };
+    },
+    [venueWidthPx, venueHeightPx]
+  );
+
   const handleConfirmAddTable = () => {
     if (!newTableType || !newTableLabel.trim()) {
       toast.error("Please provide a table name.");
@@ -644,11 +836,27 @@ function WeddingPlanner() {
     );
 
     const newNodeId = uuidv4();
+
+    // Position new tables within venue bounds with better constraints
+    const margin = 20;
+    const maxX = Math.max(margin, venueWidthPx - width - margin);
+    const maxY = Math.max(margin, venueHeightPx - height - margin);
+
+    const randomX = Math.random() * (maxX - margin) + margin;
+    const randomY = Math.random() * (maxY - margin) + margin;
+
+    const constrainedPosition = constrainTablePosition(
+      randomX,
+      randomY,
+      width,
+      height
+    );
+
     const newNodeData = {
       id: newNodeId,
       type: "tableNode",
       event_id: pathName.split("/").pop() as string,
-      position: { x: 50, y: 50 },
+      position: constrainedPosition,
       data: {
         event_id: pathName.split("/").pop() as string,
         label: newTableLabel,
@@ -738,17 +946,29 @@ function WeddingPlanner() {
         if (change.type === "position" && change.position) {
           const node = nodes.find((n) => n.id === change.id);
           if (node) {
+            // Constrain table position within venue bounds
+            const constrainedPosition = constrainTablePosition(
+              change.position.x,
+              change.position.y,
+              node.data.width,
+              node.data.height
+            );
+
             const updatedNode = {
               ...node,
-              position: change.position,
+              position: constrainedPosition,
             };
+
+            // Update the change object with constrained position
+            change.position = constrainedPosition;
+
             trackChange(change.id, "node", "updated", updatedNode);
           }
         }
       });
       onNodesChange(changes);
     },
-    [onNodesChange, nodes, trackChange]
+    [onNodesChange, nodes, trackChange, constrainTablePosition]
   );
 
   const handleSaveChanges = useCallback(() => {
@@ -774,28 +994,62 @@ function WeddingPlanner() {
     }
   }, [data]);
 
-  // Load seat plan data - only run once when data is available
+  // Load seat plan data and constrain existing tables within venue bounds
   useEffect(() => {
     if (seatPlandata?.data && seatPlandata.data.length > 0) {
-      const nodesWithCallbacks = seatPlandata.data.map(createNodeWithCallbacks);
+      const nodesWithCallbacks = seatPlandata.data.map((nodeData: any) => {
+        // Constrain existing tables within venue bounds
+        const constrainedPosition = constrainTablePosition(
+          nodeData.position.x,
+          nodeData.position.y,
+          nodeData.data.width || 100,
+          nodeData.data.height || 100
+        );
+
+        const constrainedNode = {
+          ...nodeData,
+          position: constrainedPosition,
+        };
+        return createNodeWithCallbacks(constrainedNode);
+      });
       setNodes(nodesWithCallbacks);
+    } else {
+      setNodes([]);
     }
-  }, [seatPlandata?.data]); // Only depend on the actual data
-  const HEADER_H = 100; // space for logo + title
-  const MARGIN = 10; // left/right padding
+
+    // Set initial centered viewport after a small delay
+    setTimeout(() => {
+      const initialViewport = getInitialViewport();
+      setViewport(initialViewport, { duration: 800 });
+    }, 200);
+  }, [
+    seatPlandata?.data,
+    constrainTablePosition,
+    getInitialViewport,
+    setViewport,
+  ]);
+
+  const HEADER_H = 100;
+  const MARGIN = 10;
 
   function loadImage(src: string) {
     return new Promise<HTMLImageElement>((resolve, reject) => {
       const im = new Image();
-      im.crossOrigin = "anonymous"; // needed for remote URLs
+      im.crossOrigin = "anonymous";
       im.onload = () => resolve(im);
       im.onerror = reject;
       im.src = src;
     });
   }
+  const { data: ComInfo } = useQuery({
+    queryKey: ["header"],
+    queryFn: () => getHeader(),
+    gcTime: 1000 * 60 * 60,
+  });
+
   const handleDownloadPdf = useCallback(() => {
-    const eventName = (Query.get("name") as string) || "Wedding Planner";
-    const eventLogo = Query.get("logo") as string;
+    const eventName = ComInfo?.data?.title || "Wedding Planner";
+    const eventLogo = ComInfo?.data?.imageUrl || "";
 
     if (!reactFlowWrapper.current) {
       toast.error("React Flow container not found for PDF capture.");
@@ -825,56 +1079,123 @@ function WeddingPlanner() {
 
     setTimeout(async () => {
       try {
+        // Reduced scale for quality/size balance
+        const OPTIMAL_SCALE = 5; // Down from 8x to 5x for smaller file size
+        const originalRect = reactFlowPane.getBoundingClientRect();
+
         const dataUrl = await htmlToImage.toPng(reactFlowPane, {
-          quality: 0.95,
-          pixelRatio: 2,
+          quality: 0.95, // Slightly reduced from 1.0
+          pixelRatio: 1,
           backgroundColor: "#ffffff",
+          width: originalRect.width * OPTIMAL_SCALE,
+          height: originalRect.height * OPTIMAL_SCALE,
+          canvasWidth: originalRect.width * OPTIMAL_SCALE,
+          canvasHeight: originalRect.height * OPTIMAL_SCALE,
+          skipAutoScale: true,
+          style: {
+            transform: `scale(${OPTIMAL_SCALE})`,
+            transformOrigin: "top left",
+            width: originalRect.width + "px",
+            height: originalRect.height + "px",
+          },
         });
 
+        // Convert PNG to compressed JPEG for smaller file size
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
         const img = await loadImage(dataUrl);
-        const pageW = img.width + MARGIN * 2;
-        const pageH = HEADER_H + img.height + MARGIN * 2;
 
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        // Convert to JPEG with high quality but compression
+        const jpegDataUrl = canvas.toDataURL("image/jpeg", 0.92); // High quality JPEG
+        const compressedImg = await loadImage(jpegDataUrl);
+
+        // Calculate PDF dimensions
+        const imgWidthMM = (compressedImg.width / OPTIMAL_SCALE) * 0.264583;
+        const imgHeightMM = (compressedImg.height / OPTIMAL_SCALE) * 0.264583;
+
+        const HEADER_HEIGHT = 35;
+        const MARGIN = 20;
+        const pageWidth = Math.max(imgWidthMM + MARGIN * 2, 210);
+        const pageHeight = HEADER_HEIGHT + imgHeightMM + MARGIN * 2;
+
+        // Enable compression in jsPDF
         const pdf = new jsPDF({
-          orientation: img.width > img.height ? "landscape" : "portrait",
-          unit: "px",
-          format: [pageW, pageH],
+          orientation: imgWidthMM > imgHeightMM ? "landscape" : "portrait",
+          unit: "mm",
+          format: [pageWidth, pageHeight],
+          compress: true, // Enable PDF compression
+          precision: 2, // Reduced precision for smaller size
         });
 
-        // Header: logo (optional) + event name
-        let logoW = 80,
-          logoH = 80,
-          logoX = MARGIN,
-          logoY = MARGIN;
+        const pdfPageWidth = pdf.internal.pageSize.getWidth();
+        const pdfPageHeight = pdf.internal.pageSize.getHeight();
+
+        // Add logo
+        let logoHeight = 0;
         if (eventLogo) {
           try {
             const logoImg = await loadImage(eventLogo);
-            // keep aspect ratio within 80x80 box
-            const scale = Math.min(
-              logoW / logoImg.width,
-              logoH / logoImg.height,
-              1
+            const logoSize = 20;
+            const logoX = (pdfPageWidth - logoSize) / 2;
+            const logoY = MARGIN;
+            pdf.addImage(
+              logoImg,
+              "JPEG",
+              logoX,
+              logoY,
+              logoSize,
+              logoSize,
+              undefined,
+              "FAST"
             );
-            const w = logoImg.width * scale;
-            const h = logoImg.height * scale;
-            pdf.addImage(logoImg, "PNG", logoX, logoY, w, h);
-            logoW = w;
-            logoH = h;
+            logoHeight = logoSize + 8;
           } catch {
-            // ignore logo load failure
+            console.warn("Failed to load logo image");
           }
         }
 
-        pdf.setFontSize(24);
-        pdf.text(eventName || "", logoX + logoW + 16, MARGIN + 40);
+        // Title
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(22);
+        pdf.setTextColor(40, 40, 40);
+        const titleY = logoHeight > 0 ? MARGIN + logoHeight : MARGIN + 15;
+        pdf.text(eventName || "", pdfPageWidth / 2, titleY, {
+          align: "center",
+        });
 
-        // Diagram below header with left/right padding
-        const diagramX = MARGIN;
-        const diagramY = HEADER_H;
-        pdf.addImage(img, "PNG", diagramX, diagramY, img.width, img.height);
+        // Add compressed image with FAST compression
+        const diagramY = titleY + 15;
+        const diagramX = (pdfPageWidth - imgWidthMM) / 2;
 
-        pdf.save("wedding-layout.pdf");
-        toast.success("Layout downloaded as PDF!");
+        pdf.addImage(
+          compressedImg,
+          "JPEG",
+          diagramX,
+          diagramY,
+          imgWidthMM,
+          imgHeightMM,
+          undefined,
+          "FAST"
+        ); // Use FAST compression
+
+        // Footer
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(9);
+        pdf.setTextColor(120, 120, 120);
+        const currentDate = new Date().toLocaleDateString();
+        const footerText = `Generated on ${currentDate}`;
+        pdf.text(footerText, pdfPageWidth - MARGIN, pdfPageHeight - 8, {
+          align: "right",
+        });
+
+        pdf.save(
+          `${eventName.replace(/[^a-z0-9]/gi, "_").toLowerCase()}-layout.pdf`
+        );
+        toast.success("Optimized high-quality layout downloaded!");
       } catch (error) {
         console.error("PDF generation error:", error);
         toast.error("Failed to download PDF.");
@@ -883,7 +1204,7 @@ function WeddingPlanner() {
         if (reactFlowControls) reactFlowControls.style.display = "";
         if (reactFlowMiniMap) reactFlowMiniMap.style.display = "";
       }
-    }, 100);
+    }, 200);
   }, [fitView, getViewport, setViewport]);
 
   const handleOnIdle = () => {
@@ -912,6 +1233,13 @@ function WeddingPlanner() {
         setShowSidebar={setShowSidebar}
       />
       <div className="flex-grow h-full relative" ref={reactFlowWrapper}>
+        {/* Zoom-Responsive Venue Boundary */}
+        <ZoomResponsiveBoundary
+          venueWidth={venueWidth}
+          venueHeight={venueHeight}
+          SCALE_FACTOR={SCALE_FACTOR}
+        />
+
         <Button
           variant="outline"
           size="icon"
@@ -921,6 +1249,27 @@ function WeddingPlanner() {
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle Sidebar</span>
         </Button>
+
+        {/* Enhanced Venue Info Panel */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-lg hidden p-4 shadow-lg border">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2 text-center">
+            Venue Information
+          </h3>
+          <div className="flex gap-4 text-xs text-slate-600">
+            <div>
+              <strong>Size:</strong> {venueWidth}m × {venueHeight}m
+            </div>
+            <div>
+              <strong>Area:</strong> {(venueWidth * venueHeight).toFixed(1)}m²
+            </div>
+            <div>
+              <strong>Scale:</strong> 1m = {SCALE_FACTOR}px
+            </div>
+            <div className="text-blue-600">
+              <strong>Capacity:</strong> ~{estimatedCapacity} tables
+            </div>
+          </div>
+        </div>
 
         <div className="absolute top-4 right-4 z-20 flex gap-2 top-right-buttons">
           <Button
@@ -948,8 +1297,11 @@ function WeddingPlanner() {
           nodeTypes={nodeTypes}
           snapToGrid={true}
           snapGrid={snapGrid}
-          fitView
           className="bg-transparent"
+          onMoveEnd={onMoveEnd}
+          minZoom={0.05}
+          maxZoom={4}
+          // REMOVED defaultViewport - using programmatic setViewport instead
         >
           <Controls />
           <MiniMap />
@@ -971,7 +1323,10 @@ function WeddingPlanner() {
               Table
             </DialogTitle>
             <DialogDescription>
-              Configure the details for your new table.
+              Configure the details for your new table. Tables will be placed
+              within the venue area ({venueWidth}m × {venueHeight}m).
+              <br />
+              Estimated capacity: ~{estimatedCapacity} tables total.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -1030,7 +1385,7 @@ function WeddingPlanner() {
               value={tWidth > 0 ? tWidth : ""}
               onChange={(e) => setTWidth(Number(e.target.value))}
               className="col-span-3"
-              placeholder="e.g., Wedding Table, Fancy Table"
+              placeholder="e.g., 2.5"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -1042,7 +1397,7 @@ function WeddingPlanner() {
               value={tHeight > 0 ? tHeight : ""}
               onChange={(e) => setTHeight(Number(e.target.value))}
               className="col-span-3"
-              placeholder="e.g., Wedding Table, Fancy Table"
+              placeholder="e.g., 1.5"
             />
           </div>
 

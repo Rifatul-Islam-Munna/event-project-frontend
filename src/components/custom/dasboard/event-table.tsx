@@ -234,7 +234,7 @@ export function EventTable({
                       variant="default"
                       size="sm"
                       onClick={() =>
-                        onManageEvent(event?._id, event?.name, event?.logo_path)
+                        onManageEvent(event?._id, event?.width, event?.height)
                       }
                       className=" text-primary-foreground hover:bg-primary/90 transition-colors bg-gradient-to-br from-blue-400 to-blue-500 rounded-full text-xs cursor-pointer "
                     >
