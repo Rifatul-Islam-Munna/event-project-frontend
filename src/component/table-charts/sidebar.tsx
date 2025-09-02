@@ -53,7 +53,7 @@ export function Sidebar({
 
   return (
     <div
-      className={`fixed inset-y-0 left-0 z-30 w-80 bg-gradient-to-r from-gray-50/30 to-gray-50 mt-11 md:mt-0 border-r p-4 flex flex-col h-full transition-transform duration-300 ease-in-out
+      className={`fixed inset-y-0 left-0 z-30 w-80  bg-white/60 mt-11 md:mt-0 border-r p-4 flex flex-col h-full transition-transform duration-300 ease-in-out
                md:relative md:translate-x-0 ${
                  showSidebar ? "translate-x-0" : "-translate-x-full"
                } sidebar-container`} // Added sidebar-container for print styles

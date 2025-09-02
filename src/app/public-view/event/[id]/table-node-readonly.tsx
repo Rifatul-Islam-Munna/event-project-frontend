@@ -14,8 +14,8 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { cn } from "@/lib/utils";
 import {
   getRectangularSeatDistribution,
-  TableNodeData,
-  TableType,
+  type TableNodeData,
+  type TableType,
 } from "@/component/table-charts/wedding-planner";
 
 interface CustomTableNodeProps

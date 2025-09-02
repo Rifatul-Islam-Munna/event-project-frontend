@@ -118,15 +118,26 @@ function ReadOnlyWeddingPlanner() {
   useEffect(() => {
     if (seatPlandata?.data && seatPlandata.data.length > 0) {
       const readOnlyNodes = seatPlandata.data.map((nodeData: any) => ({
-        ...nodeData,
+        id: nodeData.id,
+        type: "tableNode",
+        position: nodeData.position || { x: 0, y: 0 },
         data: {
           ...nodeData.data,
-          searchQuery, // Pass search query to nodes for highlighting
+          searchQuery,
         },
+        ...(nodeData.style && { style: nodeData.style }),
+        ...(nodeData.width && { width: nodeData.width }),
+        ...(nodeData.height && { height: nodeData.height }),
       }));
+
+      console.log("[v0] Setting nodes:", readOnlyNodes);
       setNodes(readOnlyNodes);
     }
   }, [seatPlandata?.data, setNodes, searchQuery]);
+
+  useEffect(() => {
+    console.log("[v0] Current nodes state:", nodes);
+  }, [nodes]);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -173,7 +184,7 @@ function ReadOnlyWeddingPlanner() {
 
   return (
     <div className="h-screen w-full relative">
-      <div className="absolute top-4 left-4 z-10 bg-white rounded-lg shadow-lg p-4 min-w-80">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-white rounded-lg shadow-lg p-4 min-w-80">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
@@ -237,6 +248,9 @@ function ReadOnlyWeddingPlanner() {
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
+        minZoom={0.1}
+        maxZoom={2}
+        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
       >
         <Controls showInteractive={false} />
         <MiniMap />

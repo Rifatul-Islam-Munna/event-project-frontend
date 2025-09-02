@@ -1079,56 +1079,58 @@ function WeddingPlanner() {
 
     setTimeout(async () => {
       try {
-        // Reduced scale for quality/size balance
-        const OPTIMAL_SCALE = 5; // Down from 8x to 5x for smaller file size
+        // Back to the 10x scaling that worked well
+        const MAX_SCALE = 10;
         const originalRect = reactFlowPane.getBoundingClientRect();
 
-        const dataUrl = await htmlToImage.toPng(reactFlowPane, {
-          quality: 0.95, // Slightly reduced from 1.0
-          pixelRatio: 1,
+        const dataUrl = await toSvg(reactFlowPane, {
+          quality: 2.0,
+          pixelRatio: 2.5,
           backgroundColor: "#ffffff",
-          width: originalRect.width * OPTIMAL_SCALE,
-          height: originalRect.height * OPTIMAL_SCALE,
-          canvasWidth: originalRect.width * OPTIMAL_SCALE,
-          canvasHeight: originalRect.height * OPTIMAL_SCALE,
+          width: originalRect.width * MAX_SCALE,
+          height: originalRect.height * MAX_SCALE,
+          canvasWidth: originalRect.width * MAX_SCALE,
+          canvasHeight: originalRect.height * MAX_SCALE,
           skipAutoScale: true,
           style: {
-            transform: `scale(${OPTIMAL_SCALE})`,
+            transform: `scale(${MAX_SCALE})`,
             transformOrigin: "top left",
             width: originalRect.width + "px",
             height: originalRect.height + "px",
+            imageRendering: "pixelated",
+            WebkitImageRendering: "pixelated",
           },
         });
 
-        // Convert PNG to compressed JPEG for smaller file size
+        const img = await loadImage(dataUrl);
+
+        // Convert to high-quality JPEG to avoid memory issues with large PNG
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
-        const img = await loadImage(dataUrl);
 
         canvas.width = img.width;
         canvas.height = img.height;
         ctx.drawImage(img, 0, 0);
 
-        // Convert to JPEG with high quality but compression
-        const jpegDataUrl = canvas.toDataURL("image/jpeg", 0.92); // High quality JPEG
-        const compressedImg = await loadImage(jpegDataUrl);
+        // Very high quality JPEG
+        const jpegDataUrl = canvas.toDataURL("image/jpeg", 0.98);
+        const finalImg = await loadImage(jpegDataUrl);
 
         // Calculate PDF dimensions
-        const imgWidthMM = (compressedImg.width / OPTIMAL_SCALE) * 0.264583;
-        const imgHeightMM = (compressedImg.height / OPTIMAL_SCALE) * 0.264583;
+        const imgWidthMM = (finalImg.width / MAX_SCALE) * 0.264583;
+        const imgHeightMM = (finalImg.height / MAX_SCALE) * 0.264583;
 
         const HEADER_HEIGHT = 35;
         const MARGIN = 20;
         const pageWidth = Math.max(imgWidthMM + MARGIN * 2, 210);
         const pageHeight = HEADER_HEIGHT + imgHeightMM + MARGIN * 2;
 
-        // Enable compression in jsPDF
         const pdf = new jsPDF({
           orientation: imgWidthMM > imgHeightMM ? "landscape" : "portrait",
           unit: "mm",
           format: [pageWidth, pageHeight],
-          compress: true, // Enable PDF compression
-          precision: 2, // Reduced precision for smaller size
+          compress: false, // No compression for better quality
+          precision: 16, // High precision like before
         });
 
         const pdfPageWidth = pdf.internal.pageSize.getWidth();
@@ -1139,20 +1141,11 @@ function WeddingPlanner() {
         if (eventLogo) {
           try {
             const logoImg = await loadImage(eventLogo);
-            const logoSize = 20;
+            const logoSize = 25;
             const logoX = (pdfPageWidth - logoSize) / 2;
             const logoY = MARGIN;
-            pdf.addImage(
-              logoImg,
-              "JPEG",
-              logoX,
-              logoY,
-              logoSize,
-              logoSize,
-              undefined,
-              "FAST"
-            );
-            logoHeight = logoSize + 8;
+            pdf.addImage(logoImg, "PNG", logoX, logoY, logoSize, logoSize);
+            logoHeight = logoSize + 10;
           } catch {
             console.warn("Failed to load logo image");
           }
@@ -1160,42 +1153,44 @@ function WeddingPlanner() {
 
         // Title
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(22);
+        pdf.setFontSize(24);
         pdf.setTextColor(40, 40, 40);
-        const titleY = logoHeight > 0 ? MARGIN + logoHeight : MARGIN + 15;
+        const titleY = logoHeight > 0 ? MARGIN + logoHeight : MARGIN + 20;
         pdf.text(eventName || "", pdfPageWidth / 2, titleY, {
           align: "center",
         });
 
-        // Add compressed image with FAST compression
-        const diagramY = titleY + 15;
+        // Add high-quality image with no compression
+        const diagramY = titleY + 20;
         const diagramX = (pdfPageWidth - imgWidthMM) / 2;
 
         pdf.addImage(
-          compressedImg,
+          finalImg,
           "JPEG",
           diagramX,
           diagramY,
           imgWidthMM,
           imgHeightMM,
           undefined,
-          "FAST"
-        ); // Use FAST compression
+          "NONE"
+        ); // No compression
 
         // Footer
         pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(9);
+        pdf.setFontSize(10);
         pdf.setTextColor(120, 120, 120);
         const currentDate = new Date().toLocaleDateString();
-        const footerText = `Generated on ${currentDate}`;
-        pdf.text(footerText, pdfPageWidth - MARGIN, pdfPageHeight - 8, {
+        const footerText = `Generated on ${currentDate} - High Quality (10x)`;
+        pdf.text(footerText, pdfPageWidth - MARGIN, pdfPageHeight - 10, {
           align: "right",
         });
 
         pdf.save(
-          `${eventName.replace(/[^a-z0-9]/gi, "_").toLowerCase()}-layout.pdf`
+          `${eventName
+            .replace(/[^a-z0-9]/gi, "_")
+            .toLowerCase()}-high-quality-layout.pdf`
         );
-        toast.success("Optimized high-quality layout downloaded!");
+        toast.success("High-quality layout downloaded!");
       } catch (error) {
         console.error("PDF generation error:", error);
         toast.error("Failed to download PDF.");
@@ -1204,7 +1199,7 @@ function WeddingPlanner() {
         if (reactFlowControls) reactFlowControls.style.display = "";
         if (reactFlowMiniMap) reactFlowMiniMap.style.display = "";
       }
-    }, 200);
+    }, 300);
   }, [fitView, getViewport, setViewport]);
 
   const handleOnIdle = () => {
