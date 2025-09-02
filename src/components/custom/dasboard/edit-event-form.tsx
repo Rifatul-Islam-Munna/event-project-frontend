@@ -38,6 +38,8 @@ export function EditEventForm({
   const [eventLocation, setEventLocation] = useState(event.location);
   const [logoFile, setLogoFile] = useState<File | null>(null); // For new file upload
   const [currentLogoPath, setCurrentLogoPath] = useState(event.logo_path); // To display current logo
+  const [width, setWidth] = useState(event?.width ?? 0);
+  const [height, setHeight] = useState(event?.height ?? 0);
 
   useEffect(() => {
     setEventName(event.name);
@@ -77,6 +79,8 @@ export function EditEventForm({
     fromdata.append("date", format(eventDate, "yyyy-MM-dd"));
     fromdata.append("id", event._id);
     fromdata.append("location", eventLocation);
+    fromdata.append("width", width.toString());
+    fromdata.append("height", height.toString());
     if (logoFile) fromdata.append("file", logoFile);
     mutate(fromdata);
 
@@ -167,6 +171,40 @@ export function EditEventForm({
             New file selected: {logoFile.name}
           </p>
         )}
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="eventLocation" className="text-foreground">
+          Venue Width (meter)
+        </Label>
+        <div className="flex gap-2">
+          <Input
+            id="eventLocation"
+            name="eventLocation"
+            type="text"
+            placeholder="venue width in meter"
+            required
+            value={width > 0 ? width : ""}
+            onChange={(e) => setWidth(Number(e.target.value))}
+            className="border-border focus:ring-primary focus:border-primary flex-1"
+          />
+        </div>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="eventLocation" className="text-foreground">
+          Venue Height (meter)
+        </Label>
+        <div className="flex gap-2">
+          <Input
+            id="eventLocation"
+            name="eventLocation"
+            type="text"
+            placeholder="venue height in meter"
+            required
+            value={height > 0 ? height : ""}
+            onChange={(e) => setHeight(Number(e.target.value))}
+            className="border-border focus:ring-primary focus:border-primary flex-1"
+          />
+        </div>
       </div>
       <div className="mt-4 flex justify-end">
         <Button

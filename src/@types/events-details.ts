@@ -34,6 +34,8 @@ export type EventItem = {
   createdAt: string; // ISO datetime
   updatedAt: string; // ISO datetime
   __v: number;
+  width?: number;
+  height?: number;
 };
 
 export type EventList = {

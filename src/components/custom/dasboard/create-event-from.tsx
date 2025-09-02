@@ -5,21 +5,42 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { v4 as uuidv4 } from "uuid"; // For generating unique IDs
-import { DialogFooter } from "@/components/ui/dialog"; // Only import DialogFooter
+import { v4 as uuidv4 } from "uuid";
+import { DialogFooter } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils"; // Assuming cn utility is available
+import { CalendarIcon, Loader2, MapPin, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { getUserInfo } from "@/actions/auth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { postEvent } from "@/actions/fetch-action";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
+
+// Dynamically import the map component to avoid SSR issues
+const MapLocationPicker = dynamic(() => import("./MapLocationPicker"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[400px] w-full bg-slate-100 rounded-lg flex items-center justify-center">
+      <div className="text-slate-500">Loading map...</div>
+    </div>
+  ),
+});
 
 type CreateEventFormProps = {
   onAddEvent: (event: {
@@ -27,19 +48,23 @@ type CreateEventFormProps = {
     name: string;
     date: string;
     location: string;
-    logoFile?: File | null; // Changed to File for upload
+    logoFile?: File | null;
   }) => void;
-  onClose: () => void; // Callback to close the modal
+  onClose: () => void;
 };
 
 export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState<Date | undefined>(undefined);
   const [eventLocation, setEventLocation] = useState("");
-  const [logoFile, setLogoFile] = useState<File | null>(null); // State for the file object
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [mapDrawerOpen, setMapDrawerOpen] = useState(false);
+  const [width, setWidth] = useState(80);
+  const [height, setHeight] = useState(80);
+
   const query = useQueryClient();
   const { mutate, isPending } = useMutation({
     mutationKey: ["createEvent"],
@@ -61,6 +86,12 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
       return toast.error(error.message);
     },
   });
+
+  const handleLocationSelect = (locationName: string) => {
+    setEventLocation(locationName);
+    setMapDrawerOpen(false);
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -70,6 +101,7 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
       setIsSubmitting(false);
       return;
     }
+
     const name = eventName
       .toLowerCase()
       .replace(/\s+/g, "-")
@@ -86,15 +118,15 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
 
     const slug = `${name}-${date}-${location}-${email}-${random}`;
     const newEvent = {
-      id: uuidv4(), // Generate a unique ID for client-side management
+      id: uuidv4(),
       name: eventName,
-      date: format(eventDate, "yyyy-MM-dd"), // Format date to string
+      date: format(eventDate, "yyyy-MM-dd"),
       location: eventLocation,
       logoFile: logoFile,
       slug: slug,
+      width: width,
+      height: height,
     };
-
-    console.log("newEvent", newEvent);
 
     const fromdata = new FormData();
     fromdata.append("name", newEvent.name);
@@ -102,7 +134,8 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
     fromdata.append("location", newEvent.location);
     fromdata.append("file", newEvent.logoFile as File);
     fromdata.append("slug", newEvent.slug);
-    console.log("fromdata", fromdata.get("name"));
+    fromdata.append("width", newEvent.width.toString());
+    fromdata.append("height", newEvent.height.toString());
 
     mutate(fromdata);
   };
@@ -124,6 +157,7 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
           className="border-border focus:ring-primary focus:border-primary"
         />
       </div>
+
       <div className="grid gap-2">
         <Label htmlFor="eventDate" className="text-foreground">
           Date
@@ -152,21 +186,67 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
           </PopoverContent>
         </Popover>
       </div>
+
       <div className="grid gap-2">
         <Label htmlFor="eventLocation" className="text-foreground">
           Location
         </Label>
-        <Input
-          id="eventLocation"
-          name="eventLocation"
-          type="text"
-          placeholder="Grand Ballroom"
-          required
-          value={eventLocation}
-          onChange={(e) => setEventLocation(e.target.value)}
-          className="border-border focus:ring-primary focus:border-primary"
-        />
+        <div className="flex gap-2">
+          <Input
+            id="eventLocation"
+            name="eventLocation"
+            type="text"
+            placeholder="Grand Ballroom or search on map..."
+            required
+            value={eventLocation}
+            onChange={(e) => setEventLocation(e.target.value)}
+            className="border-border focus:ring-primary focus:border-primary flex-1"
+          />
+
+          {/* Map Drawer Trigger */}
+          <Drawer open={mapDrawerOpen} onOpenChange={setMapDrawerOpen}>
+            <DrawerTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="px-3 border-border hover:bg-muted"
+              >
+                <MapPin className="h-4 w-4" />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent className="h-[80vh]">
+              <DrawerHeader>
+                <DrawerTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                  Choose Event Location
+                </DrawerTitle>
+                <DrawerDescription>
+                  Search for a location or click on the map to pin your event
+                  venue
+                </DrawerDescription>
+              </DrawerHeader>
+
+              <div className="px-4 pb-4 flex-1 overflow-hidden">
+                <MapLocationPicker
+                  onLocationSelect={handleLocationSelect}
+                  initialLocation={eventLocation}
+                />
+              </div>
+
+              <DrawerFooter>
+                <DrawerClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Click the map icon to search or pin location on map
+        </p>
       </div>
+
       <div className="grid gap-2">
         <Label htmlFor="logoFile" className="text-foreground">
           Event Logo (Upload Image)
@@ -182,14 +262,49 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
           className="border-border focus:ring-primary focus:border-primary file:text-primary file:bg-muted file:border-border file:hover:bg-muted/80"
         />
       </div>
+      <div className="grid gap-2">
+        <Label htmlFor="eventLocation" className="text-foreground">
+          Venue Width (meter)
+        </Label>
+        <div className="flex gap-2">
+          <Input
+            id="eventLocation"
+            name="eventLocation"
+            type="text"
+            placeholder="venue width in meter"
+            required
+            value={width > 0 ? width : ""}
+            onChange={(e) => setWidth(Number(e.target.value))}
+            className="border-border focus:ring-primary focus:border-primary flex-1"
+          />
+        </div>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="eventLocation" className="text-foreground">
+          Venue Height (meter)
+        </Label>
+        <div className="flex gap-2">
+          <Input
+            id="eventLocation"
+            name="eventLocation"
+            type="text"
+            placeholder="venue height in meter"
+            required
+            value={height > 0 ? height : ""}
+            onChange={(e) => setHeight(Number(e.target.value))}
+            className="border-border focus:ring-primary focus:border-primary flex-1"
+          />
+        </div>
+      </div>
+
       <DialogFooter className="mt-4">
         <Button
           type="submit"
           className="w-full bg-gradient-to-br from-blue-400 to-blue-500 rounded-full text-primary-foreground hover:bg-primary/90"
           disabled={isPending}
         >
-          {isPending && <Loader2 className=" w-4  h-4 animate-spin" />}Create
-          Event
+          {isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+          Create Event
         </Button>
       </DialogFooter>
     </form>

@@ -1,3 +1,5 @@
+"use client";
+import { LazyMotion, domAnimation, m } from "motion/react";
 import {
   getFeatureDescription,
   getLimitDescription,
@@ -7,7 +9,22 @@ import { getAllThePlans } from "@/actions/fetch-action";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { Check } from "lucide-react";
+import {
+  Check,
+  Crown,
+  Zap,
+  Star,
+  ArrowRight,
+  Diamond,
+  Rocket,
+  Sparkles,
+  Users,
+  Calendar,
+  Share2,
+  Settings,
+  Shield,
+  Download,
+} from "lucide-react";
 import Link from "next/link";
 
 interface PricingSectionProps {
@@ -19,6 +36,7 @@ export function PricingSection() {
     queryKey: ["plans"],
     queryFn: () => getAllThePlans(),
   });
+
   const formatPrice = (priceCents: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -39,134 +57,362 @@ export function PricingSection() {
     }
   };
 
-  const getPlanGradient = (index: number) => {
-    const gradients = [
-      { bg: "from-slate-50 to-blue-50", button: "from-slate-600 to-blue-600" },
+  const getPlanConfig = (index: number) => {
+    const configs = [
       {
-        bg: "from-blue-50 to-indigo-50",
-        button: "from-blue-600 to-indigo-600",
+        gradient: "from-blue-50 to-indigo-50",
+        border: "border-blue-200/60",
+        button: "from-blue-600 via-blue-700 to-indigo-600",
+        buttonShadow: "shadow-[0_8px_32px_rgba(59,130,246,0.4)]",
+        buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(59,130,246,0.6)]",
+        icon: Rocket,
+        iconColor: "text-blue-600",
+        accent: "blue",
+        buttonText: "Start Building",
+        buttonIcon: Rocket,
+        tier: "Starter",
       },
       {
-        bg: "from-indigo-50 to-purple-50",
-        button: "from-indigo-600 to-purple-600",
+        gradient: "from-indigo-50 to-purple-50",
+        border: "border-indigo-200/60",
+        button: "from-indigo-600 via-purple-600 to-pink-600",
+        buttonShadow: "shadow-[0_8px_32px_rgba(129,140,248,0.4)]",
+        buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(129,140,248,0.6)]",
+        icon: Crown,
+        iconColor: "text-indigo-600",
+        accent: "indigo",
+        buttonText: "Claim Your Plan",
+        buttonIcon: Crown,
+        tier: "Professional",
+      },
+      {
+        gradient: "from-purple-50 to-pink-50",
+        border: "border-purple-200/60",
+        button: "from-purple-600 via-pink-600 to-rose-600",
+        buttonShadow: "shadow-[0_8px_32px_rgba(168,85,247,0.4)]",
+        buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(168,85,247,0.6)]",
+        icon: Diamond,
+        iconColor: "text-purple-600",
+        accent: "purple",
+        buttonText: "Go Premium",
+        buttonIcon: Diamond,
+        tier: "Enterprise",
       },
     ];
-    return gradients[index % gradients.length];
+    return configs[index % configs.length];
+  };
+
+  const getFeatureIcon = (feature: string) => {
+    if (
+      feature.toLowerCase().includes("user") ||
+      feature.toLowerCase().includes("guest")
+    )
+      return Users;
+    if (
+      feature.toLowerCase().includes("event") ||
+      feature.toLowerCase().includes("calendar")
+    )
+      return Calendar;
+    if (
+      feature.toLowerCase().includes("share") ||
+      feature.toLowerCase().includes("qr")
+    )
+      return Share2;
+    if (
+      feature.toLowerCase().includes("manage") ||
+      feature.toLowerCase().includes("dashboard")
+    )
+      return Settings;
+    if (
+      feature.toLowerCase().includes("secure") ||
+      feature.toLowerCase().includes("auth")
+    )
+      return Shield;
+    return Check;
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.25, 0.4, 0.25, 1],
+      },
+    },
+  };
+
+  const pulseVariants = {
+    animate: {
+      scale: [1, 1.05, 1],
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    },
   };
 
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-white to-blue-50/30">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Plans & Pricing
+    <LazyMotion features={domAnimation}>
+      <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-b from-white to-slate-50/50">
+        <div className="container mx-auto px-4 md:px-6 max-w-7xl">
+          {/* Enhanced Header with Icons */}
+          <m.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="text-center mb-16"
+          >
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Sparkles className="h-6 w-6 text-indigo-500" />
+              <span className="text-sm font-semibold text-indigo-600 tracking-wide uppercase">
+                Pricing Plans
+              </span>
+              <Sparkles className="h-6 w-6 text-indigo-500" />
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4">
+              Choose Your Perfect Plan
             </h2>
-            <p className="max-w-[900px] text-slate-600 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Choose the perfect plan for your event. Professional seating
-              management made simple and affordable.
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Professional seating management made simple. Start your event
+              planning journey today.
             </p>
-          </div>
-        </div>
-        <div className="mx-auto grid max-w-6xl items-start gap-6 py-12 lg:grid-cols-3">
-          {data?.data?.map((plan, index) => {
-            const gradient = getPlanGradient(index);
-            const isPopular = index === 1; // Middle plan is popular
+          </m.div>
 
-            return (
-              <Card
-                key={plan._id}
-                className={`group relative flex flex-col h-full bg-white/70 backdrop-blur-md border border-white/40 rounded-3xl hover:bg-white/90 hover:scale-[1.02] transition-all duration-500 ${
-                  isPopular ? "ring-2 ring-blue-200 scale-105" : ""
-                }`}
-              >
-                {isPopular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                <CardHeader
-                  className={`text-center bg-gradient-to-br ${gradient.bg} rounded-t-3xl relative overflow-hidden p-8`}
+          {/* Enhanced Pricing Cards */}
+          <m.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={containerVariants}
+            className="grid max-w-5xl mx-auto gap-6 lg:grid-cols-3"
+          >
+            {data?.data?.map((plan, index) => {
+              const config = getPlanConfig(index);
+              const isPopular = index === 1;
+              const IconComponent = config.icon;
+              const ButtonIcon = config.buttonIcon;
+
+              return (
+                <m.div
+                  key={plan._id}
+                  variants={cardVariants}
+                  whileHover={{
+                    y: -4,
+                    transition: { duration: 0.3, ease: "easeOut" },
+                  }}
+                  className="group relative h-full"
                 >
-                  <CardTitle className="text-2xl font-bold text-slate-800 relative z-10">
-                    {plan.title}
-                  </CardTitle>
-                  <div className="flex items-baseline justify-center gap-1 relative z-10 my-4">
-                    <span className="text-4xl font-bold text-slate-900">
-                      {formatPrice(plan.priceCents, plan.currency)}
-                    </span>
-                    <span className="text-slate-600">
-                      {formatBillingUnit(plan.billingUnit)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-slate-600 relative z-10">
-                    {plan.description}
-                  </p>
-                </CardHeader>
-                <CardContent className="flex-1 p-8 bg-white/80 backdrop-blur-sm rounded-b-3xl">
-                  <div className="space-y-6 mb-8">
-                    {/* Features */}
-                    <div>
-                      <h4 className="font-semibold text-slate-800 mb-3">
-                        Features
-                      </h4>
-                      <ul className="space-y-2">
-                        {plan.permissions.map((feature, featureIndex) => (
-                          <li
-                            key={featureIndex}
-                            className="flex items-start gap-3"
-                          >
-                            <Check className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                            <span className="text-slate-600 text-sm leading-relaxed">
-                              {getFeatureDescription(feature)}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                  <Card
+                    className={`relative h-full bg-gradient-to-br ${
+                      config.gradient
+                    } border ${
+                      config.border
+                    } rounded-2xl transition-all duration-300 hover:shadow-lg ${
+                      isPopular ? "ring-2 ring-indigo-300 scale-105" : ""
+                    }`}
+                  >
+                    {/* Enhanced Popular Badge */}
+                    {isPopular && (
+                      <m.div
+                        variants={pulseVariants}
+                        animate="animate"
+                        className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10"
+                      >
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg">
+                          <Crown className="h-4 w-4" />
+                          Most Popular
+                          <Sparkles className="h-3 w-3" />
+                        </div>
+                      </m.div>
+                    )}
 
-                    {/* Limits */}
-                    {plan.limits.length > 0 && (
+                    {/* Enhanced Header with Beautiful Icons */}
+                    <CardHeader className="text-center pb-4 pt-8 px-6 space-y-4">
+                      <div className="flex items-center justify-center mb-3">
+                        <m.div
+                          whileHover={{ rotate: 10, scale: 1.1 }}
+                          transition={{ duration: 0.3 }}
+                          className="relative w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center group-hover:shadow-xl transition-shadow duration-300"
+                        >
+                          <IconComponent
+                            className={`h-8 w-8 ${config.iconColor}`}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-transparent rounded-2xl"></div>
+                        </m.div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          {config.tier}
+                        </div>
+                        <CardTitle className="text-2xl font-bold text-slate-900">
+                          {plan.title}
+                        </CardTitle>
+                      </div>
+
+                      <div className="flex items-baseline justify-center gap-1 mb-2">
+                        <span className="text-4xl font-bold text-slate-900">
+                          {formatPrice(plan.priceCents, plan.currency)}
+                        </span>
+                        <span className="text-slate-500 text-sm font-medium">
+                          {formatBillingUnit(plan.billingUnit)}
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-slate-600 px-2">
+                        {plan.description}
+                      </p>
+                    </CardHeader>
+
+                    {/* Enhanced Content with Feature Icons */}
+                    <CardContent className="px-6 pb-6 space-y-6">
+                      {/* Enhanced Features with Icons */}
                       <div>
-                        <h4 className="font-semibold text-slate-800 mb-3">
-                          Limits
+                        <h4 className="flex items-center gap-2 font-semibold text-slate-800 text-sm mb-4 uppercase tracking-wide">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          What's Included
                         </h4>
-                        <ul className="space-y-2">
-                          {plan.limits.map((limit, limitIndex) => (
-                            <li
-                              key={limitIndex}
-                              className="flex items-start gap-3"
-                            >
-                              <Check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                              <span className="text-slate-600 text-sm leading-relaxed">
-                                {getLimitDescription(limit.key)}:{" "}
-                                {limit.limit.toLocaleString()}
-                              </span>
+                        <ul className="space-y-3">
+                          {plan.permissions
+                            .slice(0, 4)
+                            .map((feature, featureIndex) => {
+                              const FeatureIcon = getFeatureIcon(
+                                getFeatureDescription(feature)
+                              );
+                              return (
+                                <li
+                                  key={featureIndex}
+                                  className="flex items-start gap-3 text-sm group/item"
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-green-200 transition-colors duration-200">
+                                    <FeatureIcon className="h-4 w-4 text-green-600" />
+                                  </div>
+                                  <span className="text-slate-700 leading-relaxed group-hover/item:text-slate-900 transition-colors duration-200">
+                                    {getFeatureDescription(feature)}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          {plan.permissions.length > 4 && (
+                            <li className="flex items-center gap-2 text-sm text-slate-500 pl-11">
+                              <Sparkles className="h-4 w-4" />+
+                              {plan.permissions.length - 4} more premium
+                              features
                             </li>
-                          ))}
+                          )}
                         </ul>
                       </div>
-                    )}
-                  </div>
 
-                  <Link
-                    href={`/payment?plan=${plan._id}&price=${plan.priceCents}`}
-                  >
-                    <Button
-                      className={`w-full bg-gradient-to-r ${gradient.button} text-white hover:opacity-90 hover:scale-105 transition-all duration-300 rounded-2xl py-6 text-base font-medium`}
-                      size="lg"
-                    >
-                      Get Started
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            );
-          })}
+                      {/* Enhanced Limits */}
+                      {plan.limits.length > 0 && (
+                        <div>
+                          <h4 className="flex items-center gap-2 font-semibold text-slate-800 text-sm mb-3 uppercase tracking-wide">
+                            <div
+                              className={`w-2 h-2 bg-${config.accent}-500 rounded-full`}
+                            ></div>
+                            Usage Limits
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {plan.limits.map((limit, limitIndex) => (
+                              <div
+                                key={limitIndex}
+                                className="flex items-center gap-1 bg-white/80 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200/50"
+                              >
+                                <Star className="h-3 w-3 text-yellow-500" />
+                                {limit.limit.toLocaleString()}{" "}
+                                {getLimitDescription(limit.key)}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Super Attractive CTA Button */}
+                      <Link
+                        href={`/payment?plan=${plan._id}&price=${plan.priceCents}`}
+                      >
+                        <m.div
+                          whileHover={{
+                            scale: 1.03,
+                            y: -2,
+                            transition: { duration: 0.2 },
+                          }}
+                          whileTap={{
+                            scale: 0.98,
+                            transition: { duration: 0.1 },
+                          }}
+                          className="pt-4"
+                        >
+                          <Button
+                            className={`group relative w-full bg-gradient-to-r ${config.button} text-white font-bold text-lg py-6 px-6 rounded-2xl ${config.buttonShadow} ${config.buttonHoverShadow} hover:scale-105 transition-all duration-400 border-0 overflow-hidden`}
+                            size="lg"
+                          >
+                            {/* Animated Background Glow */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
+
+                            {/* Pulsing Background */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                            {/* Button Content */}
+                            <span className="relative z-10 flex items-center justify-center gap-3">
+                              <ButtonIcon className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+                              {config.buttonText}
+                              <m.div
+                                whileHover={{ x: 4 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <ArrowRight className="h-5 w-5" />
+                              </m.div>
+                            </span>
+
+                            {/* Corner Sparkles */}
+                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <Sparkles className="h-4 w-4 text-white/60" />
+                            </div>
+                            <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                              <Sparkles className="h-3 w-3 text-white/40" />
+                            </div>
+                          </Button>
+                        </m.div>
+                      </Link>
+
+                      {/* Trust Signal */}
+                      <div className="flex items-center justify-center gap-2 pt-2 text-xs text-slate-500">
+                        <Shield className="h-4 w-4" />
+                        <span>30-day money-back guarantee</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </m.div>
+              );
+            })}
+          </m.div>
+
+          {/* Enhanced Bottom Accent */}
+          <m.div
+            initial={{ opacity: 0, scaleX: 0 }}
+            whileInView={{ opacity: 1, scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mt-16 mx-auto w-32 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full shadow-lg"
+          />
         </div>
-      </div>
-    </section>
+      </section>
+    </LazyMotion>
   );
 }

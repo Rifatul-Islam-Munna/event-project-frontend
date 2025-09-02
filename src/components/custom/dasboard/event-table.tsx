@@ -173,6 +173,9 @@ export function EventTable({
               <TableHead className="text-foreground py-3">Event Name</TableHead>
               <TableHead className="text-foreground py-3">Date</TableHead>
               <TableHead className="text-foreground py-3">Location</TableHead>
+              <TableHead className="text-foreground py-3">
+                width/height (m)
+              </TableHead>
 
               <TableHead className="text-foreground text-center py-3">
                 Manage
@@ -221,6 +224,9 @@ export function EventTable({
                   </TableCell>
                   <TableCell className="text-muted-foreground py-3">
                     {event?.location}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground py-3">
+                    {event?.width} x {event?.height}
                   </TableCell>
 
                   <TableCell className="text-center py-3">

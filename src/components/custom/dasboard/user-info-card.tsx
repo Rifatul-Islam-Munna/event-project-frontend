@@ -34,15 +34,6 @@ export function UserInfoCard() {
         <CardTitle className="text-lg font-semibold text-gray-700">
           User Profile
         </CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleLogout}
-          className="border-border bg-gradient-to-br from-blue-400 to-blue-500 text-white shadow-xs rounded-full hover:text-white cursor-pointer"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
-        </Button>
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="flex items-center gap-3">

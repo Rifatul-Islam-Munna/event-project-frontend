@@ -2,6 +2,7 @@
 import { WeddingPlannerWrapper } from "@/component/table-charts/wedding-planner";
 import { SiteFooter } from "@/components/custom/common/site-footer";
 import { SiteHeader } from "@/components/custom/common/site-header";
+import { BenefitsSection } from "@/components/custom/home/BenefitsSection";
 import { CallToActionSection } from "@/components/custom/home/call-to-action-sections";
 import { FAQSection } from "@/components/custom/home/faq-section";
 import { FeaturesSection } from "@/components/custom/home/features-sections";
@@ -18,6 +19,7 @@ export default function Home() {
         <FeaturesSection />
         <HowItWorksSection />
         <CallToActionSection />
+        <BenefitsSection />
         <PricingSection />
         <TestimonialsSection />
         <FAQSection />

@@ -8,6 +8,7 @@ import { SubscriptionFilters, SubscriptionResponse, User } from "@/@types/admin"
 import { getToken, getUserInfo } from "./auth";
 import { PricingPlan } from "@/@types/pricing";
 import { cookies } from "next/headers";
+import { Header } from "@/@types/user-types";
 export const postEvent = async (from:FormData)=>{
      
         const [data,error]  = await PostRequestAxios(`/events`,from);
@@ -302,5 +303,59 @@ export const updatePlans = async ( id:string,payload:Record<string,unknown>)=>{
     const [data ,error] = await PatchRequestAxios(`/subscription/update-plans?id=${id}`,payload);
     
 
+    return {data,error}
+}
+
+
+export const getHeader = async ()=>{
+  const [data,error] = await GetRequestNormal<Header>(`/header/get-one`);
+  return {data,error}
+}
+
+export const postHeader = async (payload:FormData)=>{
+      const [data,error] = await PostRequestAxios(`/header`,payload);
+    console.log("vendor-data->",data,"vendor-error->",error);
+    return {data,error}
+}
+
+export const DeleteHeader = async (id:string) =>{
+    const [data,error] = await DeleteAxios(`/header/${id}`);
+    console.log("guest-data-update->",data,"guest-error-update->",error);
+    return {data,error}
+}
+interface User {
+  _id: string;
+  type: "user";
+  name: string;
+  email: string;
+  password: string;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  __v: number;
+  plan?: string; // optional because not all users have it
+  subscription?: string; // optional as well
+}
+
+interface PaginatedUsersResponse {
+  data: User[];
+  totalPages: number;
+  totalDocs: number;
+  currentPage: number;
+}
+
+export const getAllUser = async (page:number,limit:number)=>{
+  const [data,error] = await GetRequestNormal<PaginatedUsersResponse>(`/user/get-all-user?limit=${limit}&page=${page}`);
+  return {data,error}
+}
+
+export const postAdminSub = async (payload:Record<string,unknown>)=>{
+      const [data,error] = await PostRequestAxios(`/subscription/subscription-admin`,payload);
+    console.log("vendor-data->",data,"vendor-error->",error);
+    return {data,error}
+}
+
+export const deleteUSer = async (id:string) =>{
+    const [data,error] = await DeleteAxios(`/user/delete-user?id=${id}`);
+    console.log("guest-data-update->",data,"guest-error-update->",error);
     return {data,error}
 }

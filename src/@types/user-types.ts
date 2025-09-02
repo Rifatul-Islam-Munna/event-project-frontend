@@ -23,3 +23,11 @@ export type User = {
   plan?:PricingPlan
   subscription?:{endDate:string,startedDate:string}
 };
+
+
+export type Header ={
+  _id:string;
+  imageUrl:string;
+  title:string
+  createdAt:string
+}

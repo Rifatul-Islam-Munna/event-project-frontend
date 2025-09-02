@@ -34,7 +34,7 @@ import { Menu, FileText, Database } from "lucide-react";
 import * as htmlToImage from "html-to-image";
 import { jsPDF } from "jspdf";
 import type { Guest } from "@/@types/events-details";
-import { useParams, usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   deleteGuest,
@@ -47,6 +47,13 @@ import {
 } from "@/actions/fetch-action";
 import { useIdleTimer } from "react-idle-timer";
 import { useStore } from "@/zustan-fn/save-alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Define types for custom node data and guest data
 export type TableType =
@@ -68,6 +75,9 @@ export interface TableNodeData {
   width: number;
   height: number;
   numSeats: number;
+  measurementType: string; // Add this
+  widthTable: number; // Add this
+  heightTable: number;
   onGuestDrop: (event: React.DragEvent, nodeId: string, seatId: string) => void;
   onRemoveGuestFromSeat: (
     nodeId: string,
@@ -222,6 +232,9 @@ function WeddingPlanner() {
   const [newTableNumSeats, setNewTableNumSeats] = useState(8);
   const [newTableLabel, setNewTableLabel] = useState("");
   const [showSidebar, setShowSidebar] = useState(true);
+  const [mType, setMtype] = useState("");
+  const [tWidth, setTWidth] = useState(0);
+  const [tHeight, setTHeight] = useState(0);
   const { screenToFlowPosition, setViewport, getNodes, fitView, getViewport } =
     useReactFlow();
   console.log("changes", changedObjects);
@@ -341,6 +354,8 @@ function WeddingPlanner() {
       setNewTableNumSeats(8);
     }
     setNewTableLabel("");
+    setTHeight(0);
+    setTWidth(0);
     setIsAddTableDialogOpen(true);
   };
 
@@ -350,28 +365,51 @@ function WeddingPlanner() {
       event.preventDefault();
       const guestId = event.dataTransfer.getData("guestId");
       const guestName = event.dataTransfer.getData("guestName");
+      const fromTableId = event.dataTransfer.getData("fromTableId");
+      const fromSeatId = event.dataTransfer.getData("fromSeatId");
 
       if (!guestId || !guestName) {
         toast.error("Invalid guest data");
         return;
       }
 
-      // Update the node with the new seat assignment
+      if (fromTableId && fromSeatId && fromTableId !== nodeId) {
+        setNodes((nds) =>
+          nds.map((node) => {
+            if (node.id === fromTableId) {
+              const updatedSeats = node.data.seats.map((seat) => {
+                if (seat.id === fromSeatId && seat.occupiedBy === guestId) {
+                  return { ...seat, occupiedBy: null, occupiedByName: null };
+                }
+                return seat;
+              });
+
+              const updatedNode = {
+                ...node,
+                data: { ...node.data, seats: updatedSeats },
+              };
+
+              trackChange(fromTableId, "node", "updated", updatedNode);
+              return updatedNode;
+            }
+            return node;
+          })
+        );
+      }
+
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
-            // Check if seat is already occupied
             const targetSeat = node.data.seats.find(
               (seat) => seat.id === seatId
             );
-            if (targetSeat?.occupiedBy) {
+            if (targetSeat?.occupiedBy && targetSeat.occupiedBy !== guestId) {
               toast.error("This seat is already occupied");
               return node;
             }
 
-            // Check if guest is already assigned to another seat in this node
             const isGuestAlreadyAssigned = node.data.seats.some(
-              (seat) => seat.occupiedBy === guestId
+              (seat) => seat.occupiedBy === guestId && seat.id !== seatId
             );
             if (isGuestAlreadyAssigned) {
               toast.error("Guest is already assigned to another seat");
@@ -401,7 +439,6 @@ function WeddingPlanner() {
         })
       );
 
-      // Update guest status
       setGuests((prevGuests) =>
         prevGuests.map((guest) => {
           if (guest._id === guestId) {
@@ -413,7 +450,11 @@ function WeddingPlanner() {
         })
       );
 
-      toast.success(`${guestName} assigned to seat successfully!`);
+      if (fromTableId && fromTableId !== nodeId) {
+        toast.success(`${guestName} moved to new table successfully!`);
+      } else {
+        toast.success(`${guestName} assigned to seat successfully!`);
+      }
     },
     [setNodes, setGuests, trackChange]
   );
@@ -616,6 +657,9 @@ function WeddingPlanner() {
         width,
         height,
         numSeats: newTableNumSeats,
+        measurementType: mType,
+        widthTable: tWidth,
+        heightTable: tHeight,
       },
       style: { width: `${width}px`, height: `${height}px` },
     };
@@ -963,6 +1007,45 @@ function WeddingPlanner() {
               </div>
             )}
           </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="tableName" className="text-right">
+              Measurement Type
+            </Label>
+            <Select value={mType} onValueChange={setMtype}>
+              <SelectTrigger className="w-[190px]">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ft">ft</SelectItem>
+                <SelectItem value="m">meter</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="tableName" className="text-right">
+              Table width
+            </Label>
+            <Input
+              id="tableName"
+              value={tWidth > 0 ? tWidth : ""}
+              onChange={(e) => setTWidth(Number(e.target.value))}
+              className="col-span-3"
+              placeholder="e.g., Wedding Table, Fancy Table"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="tableName" className="text-right">
+              Table height
+            </Label>
+            <Input
+              id="tableName"
+              value={tHeight > 0 ? tHeight : ""}
+              onChange={(e) => setTHeight(Number(e.target.value))}
+              className="col-span-3"
+              placeholder="e.g., Wedding Table, Fancy Table"
+            />
+          </div>
+
           <DialogFooter>
             <Button onClick={handleConfirmAddTable}>Add Table</Button>
           </DialogFooter>
