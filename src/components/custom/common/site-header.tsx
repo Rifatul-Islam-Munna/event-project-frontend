@@ -76,7 +76,9 @@ export function SiteHeader() {
             />
           )}
 
-          <span className="font-bold text-lg">{data?.data?.title}</span>
+          <span className="font-bold text-sm sm:text-lg">
+            {data?.data?.title}
+          </span>
         </Link>
 
         {user ? (
@@ -180,7 +182,7 @@ export function SiteHeader() {
           <nav className="md:flex items-center space-x-4">
             <Link
               href="#how-it-works"
-              className="text-sm font-medium hover:underline underline-offset-4"
+              className="text-sm hidden sm:block font-medium hover:underline underline-offset-4"
             >
               How it Works
             </Link>
@@ -188,7 +190,7 @@ export function SiteHeader() {
               <RainbowButton
                 onClick={() => router.push("/#pricing")}
                 variant={"outline"}
-                className=" p-2 "
+                className=" p-1 sm:p-2 "
               >
                 Upgrade to Pro
               </RainbowButton>
