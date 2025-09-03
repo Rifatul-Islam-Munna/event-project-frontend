@@ -38,7 +38,7 @@ export function HeroSection() {
 
       <div className=" w-full relative z-10 lg:px-10">
         {/* Trust Bar */}
-        <div className="flex flex-wrap justify-center items-center gap-6 mb-12 p-6 rounded-2xl bg-white/60 backdrop-blur-sm border border-slate-200/50 w-full">
+        <div className="flex flex-wrap   justify-items-center  sm:justify-center items-center gap-6 mb-12 p-6 rounded-2xl bg-white/60 backdrop-blur-sm border border-slate-200/50 w-full">
           {trustIndicators.map((indicator, index) => {
             const IconComponent = indicator.icon;
             return (
