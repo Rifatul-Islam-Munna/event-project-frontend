@@ -11,7 +11,7 @@ import {
   Clock,
   Heart,
 } from "lucide-react";
-import banner from "./banner.jpg";
+import banner from "./banner.png";
 
 export function HeroSection() {
   const trustIndicators = [
