@@ -92,21 +92,21 @@ export function HowItWorksSection() {
     <LazyMotion features={domAnimation}>
       <section
         id="how-it-works"
-        className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-white via-slate-50/50 to-blue-50/30"
+        className="w-full py-12 sm:py-16 md:py-20 lg:py-24 xl:py-32 bg-gradient-to-br from-white via-slate-50/50 to-blue-50/30"
       >
-        <div className="container mx-auto px-4 md:px-6 max-w-7xl">
+        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-6 max-w-7xl">
           {/* Header Section */}
           <m.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="text-center mb-20"
+            className="text-center mb-12 sm:mb-16 md:mb-20"
           >
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3 sm:mb-4 px-4">
               How It Works
             </h2>
-            <p className="max-w-3xl mx-auto text-lg text-slate-600 leading-relaxed">
+            <p className="max-w-2xl sm:max-w-3xl lg:max-w-4xl mx-auto text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed px-4">
               Our intuitive platform makes managing your event seating and
               vendor communications simple.
             </p>
@@ -118,16 +118,19 @@ export function HowItWorksSection() {
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
             variants={containerVariants}
-            className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-6"
+            className="max-w-6xl mx-auto flex flex-col sm:flex-col lg:flex-row items-center justify-center gap-6 sm:gap-8 lg:gap-4 xl:gap-6"
           >
             {steps.map((step, index) => {
               const IconComponent = step.icon;
               return (
-                <div key={step.number} className="flex items-center">
+                <div
+                  key={step.number}
+                  className="flex flex-col lg:flex-row items-center w-full lg:w-auto"
+                >
                   {/* Step Card */}
                   <m.div
                     variants={stepVariants}
-                    className="group relative flex flex-col items-center text-center flex-1 min-w-0 space-y-6 p-6 rounded-2xl hover:bg-white/60 transition-all duration-300"
+                    className="group relative flex flex-col items-center text-center flex-1 min-w-0 space-y-4 sm:space-y-6 p-4 sm:p-6 rounded-2xl hover:bg-white/60 transition-all duration-300 w-full max-w-sm lg:max-w-xs"
                   >
                     {/* Icon Container */}
                     <div className="relative">
@@ -135,7 +138,7 @@ export function HowItWorksSection() {
                       <m.div
                         whileHover={{ scale: 1.05, rotate: 5 }}
                         transition={{ duration: 0.2 }}
-                        className={`w-28 h-28 rounded-3xl bg-gradient-to-br ${step.gradient} flex items-center justify-center relative overflow-hidden group-hover:shadow-lg transition-all duration-300`}
+                        className={`w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl sm:rounded-3xl bg-gradient-to-br ${step.gradient} flex items-center justify-center relative overflow-hidden group-hover:shadow-lg transition-all duration-300`}
                       >
                         {/* Background Pattern */}
                         <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
@@ -146,17 +149,17 @@ export function HowItWorksSection() {
                           whileHover={{ scale: 1.1 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <IconComponent className="h-12 w-12 text-white relative z-10" />
+                          <IconComponent className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-white relative z-10" />
                         </m.div>
                       </m.div>
 
                       {/* Step Number Badge */}
                       <m.div
                         variants={iconVariants}
-                        className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center border-2 border-white group-hover:scale-110 transition-transform duration-200"
+                        className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full flex items-center justify-center border-2 border-white group-hover:scale-110 transition-transform duration-200"
                       >
                         <span
-                          className={`text-sm font-bold text-${step.accentColor}-600`}
+                          className={`text-xs sm:text-sm font-bold text-${step.accentColor}-600`}
                         >
                           {step.number}
                         </span>
@@ -164,16 +167,16 @@ export function HowItWorksSection() {
 
                       {/* Status Indicator */}
                       <div
-                        className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full ${step.iconBg} flex items-center justify-center border-2 border-white`}
+                        className={`absolute -bottom-1 sm:-bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 sm:w-6 sm:h-6 rounded-full ${step.iconBg} flex items-center justify-center border-2 border-white`}
                       >
                         <div
-                          className={`w-3 h-3 rounded-full ${step.dotColor}`}
+                          className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${step.dotColor}`}
                         ></div>
                       </div>
 
                       {/* Progress Line for Mobile */}
                       {index < steps.length - 1 && (
-                        <div className="lg:hidden absolute top-full left-1/2 -translate-x-1/2 mt-4 w-0.5 h-12 bg-gradient-to-b from-slate-300 to-transparent"></div>
+                        <div className="lg:hidden absolute top-full left-1/2 -translate-x-1/2 mt-3 sm:mt-4 w-0.5 h-8 sm:h-12 bg-gradient-to-b from-slate-300 to-transparent"></div>
                       )}
                     </div>
 
@@ -183,14 +186,14 @@ export function HowItWorksSection() {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: 0.4 }}
-                      className="space-y-3 max-w-xs"
+                      className="space-y-2 sm:space-y-3 max-w-xs sm:max-w-sm lg:max-w-xs px-2 sm:px-0"
                     >
                       <h3
-                        className={`text-xl font-bold text-slate-900 group-hover:text-${step.accentColor}-700 transition-colors duration-200`}
+                        className={`text-lg sm:text-xl md:text-xl font-bold text-slate-900 group-hover:text-${step.accentColor}-700 transition-colors duration-200`}
                       >
                         {step.title}
                       </h3>
-                      <p className="text-slate-600 leading-relaxed text-sm">
+                      <p className="text-slate-600 leading-relaxed text-xs sm:text-sm md:text-sm">
                         {step.description}
                       </p>
                     </m.div>
@@ -200,24 +203,24 @@ export function HowItWorksSection() {
                   {index < steps.length - 1 && (
                     <m.div
                       variants={arrowVariants}
-                      className="flex items-center justify-center mx-2"
+                      className="flex items-center justify-center mx-2 my-2 sm:my-4 lg:my-0"
                     >
                       {/* Desktop Arrow */}
                       <m.div
                         whileHover={{ scale: 1.1, x: 3 }}
                         transition={{ duration: 0.2 }}
-                        className="hidden lg:flex w-14 h-14 rounded-full bg-gradient-to-r from-slate-100 via-white to-blue-50 items-center justify-center border border-slate-200/60 hover:border-blue-200 transition-all duration-200"
+                        className="hidden lg:flex w-10 h-10 xl:w-14 xl:h-14 rounded-full bg-gradient-to-r from-slate-100 via-white to-blue-50 items-center justify-center border border-slate-200/60 hover:border-blue-200 transition-all duration-200"
                       >
-                        <ArrowRight className="h-6 w-6 text-blue-500" />
+                        <ArrowRight className="h-5 w-5 xl:h-6 xl:w-6 text-blue-500" />
                       </m.div>
 
                       {/* Mobile Arrow */}
                       <m.div
                         whileHover={{ scale: 1.1, y: 3 }}
                         transition={{ duration: 0.2 }}
-                        className="flex lg:hidden w-12 h-12 rounded-full bg-gradient-to-b from-slate-100 via-white to-blue-50 items-center justify-center border border-slate-200/60 hover:border-blue-200 transition-all duration-200"
+                        className="flex lg:hidden w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-b from-slate-100 via-white to-blue-50 items-center justify-center border border-slate-200/60 hover:border-blue-200 transition-all duration-200"
                       >
-                        <ArrowRight className="h-5 w-5 text-blue-500 rotate-90" />
+                        <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 rotate-90" />
                       </m.div>
                     </m.div>
                   )}
@@ -232,7 +235,7 @@ export function HowItWorksSection() {
             whileInView={{ opacity: 1, scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 1 }}
-            className="mt-16 mx-auto w-32 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full"
+            className="mt-12 sm:mt-16 mx-auto w-24 sm:w-32 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full"
           />
         </div>
       </section>
