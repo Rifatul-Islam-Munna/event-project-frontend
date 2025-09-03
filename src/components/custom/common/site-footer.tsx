@@ -1,3 +1,4 @@
+"use client";
 import { getHeader } from "@/actions/fetch-action";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
