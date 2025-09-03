@@ -34,6 +34,9 @@ import avatr from "./avatar.png";
 import { useQuery } from "@tanstack/react-query";
 import { getHeader } from "@/actions/fetch-action";
 import Image from "next/image";
+import { ShimmerButton } from "@/components/magicui/shimmer-button";
+import { isAfter } from "date-fns";
+import { RainbowButton } from "@/components/magicui/rainbow-button";
 
 export function SiteHeader() {
   const pathName = usePathname();
@@ -56,7 +59,9 @@ export function SiteHeader() {
     };
     getElement();
   }, [pathName, handleLogout]);
-
+  const isSubscriptionActive = user?.subscription?.endDate
+    ? isAfter(new Date(user.subscription.endDate), new Date())
+    : false;
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
@@ -179,6 +184,15 @@ export function SiteHeader() {
             >
               How it Works
             </Link>
+            {!isSubscriptionActive && (
+              <RainbowButton
+                onClick={() => router.push("/#pricing")}
+                variant={"outline"}
+                className=" p-2 "
+              >
+                Upgrade to Pro
+              </RainbowButton>
+            )}
             <Button
               variant="outline"
               size="sm"
