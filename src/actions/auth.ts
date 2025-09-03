@@ -25,7 +25,7 @@ export const loginUser = async (email:string,password:string)=>{
       coookies.set("user_info",JSON.stringify(data?.data),{maxAge:60*60*24,path:'/',httpOnly:true})
       if(data?.sub_token){
 
-          coookies.set("sub_token",data?.sub_token,{maxAge:60*60*1,path:'/',httpOnly:true})
+          coookies.set("sub_token",data?.sub_token,{maxAge:60*60*24,path:'/',httpOnly:true})
       }
 
    

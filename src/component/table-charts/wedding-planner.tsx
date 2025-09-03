@@ -31,7 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
-import { Menu, FileText, Database } from "lucide-react";
+import { Menu, FileText, Database, Loader2 } from "lucide-react";
 import * as htmlToImage from "html-to-image";
 import { toSvg } from "html-to-image";
 import { jsPDF } from "jspdf";
@@ -535,6 +535,7 @@ function WeddingPlanner() {
   };
 
   // Create stable callback functions using useCallback
+  // Create stable callback functions using useCallback
   const handleGuestDrop = useCallback(
     (event: React.DragEvent, nodeId: string, seatId: string) => {
       event.preventDefault();
@@ -583,8 +584,12 @@ function WeddingPlanner() {
               return node;
             }
 
+            // FIXED: Exclude the fromSeatId from the check
             const isGuestAlreadyAssigned = node.data.seats.some(
-              (seat) => seat.occupiedBy === guestId && seat.id !== seatId
+              (seat) =>
+                seat.occupiedBy === guestId &&
+                seat.id !== seatId &&
+                seat.id !== fromSeatId // This is the key fix!
             );
             if (isGuestAlreadyAssigned) {
               toast.error("Guest is already assigned to another seat");
@@ -592,6 +597,11 @@ function WeddingPlanner() {
             }
 
             const updatedSeats = node.data.seats.map((seat) => {
+              // Clear the source seat if moving within same table
+              if (seat.id === fromSeatId && fromTableId === nodeId) {
+                return { ...seat, occupiedBy: null, occupiedByName: null };
+              }
+              // Assign to target seat
               if (seat.id === seatId) {
                 return {
                   ...seat,
@@ -627,6 +637,8 @@ function WeddingPlanner() {
 
       if (fromTableId && fromTableId !== nodeId) {
         toast.success(`${guestName} moved to new table successfully!`);
+      } else if (fromTableId && fromSeatId) {
+        toast.success(`${guestName} moved to different seat successfully!`);
       } else {
         toast.success(`${guestName} assigned to seat successfully!`);
       }
@@ -1046,8 +1058,10 @@ function WeddingPlanner() {
     queryFn: () => getHeader(),
     gcTime: 1000 * 60 * 60,
   });
+  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
 
   const handleDownloadPdf = useCallback(() => {
+    setIsPdfDownloading(true);
     const eventName = ComInfo?.data?.title || "Wedding Planner";
     const eventLogo = ComInfo?.data?.imageUrl || "";
 
@@ -1191,13 +1205,16 @@ function WeddingPlanner() {
             .toLowerCase()}-high-quality-layout.pdf`
         );
         toast.success("High-quality layout downloaded!");
+        setIsPdfDownloading(false);
       } catch (error) {
         console.error("PDF generation error:", error);
         toast.error("Failed to download PDF.");
+        setIsPdfDownloading(false);
       } finally {
         setViewport(initialViewport);
         if (reactFlowControls) reactFlowControls.style.display = "";
         if (reactFlowMiniMap) reactFlowMiniMap.style.display = "";
+        setIsPdfDownloading(false);
       }
     }, 300);
   }, [fitView, getViewport, setViewport]);
@@ -1278,8 +1295,17 @@ function WeddingPlanner() {
             Save Changes (
             {changedObjects.guest.length + changedObjects.node.length})
           </Button>
-          <Button onClick={handleDownloadPdf} variant="outline">
-            <FileText className="w-4 h-4 mr-2" /> Download PDF
+          <Button
+            onClick={handleDownloadPdf}
+            disabled={isPdfDownloading}
+            variant="outline"
+          >
+            {isPdfDownloading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4 mr-2" />
+            )}{" "}
+            Download PDF
           </Button>
         </div>
 

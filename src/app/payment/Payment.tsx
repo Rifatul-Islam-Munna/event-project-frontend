@@ -238,6 +238,7 @@ export default function BillingPage() {
   }
 
   const clientSecret = data?.data?.key;
+  const customerSessionSecret = data?.data?.customerSessionSecret;
   if (!clientSecret) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
@@ -270,7 +271,13 @@ export default function BillingPage() {
           </p>
         </div>
 
-        <Elements stripe={stripePromise!} options={{ clientSecret }}>
+        <Elements
+          stripe={stripePromise!}
+          options={{
+            clientSecret,
+            customerSessionClientSecret: customerSessionSecret,
+          }}
+        >
           <Checkout
             clientSecret={clientSecret}
             plan={plan}

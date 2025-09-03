@@ -67,6 +67,7 @@
     "sanitize-html": "^2.17.0",
     "sonner": "^2.0.7",
     "strip-js": "^1.2.0",
+    "stripe": "^18.5.0",
     "svg2pdf": "^1.1.1",
     "svg2pdf.js": "^2.5.0",
     "tailwind-merge": "^3.3.1",

@@ -9,6 +9,7 @@ import { getToken, getUserInfo } from "./auth";
 import { PricingPlan } from "@/@types/pricing";
 import { cookies } from "next/headers";
 import { Header } from "@/@types/user-types";
+import Stripe from 'stripe';
 export const postEvent = async (from:FormData)=>{
      
         const [data,error]  = await PostRequestAxios(`/events`,from);
@@ -358,4 +359,35 @@ export const deleteUSer = async (id:string) =>{
     const [data,error] = await DeleteAxios(`/user/delete-user?id=${id}`);
     console.log("guest-data-update->",data,"guest-error-update->",error);
     return {data,error}
+}
+
+
+ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+export async function prepareBilling() {
+  const user = await getUserInfo();             // { _id, email, name }
+  const mongoId = user._id;
+
+  // Find or create Stripe Customer linked to mongoId
+  const search = await stripe.customers.search({
+    query: `metadata['app_user_id']:'${mongoId}'`,
+    limit: 1,
+  });
+  const customer =
+    search.data[0] ??
+    (await stripe.customers.create({
+      email: user.email,
+      name:  user.name,
+      metadata: { app_user_id: mongoId },
+    }));
+
+  const si = await stripe.setupIntents.create({
+    customer: customer.id,
+    usage:   'off_session',
+    payment_method_types: ['card'],
+  });
+
+  return {                              
+    clientSecret: si.client_secret!,  
+  };
 }

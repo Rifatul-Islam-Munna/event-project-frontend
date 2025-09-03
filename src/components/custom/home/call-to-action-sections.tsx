@@ -203,7 +203,7 @@ export function CallToActionSection() {
                   asChild
                   className="group bg-white text-slate-900 hover:bg-yellow-50 border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-2xl px-8 py-6 font-semibold text-lg h-auto min-w-[200px]"
                 >
-                  <Link href="/get-started" className="flex items-center gap-3">
+                  <Link href="/dashboard" className="flex items-center gap-3">
                     Get Started Now
                     <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
                   </Link>

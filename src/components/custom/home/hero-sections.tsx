@@ -110,7 +110,7 @@ export function HeroSection() {
 
             {/* CTA Section */}
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start">
-              <Link href="/get-started">
+              <Link href="/dashboard">
                 <Button
                   size="lg"
                   className="group relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold text-lg px-8 py-6 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 overflow-hidden min-w-[200px]"
@@ -126,7 +126,7 @@ export function HeroSection() {
 
               <div className="flex items-center gap-2 text-sm text-slate-600">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Free 14-day trial • No credit card required</span>
+                <span>Free trial • No credit card required</span>
               </div>
             </div>
 
