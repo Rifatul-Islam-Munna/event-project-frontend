@@ -12,6 +12,8 @@ import {
   MessageCircle,
   Settings,
   Clock,
+  Shield,
+  Star,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -110,6 +112,11 @@ export function FeaturesSection() {
       title: "Automated Scheduling",
       description: "Cron job for delivery",
     },
+  ];
+  const trustIndicators = [
+    { icon: Users, text: "1000+ Events", subtext: "Successfully Managed" },
+    { icon: Star, text: "4.9/5 Rating", subtext: "Customer Satisfaction" },
+    { icon: Shield, text: "100% Secure", subtext: "Data Protection" },
   ];
 
   return (
@@ -264,6 +271,44 @@ export function FeaturesSection() {
             </div>
           </motion.div>
         </motion.div>
+      </div>
+      <div className="flex flex-wrap mt-6   justify-items-center  sm:justify-center items-center gap-6 mb-12 p-6 rounded-2xl backdrop-blur-sm  w-full">
+        {trustIndicators.map((indicator, index) => {
+          const IconComponent = indicator.icon;
+          return (
+            <div key={index} className="flex items-center gap-3">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center"
+              >
+                <IconComponent className="h-6 w-6 text-white" />
+              </motion.div>
+              <div>
+                <motion.div
+                  initial={{ opacity: 0, filter: "blur(4px)" }}
+                  whileInView={{ opacity: 1, filter: "blur(0px)" }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="font-bold text-slate-900 text-sm"
+                >
+                  {indicator.text}
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, filter: "blur(4px)" }}
+                  whileInView={{ opacity: 1, filter: "blur(0px)" }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="text-xs text-slate-600"
+                >
+                  {indicator.subtext}
+                </motion.div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

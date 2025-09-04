@@ -14,12 +14,6 @@ import {
 import banner from "./banner.png";
 
 export function HeroSection() {
-  const trustIndicators = [
-    { icon: Users, text: "1000+ Events", subtext: "Successfully Managed" },
-    { icon: Star, text: "4.9/5 Rating", subtext: "Customer Satisfaction" },
-    { icon: Shield, text: "100% Secure", subtext: "Data Protection" },
-  ];
-
   const benefits = [
     "✨ Setup in under 5 minutes",
     "🎯 No technical skills required",
@@ -38,26 +32,6 @@ export function HeroSection() {
 
       <div className=" w-full relative z-10 lg:px-10">
         {/* Trust Bar */}
-        <div className="flex flex-wrap   justify-items-center  sm:justify-center items-center gap-6 mb-12 p-6 rounded-2xl bg-white/60 backdrop-blur-sm border border-slate-200/50 w-full">
-          {trustIndicators.map((indicator, index) => {
-            const IconComponent = indicator.icon;
-            return (
-              <div key={index} className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
-                  <IconComponent className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <div className="font-bold text-slate-900 text-sm">
-                    {indicator.text}
-                  </div>
-                  <div className="text-xs text-slate-600">
-                    {indicator.subtext}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
 
         {/* Main Hero Content */}
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center w-full">
