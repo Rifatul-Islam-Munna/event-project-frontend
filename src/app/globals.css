@@ -172,3 +172,66 @@
 body {
   scroll-behavior: smooth;
 }
+/* === Google Translate widget cleanup === */
+/* Hide the top page banner Google injects */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+body {
+  top: 0 !important;
+}
+
+/* Scope to your mount to avoid collateral effects */
+#google_translate_element .goog-te-gadget {
+  font-size: 0; /* hide gadget text */
+  line-height: 0;
+}
+
+/* Keep only the <select> visible and readable */
+#google_translate_element .goog-te-gadget .goog-te-combo {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+/* Hide “Powered by Google”, logo, and extra spans */
+#google_translate_element .goog-logo-link,
+#google_translate_element .goog-te-gadget > span,
+#google_translate_element .goog-te-gadget .goog-te-gadget-simple,
+#google_translate_element img {
+  display: none !important;
+}
+
+/* Sometimes Google injects extra containers; hide them too */
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-ZVi9od-l4eHX-hSRGPd {
+  display: none !important;
+}
+
+/* Target only the Google translate dropdown */
+#google_translate_element .goog-te-combo {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: white;
+  color: #333;
+  font-size: 8px;
+  font-family: inherit;
+  cursor: pointer;
+  max-width: 200px;
+
+  /* Optional shadows */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Change on hover */
+#google_translate_element .goog-te-combo:hover {
+  border-color: #666;
+}
+
+/* When focused */
+#google_translate_element .goog-te-combo:focus {
+  outline: none;
+  border-color: #4f46e5; /* Tailwind indigo-600 */
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}

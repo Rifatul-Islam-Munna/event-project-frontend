@@ -50,15 +50,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <Script src="/assets/lang-config.js" strategy="beforeInteractive" />
-        <Script src="/assets/translation.js" strategy="beforeInteractive" />
-        <Script
-          src="//translate.google.com/translate_a/element.js?cb=TranslateInit"
-          strategy="afterInteractive"
-        />
-      </head>
-
       <QueryProvider>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
