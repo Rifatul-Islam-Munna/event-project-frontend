@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import Link from "next/link";
 import {
   Card,
@@ -18,7 +17,14 @@ import { useMutation } from "@tanstack/react-query";
 import { loginUser } from "@/actions/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Mail,
+  Lock,
+  ArrowRight,
+  Sparkles,
+  Shield,
+} from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,70 +59,227 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-muted py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md border border-gray-200 shadow-none bg-background">
-        {" "}
-        {/* Explicitly set border and background */}
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold text-foreground">
-            Login
+    <div className="relative flex min-h-[calc(100vh-64px)] items-center justify-center overflow-hidden">
+      {/* Rich Animated Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100">
+        <div className="absolute inset-0 bg-gradient-to-tl from-blue-100/70 via-cyan-50/50 to-emerald-100/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-rose-50/40 via-transparent to-violet-100/40"></div>
+      </div>
+
+      {/* Dynamic Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Large flowing shapes */}
+        <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-gradient-to-br from-blue-200/40 to-cyan-300/30 blur-3xl animate-slow-bounce"></div>
+        <div className="absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-gradient-to-br from-purple-200/40 to-pink-300/30 blur-3xl animate-slow-bounce delay-1000"></div>
+        <div className="absolute top-1/2 left-1/4 h-64 w-64 rounded-full bg-gradient-to-br from-emerald-200/30 to-teal-300/20 blur-3xl animate-slow-bounce delay-500"></div>
+        <div className="absolute top-1/4 right-1/3 h-72 w-72 rounded-full bg-gradient-to-br from-indigo-200/35 to-blue-300/25 blur-3xl animate-slow-bounce delay-1500"></div>
+
+        {/* Medium floating elements */}
+        <div className="absolute top-1/3 left-3/4 h-32 w-32 rounded-full bg-gradient-to-r from-violet-300/20 to-purple-400/15 blur-2xl animate-float-slow"></div>
+        <div className="absolute bottom-1/3 left-1/4 h-28 w-28 rounded-full bg-gradient-to-r from-rose-300/20 to-pink-400/15 blur-2xl animate-float-slow delay-700"></div>
+      </div>
+
+      {/* Subtle floating particles */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute animate-drift rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${Math.random() * 8 + 4}px`,
+              height: `${Math.random() * 8 + 4}px`,
+              background: `linear-gradient(45deg, 
+                ${
+                  [
+                    "rgba(99, 102, 241, 0.3)",
+                    "rgba(139, 92, 246, 0.3)",
+                    "rgba(236, 72, 153, 0.3)",
+                    "rgba(59, 130, 246, 0.3)",
+                    "rgba(34, 197, 94, 0.3)",
+                  ][Math.floor(Math.random() * 5)]
+                }, 
+                rgba(255, 255, 255, 0.2))`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${Math.random() * 4 + 6}s`,
+            }}
+          ></div>
+        ))}
+      </div>
+
+      {/* Login Card */}
+      <Card className="relative z-10 w-full max-w-md bg-white/85 backdrop-blur-2xl border border-white/30 shadow-xl shadow-indigo-500/10 rounded-3xl overflow-hidden">
+        {/* Card gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-indigo-500/5 pointer-events-none"></div>
+
+        <CardHeader className="relative text-center pb-6 pt-10">
+          {/* Decorative icon */}
+          <div className="flex justify-center mb-4">
+            <div className="relative">
+              <Shield className="h-12 w-12 text-indigo-600" />
+              <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-purple-500 animate-pulse" />
+            </div>
+          </div>
+
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+            Welcome Back
           </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Enter your email and password to access your account.
+
+          {/* Decorative underline */}
+          <div className="flex justify-center mb-4">
+            <div className="h-1 w-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
+          </div>
+
+          <CardDescription className="text-gray-600 text-sm leading-relaxed">
+            Sign in to your account and continue your journey
           </CardDescription>
         </CardHeader>
-        <CardContent>
+
+        <CardContent className="relative px-8 pb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {" "}
-            {/* Increased space-y for better visual separation */}
-            <div className="grid gap-2">
-              <Label htmlFor="email" className="text-foreground">
-                Email
+            {/* Email Field */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="email"
+                className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+              >
+                <Mail className="h-4 w-4 text-indigo-500" />
+                Email Address
               </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                className="border-border focus:ring-primary focus:border-primary"
-              />{" "}
-              {/* Added focus styles */}
+              <div className="relative group">
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email address"
+                  required
+                  className="h-12 pl-4 pr-12 border-2 border-gray-200/50 rounded-2xl bg-white/60 backdrop-blur-sm focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-400/20 transition-all duration-300 text-gray-700 placeholder:text-gray-400 group-hover:border-indigo-300"
+                />
+                <Mail className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 group-focus-within:text-indigo-500 transition-colors duration-200" />
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password" className="text-foreground">
+
+            {/* Password Field */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="password"
+                className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+              >
+                <Lock className="h-4 w-4 text-indigo-500" />
                 Password
               </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="border-border focus:ring-primary focus:border-primary"
-              />{" "}
-              {/* Added focus styles */}
+              <div className="relative group">
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  required
+                  className="h-12 pl-4 pr-12 border-2 border-gray-200/50 rounded-2xl bg-white/60 backdrop-blur-sm focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-400/20 transition-all duration-300 text-gray-700 placeholder:text-gray-400 group-hover:border-indigo-300"
+                />
+                <Lock className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 group-focus-within:text-indigo-500 transition-colors duration-200" />
+              </div>
             </div>
+
+            {/* Eye-catching Login Button */}
             <Button
               type="submit"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              className="w-full h-14 mt-8 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white font-semibold rounded-2xl shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transform transition-all duration-300 hover:scale-[1.02] focus:ring-4 focus:ring-indigo-500/30 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none group relative overflow-hidden"
               disabled={isPending}
             >
-              {isPending && <Loader2 className=" w-4 h-4 animate-spin" />} Login
+              {/* Button gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+
+              <div className="relative flex items-center justify-center gap-2">
+                {isPending ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Signing you in...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In to Continue</span>
+                    <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
+                  </>
+                )}
+              </div>
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            {" "}
-            {/* Increased mt and set text color */}
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/register"
-              className="underline text-primary hover:text-primary/90"
-            >
-              Sign up
-            </Link>
+
+          {/* Sign up link with decorative elements */}
+          <div className="mt-8 text-center">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="h-px w-16 bg-gradient-to-r from-transparent to-gray-300"></div>
+              <span className="text-xs text-gray-500 font-medium">OR</span>
+              <div className="h-px w-16 bg-gradient-to-l from-transparent to-gray-300"></div>
+            </div>
+
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Link
+                href="/register"
+                className="font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 relative group"
+              >
+                Create Account
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+            </p>
           </div>
         </CardContent>
       </Card>
+
+      <style jsx>{`
+        @keyframes slow-bounce {
+          0%,
+          100% {
+            transform: translateY(0px) translateX(0px) scale(1);
+          }
+          50% {
+            transform: translateY(-20px) translateX(10px) scale(1.05);
+          }
+        }
+        @keyframes float-slow {
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          33% {
+            transform: translateY(-15px) rotate(120deg);
+          }
+          66% {
+            transform: translateY(15px) rotate(240deg);
+          }
+        }
+        @keyframes drift {
+          0%,
+          100% {
+            transform: translateY(0px) translateX(0px) rotate(0deg);
+            opacity: 0.4;
+          }
+          25% {
+            transform: translateY(-20px) translateX(20px) rotate(90deg);
+            opacity: 0.8;
+          }
+          50% {
+            transform: translateY(-10px) translateX(-15px) rotate(180deg);
+            opacity: 0.6;
+          }
+          75% {
+            transform: translateY(15px) translateX(10px) rotate(270deg);
+            opacity: 0.7;
+          }
+        }
+        .animate-slow-bounce {
+          animation: slow-bounce 8s ease-in-out infinite;
+        }
+        .animate-float-slow {
+          animation: float-slow 6s ease-in-out infinite;
+        }
+        .animate-drift {
+          animation: drift 12s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }

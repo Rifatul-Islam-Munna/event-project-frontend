@@ -1,4 +1,5 @@
 "use client";
+import { getHeader } from "@/actions/fetch-action";
 import { WeddingPlannerWrapper } from "@/component/table-charts/wedding-planner";
 import { SiteFooter } from "@/components/custom/common/site-footer";
 import { SiteHeader } from "@/components/custom/common/site-header";
@@ -10,6 +11,7 @@ import { HeroSection } from "@/components/custom/home/hero-sections";
 import { HowItWorksSection } from "@/components/custom/home/how-it-work-sections";
 import { PricingSection } from "@/components/custom/home/Price-section";
 import { TestimonialsSection } from "@/components/custom/home/testimonials-section";
+import { Metadata } from "next";
 
 export default function Home() {
   return (
