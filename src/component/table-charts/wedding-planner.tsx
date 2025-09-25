@@ -57,6 +57,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ZoomResponsiveBoundary from "./ZoomResponsiveBoundary";
 
 // Define types for custom node data and guest data
 export type TableType =
@@ -217,87 +218,86 @@ const calculateTableDimensions = (
   }
 };
 
-// IMPROVED: Zoom-responsive venue boundary component with better scaling
-const ZoomResponsiveBoundary = ({ venueWidth, venueHeight, SCALE_FACTOR }) => {
-  const { x, y, zoom } = useViewport();
+// const ZoomResponsiveBoundary = ({ venueWidth, venueHeight, SCALE_FACTOR }) => {
+//   const { x, y, zoom } = useViewport();
 
-  // FIXED: Better scaling that shows more realistic venue size
-  const scaledWidth = venueWidth * SCALE_FACTOR * zoom * 7; // Your multiplier
-  const scaledHeight = venueHeight * SCALE_FACTOR * zoom * 7; // Your multiplier
+//   // FIXED: Better scaling that shows more realistic venue size
+//   const scaledWidth = venueWidth * SCALE_FACTOR * zoom * 7; // Your multiplier
+//   const scaledHeight = venueHeight * SCALE_FACTOR * zoom * 7; // Your multiplier
 
-  // Calculate position based on current viewport
-  const boundaryX = x;
-  const boundaryY = y;
+//   // Calculate position based on current viewport
+//   const boundaryX = x;
+//   const boundaryY = y;
 
-  return (
-    <div
-      className="absolute pointer-events-none z-10"
-      style={{
-        left: `${boundaryX}px`,
-        top: `${boundaryY}px`,
-        width: `${scaledWidth}px`,
-        height: `${scaledHeight}px`,
-        border: `${Math.max(2, 3 * zoom)}px dashed #94a3b8`,
-        borderRadius: `${8 * zoom}px`,
-        backgroundColor: "transparent",
-        transform: "translate3d(0, 0, 0)",
-      }}
-    >
-      {/* Venue Label - scales with zoom */}
-      <div
-        className="absolute bg-white/90 px-3 py-1 rounded-lg shadow-sm border"
-        style={{
-          top: `${-40 * zoom}px`,
-          left: 0,
-          transform: `scale(${Math.max(0.8, zoom)})`,
-          transformOrigin: "left top",
-        }}
-      >
-        <span className="text-sm font-semibold text-slate-700">
-          Venue: {venueWidth}m × {venueHeight}m
-        </span>
-      </div>
+//   return (
+//     <div
+//       className="absolute pointer-events-none z-10"
+//       style={{
+//         left: `${boundaryX}px`,
+//         top: `${boundaryY}px`,
+//         width: `${scaledWidth}px`,
+//         height: `${scaledHeight}px`,
+//         border: `${Math.max(2, 3 * zoom)}px dashed #94a3b8`,
+//         borderRadius: `${8 * zoom}px`,
+//         backgroundColor: "transparent",
+//         transform: "translate3d(0, 0, 0)",
+//       }}
+//     >
+//       {/* Venue Label - scales with zoom */}
+//       <div
+//         className="absolute bg-white/90 px-3 py-1 rounded-lg shadow-sm border"
+//         style={{
+//           top: `${-40 * zoom}px`,
+//           left: 0,
+//           transform: `scale(${Math.max(0.8, zoom)})`,
+//           transformOrigin: "left top",
+//         }}
+//       >
+//         <span className="text-sm font-semibold text-slate-700">
+//           Venue: {venueWidth}m × {venueHeight}m
+//         </span>
+//       </div>
 
-      {/* Corner markers - scale with zoom */}
-      <div
-        className="absolute border-l-2 border-t-2 border-slate-400"
-        style={{
-          top: `${2 * zoom}px`,
-          left: `${2 * zoom}px`,
-          width: `${4 * zoom}px`,
-          height: `${4 * zoom}px`,
-        }}
-      ></div>
-      <div
-        className="absolute border-r-2 border-t-2 border-slate-400"
-        style={{
-          top: `${2 * zoom}px`,
-          right: `${2 * zoom}px`,
-          width: `${4 * zoom}px`,
-          height: `${4 * zoom}px`,
-        }}
-      ></div>
-      <div
-        className="absolute border-l-2 border-b-2 border-slate-400"
-        style={{
-          bottom: `${2 * zoom}px`,
-          left: `${2 * zoom}px`,
-          width: `${4 * zoom}px`,
-          height: `${4 * zoom}px`,
-        }}
-      ></div>
-      <div
-        className="absolute border-r-2 border-b-2 border-slate-400"
-        style={{
-          bottom: `${2 * zoom}px`,
-          right: `${2 * zoom}px`,
-          width: `${4 * zoom}px`,
-          height: `${4 * zoom}px`,
-        }}
-      ></div>
-    </div>
-  );
-};
+//       {/* Corner markers - scale with zoom */}
+//       <div
+//         className="absolute border-l-2 border-t-2 border-slate-400"
+//         style={{
+//           top: `${2 * zoom}px`,
+//           left: `${2 * zoom}px`,
+//           width: `${4 * zoom}px`,
+//           height: `${4 * zoom}px`,
+//         }}
+//       ></div>
+//       <div
+//         className="absolute border-r-2 border-t-2 border-slate-400"
+//         style={{
+//           top: `${2 * zoom}px`,
+//           right: `${2 * zoom}px`,
+//           width: `${4 * zoom}px`,
+//           height: `${4 * zoom}px`,
+//         }}
+//       ></div>
+//       <div
+//         className="absolute border-l-2 border-b-2 border-slate-400"
+//         style={{
+//           bottom: `${2 * zoom}px`,
+//           left: `${2 * zoom}px`,
+//           width: `${4 * zoom}px`,
+//           height: `${4 * zoom}px`,
+//         }}
+//       ></div>
+//       <div
+//         className="absolute border-r-2 border-b-2 border-slate-400"
+//         style={{
+//           bottom: `${2 * zoom}px`,
+//           right: `${2 * zoom}px`,
+//           width: `${4 * zoom}px`,
+//           height: `${4 * zoom}px`,
+//         }}
+//       ></div>
+//     </div>
+//   );
+// };
 
 function WeddingPlanner() {
   const [nodes, setNodes, onNodesChange] = useNodesState<TableNodeData>([]);
@@ -1246,6 +1246,11 @@ function WeddingPlanner() {
       />
       <div className="flex-grow h-full relative" ref={reactFlowWrapper}>
         {/* Zoom-Responsive Venue Boundary */}
+        {/*  <ZoomResponsiveBoundary
+          venueWidth={venueWidth}
+          venueHeight={venueHeight}
+          SCALE_FACTOR={SCALE_FACTOR}
+        /> */}
         <ZoomResponsiveBoundary
           venueWidth={venueWidth}
           venueHeight={venueHeight}
