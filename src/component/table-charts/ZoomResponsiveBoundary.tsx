@@ -26,6 +26,36 @@ interface SmoothDraggableVenueShapeProps {
   venueImage?: string; // Add image prop - can be from Zustand state
 }
 
+// Predefined structure for database storage
+interface VenueConfigDB {
+  venue_id: string;
+  venue_dimensions: {
+    width_meters: number;
+    height_meters: number;
+    scale_factor: number;
+  };
+  venue_shape: {
+    vertices: Point[]; // This changes when user drags vertices
+  };
+  background_image: {
+    image_url: string | null; // This changes when user selects different image
+    position: {
+      x: number; // This changes when user drags image
+      y: number; // This changes when user drags image
+    };
+    dimensions: {
+      width: number; // This changes when user resizes image
+      height: number; // This changes when user resizes image
+    };
+  };
+  // Remove static/hardcoded values:
+  // - border_style (always the same)
+  // - opacity (always 0.15)
+  // - edit_mode_settings (not persistent)
+  // - created_at/updated_at (handled by DB)
+  updated_at: string;
+}
+
 const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
   venueWidth,
   venueHeight,
@@ -79,6 +109,75 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
       }));
     }
   }, [image, scaledWidth, scaledHeight, imageState.width]);
+
+  // Save venue configuration to database format
+  const saveVenueConfiguration = useCallback(() => {
+    const venueConfig: VenueConfigDB = {
+      venue_id: `venue_${Date.now()}`,
+      venue_dimensions: {
+        width_meters: venueWidth,
+        height_meters: venueHeight,
+        scale_factor: SCALE_FACTOR,
+      },
+      venue_shape: {
+        vertices: vertices, // Only dynamic shape data
+      },
+      background_image: {
+        image_url: venueImage || null,
+        position: {
+          x: imageState.x,
+          y: imageState.y,
+        },
+        dimensions: {
+          width: imageState.width,
+          height: imageState.height,
+        },
+      },
+      updated_at: new Date().toISOString(),
+    };
+
+    console.log(
+      "🎯 OPTIMIZED VENUE CONFIG:",
+      JSON.stringify(venueConfig, null, 2)
+    );
+    return venueConfig;
+  }, [venueWidth, venueHeight, SCALE_FACTOR, vertices, venueImage, imageState]);
+
+  // Load venue configuration from database format
+  const loadVenueConfiguration = useCallback(
+    (dbConfig: VenueConfigDB) => {
+      console.log("🔄 LOADING OPTIMIZED CONFIG:", dbConfig);
+
+      // Load only the dynamic data
+      setVertices(dbConfig.venue_shape.vertices);
+
+      setImageState({
+        x: dbConfig.background_image.position.x,
+        y: dbConfig.background_image.position.y,
+        width: dbConfig.background_image.dimensions.width,
+        height: dbConfig.background_image.dimensions.height,
+      });
+
+      // Edit mode is always false on load (user decides when to edit)
+      setIsEditMode(false);
+
+      if (onShapeChange) {
+        onShapeChange(dbConfig.venue_shape.vertices);
+      }
+
+      console.log("✅ OPTIMIZED CONFIG LOADED");
+    },
+    [onShapeChange]
+  );
+
+  // Auto-save on any change (you can debounce this)
+  /*  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      saveVenueConfiguration();
+    }, 1000); // Auto-save after 1 second of inactivity
+
+    return () => clearTimeout(timeoutId);
+  }, [vertices, imageState, isEditMode, saveVenueConfiguration]); */
 
   // Generate border path points based on current vertices
   const generateBorderPath = () => {
@@ -382,6 +481,14 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
           <Edit3 size={12} />
           {isEditMode ? "Done" : "Edit"}
         </button>
+
+        {/* Manual Save Button for Testing */}
+        <button
+          onClick={() => saveVenueConfiguration()}
+          className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-green-500 hover:bg-green-600 text-white"
+        >
+          Save
+        </button>
       </div>
 
       {/* Corner markers - only show when not in edit mode */}
@@ -437,4 +544,6 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
   );
 };
 
+// Export both the component and the interface for use in parent components
 export default SmoothDraggableVenueShape;
+export type { VenueConfigDB };
