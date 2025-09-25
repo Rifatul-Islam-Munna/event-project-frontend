@@ -393,8 +393,10 @@ function WeddingPlanner() {
       );
 
       // Allow generous panning but prevent going too far
-      const constrainedX = Math.max(maxPanX - padding, Math.min(padding, x));
-      const constrainedY = Math.max(maxPanY - padding, Math.min(padding, y));
+      // Instead of tight constraints, give more freedom
+      // Remove constraints to allow free panning
+      const constrainedX = x;
+      const constrainedY = y;
 
       return {
         x: constrainedX,
@@ -406,7 +408,7 @@ function WeddingPlanner() {
   );
 
   // IMPROVED: Less aggressive viewport correction
-  const onMoveEnd = useCallback(
+  /*   const onMoveEnd = useCallback(
     (event: any, viewport: any) => {
       const constrainedViewport = constrainViewport(viewport);
 
@@ -420,7 +422,11 @@ function WeddingPlanner() {
       }
     },
     [constrainViewport, setViewport]
-  );
+  ); */
+  const onMoveEnd = useCallback((event: any, viewport: any) => {
+    // Do nothing - allow free movement
+    return;
+  }, []);
 
   const { data: seatPlandata, isLoading } = useQuery({
     queryKey: ["seat-plan", pathName.split("/").pop()],
@@ -816,18 +822,10 @@ function WeddingPlanner() {
   // Helper function to constrain table positions within venue bounds
   const constrainTablePosition = useCallback(
     (x: number, y: number, tableWidth: number, tableHeight: number) => {
-      const margin = 20;
-      const constrainedX = Math.max(
-        margin,
-        Math.min(x, venueWidthPx - tableWidth - margin)
-      );
-      const constrainedY = Math.max(
-        margin,
-        Math.min(y, venueHeightPx - tableHeight - margin)
-      );
-      return { x: constrainedX, y: constrainedY };
+      // Allow unlimited movement - no constraints
+      return { x, y };
     },
-    [venueWidthPx, venueHeightPx]
+    []
   );
 
   const handleConfirmAddTable = () => {
@@ -1324,7 +1322,7 @@ function WeddingPlanner() {
           snapToGrid={true}
           snapGrid={snapGrid}
           className="bg-transparent"
-          onMoveEnd={onMoveEnd}
+          /*      onMoveEnd={onMoveEnd} */
           minZoom={0.05}
           maxZoom={4}
           // REMOVED defaultViewport - using programmatic setViewport instead

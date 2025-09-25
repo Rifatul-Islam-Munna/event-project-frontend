@@ -1,9 +1,17 @@
 "use client";
 
 import React, { useState, useCallback, useRef } from "react";
-import { Stage, Layer, Circle, Line, Group } from "react-konva";
+import {
+  Stage,
+  Layer,
+  Circle,
+  Line,
+  Group,
+  Image as KonvaImage,
+} from "react-konva";
 import { useViewport } from "reactflow";
 import { Edit3 } from "lucide-react";
+import useImage from "use-image";
 
 interface Point {
   x: number;
@@ -15,6 +23,7 @@ interface SmoothDraggableVenueShapeProps {
   venueHeight: number; // meters
   SCALE_FACTOR: number; // px per meter
   onShapeChange?: (points: Point[]) => void;
+  venueImage?: string; // Add image prop - can be from Zustand state
 }
 
 const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
@@ -22,6 +31,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
   venueHeight,
   SCALE_FACTOR,
   onShapeChange,
+  venueImage,
 }) => {
   const { x, y, zoom } = useViewport();
 
@@ -33,7 +43,23 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
   ]);
 
   const [isEditMode, setIsEditMode] = useState(false);
+
+  // Image state for position and scale
+  const [imageState, setImageState] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
+
   const stageRef = useRef<any>(null);
+  const imageRef = useRef<any>(null);
+
+  // Load the image using use-image hook
+  const [image] = useImage(
+    venueImage ||
+      "http://localhost:9000/my-public-bucket/1756813541744-189169006.jpeg"
+  );
 
   const scaledWidth = venueWidth * SCALE_FACTOR * zoom * 7;
   const scaledHeight = venueHeight * SCALE_FACTOR * zoom * 7;
@@ -42,6 +68,17 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
   const padding = 30 * zoom;
   const boundaryX = x - padding;
   const boundaryY = y - padding;
+
+  // Initialize image dimensions when image loads
+  React.useEffect(() => {
+    if (image && imageState.width === 0) {
+      setImageState((prev) => ({
+        ...prev,
+        width: scaledWidth,
+        height: scaledHeight,
+      }));
+    }
+  }, [image, scaledWidth, scaledHeight, imageState.width]);
 
   // Generate border path points based on current vertices
   const generateBorderPath = () => {
@@ -60,9 +97,60 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
     return points;
   };
 
+  // Handle image resize from corners
+  const handleImageResize = (corner: string, newX: number, newY: number) => {
+    const minSize = 50;
+    let newWidth = imageState.width;
+    let newHeight = imageState.height;
+    let newImageX = imageState.x;
+    let newImageY = imageState.y;
+
+    switch (corner) {
+      case "top-left":
+        newWidth = Math.max(
+          minSize,
+          imageState.x + imageState.width - (newX - padding)
+        );
+        newHeight = Math.max(
+          minSize,
+          imageState.y + imageState.height - (newY - padding)
+        );
+        newImageX = newX - padding;
+        newImageY = newY - padding;
+        break;
+      case "top-right":
+        newWidth = Math.max(minSize, newX - padding - imageState.x);
+        newHeight = Math.max(
+          minSize,
+          imageState.y + imageState.height - (newY - padding)
+        );
+        newImageY = newY - padding;
+        break;
+      case "bottom-left":
+        newWidth = Math.max(
+          minSize,
+          imageState.x + imageState.width - (newX - padding)
+        );
+        newHeight = Math.max(minSize, newY - padding - imageState.y);
+        newImageX = newX - padding;
+        break;
+      case "bottom-right":
+        newWidth = Math.max(minSize, newX - padding - imageState.x);
+        newHeight = Math.max(minSize, newY - padding - imageState.y);
+        break;
+    }
+
+    setImageState({
+      x: newImageX,
+      y: newImageY,
+      width: newWidth,
+      height: newHeight,
+    });
+  };
+
   return (
     <>
-      {/* Dynamic Border that follows vertices */}
+      {/* Dynamic Border with Image */}
       <Stage
         width={scaledWidth + padding * 2}
         height={scaledHeight + padding * 2}
@@ -73,9 +161,44 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
           pointerEvents: isEditMode ? "auto" : "none",
           zIndex: 10,
         }}
+        ref={stageRef}
       >
         <Layer>
           <Group>
+            {/* Background Image - Very low opacity so tables are fully visible */}
+            {image && (
+              <KonvaImage
+                ref={imageRef}
+                image={image}
+                x={padding + imageState.x}
+                y={padding + imageState.y}
+                width={imageState.width}
+                height={imageState.height}
+                draggable={isEditMode}
+                opacity={0.15} // Very low opacity - pure background
+                listening={isEditMode}
+                onDragMove={(e) => {
+                  if (isEditMode) {
+                    setImageState((prev) => ({
+                      ...prev,
+                      x: e.target.x() - padding,
+                      y: e.target.y() - padding,
+                    }));
+                  }
+                }}
+                onMouseEnter={(e) => {
+                  if (isEditMode) {
+                    e.target.getStage()!.container().style.cursor = "move";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (isEditMode) {
+                    e.target.getStage()!.container().style.cursor = "default";
+                  }
+                }}
+              />
+            )}
+
             {/* Dynamic Border Line */}
             <Line
               points={generateBorderPath()}
@@ -133,6 +256,99 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
                   }}
                 />
               ))}
+
+            {/* 4 Corner resize handles - only in edit mode */}
+            {isEditMode && image && imageState.width > 0 && (
+              <>
+                {/* Top-left resize handle */}
+                <Circle
+                  x={padding + imageState.x}
+                  y={padding + imageState.y}
+                  radius={Math.max(8, 10 * zoom)}
+                  fill="#ef4444"
+                  stroke="white"
+                  strokeWidth={3}
+                  draggable
+                  onDragMove={(e) => {
+                    handleImageResize("top-left", e.target.x(), e.target.y());
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.getStage()!.container().style.cursor = "nw-resize";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.getStage()!.container().style.cursor = "default";
+                  }}
+                />
+
+                {/* Top-right resize handle */}
+                <Circle
+                  x={padding + imageState.x + imageState.width}
+                  y={padding + imageState.y}
+                  radius={Math.max(8, 10 * zoom)}
+                  fill="#ef4444"
+                  stroke="white"
+                  strokeWidth={3}
+                  draggable
+                  onDragMove={(e) => {
+                    handleImageResize("top-right", e.target.x(), e.target.y());
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.getStage()!.container().style.cursor = "ne-resize";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.getStage()!.container().style.cursor = "default";
+                  }}
+                />
+
+                {/* Bottom-left resize handle */}
+                <Circle
+                  x={padding + imageState.x}
+                  y={padding + imageState.y + imageState.height}
+                  radius={Math.max(8, 10 * zoom)}
+                  fill="#ef4444"
+                  stroke="white"
+                  strokeWidth={3}
+                  draggable
+                  onDragMove={(e) => {
+                    handleImageResize(
+                      "bottom-left",
+                      e.target.x(),
+                      e.target.y()
+                    );
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.getStage()!.container().style.cursor = "sw-resize";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.getStage()!.container().style.cursor = "default";
+                  }}
+                />
+
+                {/* Bottom-right resize handle */}
+                <Circle
+                  x={padding + imageState.x + imageState.width}
+                  y={padding + imageState.y + imageState.height}
+                  radius={Math.max(8, 10 * zoom)}
+                  fill="#ef4444"
+                  stroke="white"
+                  strokeWidth={3}
+                  draggable
+                  onDragMove={(e) => {
+                    handleImageResize(
+                      "bottom-right",
+                      e.target.x(),
+                      e.target.y()
+                    );
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.getStage()!.container().style.cursor = "se-resize";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.getStage()!.container().style.cursor = "default";
+                  }}
+                />
+              </>
+            )}
           </Group>
         </Layer>
       </Stage>
@@ -142,7 +358,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
         className="absolute bg-white/90 px-3 py-2 rounded-lg shadow-sm border flex items-center gap-3"
         style={{
           left: `${x}px`,
-          top: `${y - 50 * zoom}px`,
+          top: `${y - 70 * zoom}px`,
           transform: `scale(${Math.max(0.8, zoom)})`,
           transformOrigin: "left top",
           zIndex: 50,
