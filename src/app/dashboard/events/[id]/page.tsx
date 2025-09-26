@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, LayoutGrid, Truck } from "lucide-react"; // Icons for tabs
@@ -11,13 +11,16 @@ import { GuestListTab } from "@/components/custom/events/guest-list-tab";
 import { SeatingChartTab } from "@/components/custom/events/seating-chart-tab";
 import { VendorManagementTab } from "@/components/custom/events/vendor-management-tab";
 import { Guest, Vendor } from "@/@types/events-details";
-import WeddingPlanner, {
-  WeddingPlannerWrapper,
-} from "@/component/table-charts/wedding-planner";
+
 import { useStore } from "@/zustan-fn/save-alert";
 import { toast } from "sonner";
 import { User } from "@/@types/user-types";
 import { getUserInfo } from "@/actions/auth";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
+const WeddingPlannerWrapper = dynamic(
+  () => import("@/component/table-charts/wedding-planner")
+);
 
 export default function EventDetailsPage() {
   const params = useParams();
@@ -273,7 +276,11 @@ export default function EventDetailsPage() {
                 value="seating-chart"
                 className="mt-0 p-6 border-none"
               >
-                <WeddingPlannerWrapper />
+                <Suspense
+                  fallback={<Skeleton className=" container w-full h-dvh" />}
+                >
+                  <WeddingPlannerWrapper />
+                </Suspense>
               </TabsContent>
               <TabsContent value="vendors" className="mt-0 p-6 border-none">
                 {" "}

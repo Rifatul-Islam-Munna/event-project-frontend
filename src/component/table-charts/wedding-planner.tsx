@@ -39,13 +39,17 @@ import type { Guest } from "@/@types/events-details";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  deleteDecorator,
   deleteGuest,
   deleteSeatPlan,
   getAllGuest,
   getAllSeatPlan,
+  getDecorator,
   getHeader,
+  postDecorator,
   postSeatPlan,
   updateBulkGuest,
+  updateDecorator,
   updateSeatPlan,
 } from "@/actions/fetch-action";
 import { useIdleTimer } from "react-idle-timer";
@@ -58,7 +62,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ZoomResponsiveBoundary from "./ZoomResponsiveBoundary";
-
+import {
+  DecorativeNode,
+  type DecorativeNodeData,
+} from "./decorative-node/decorative-node";
+import { DecorativeSidebar } from "./decorative-node/decorative-sidebar";
 // Define types for custom node data and guest data
 export type TableType =
   | "rectangular"
@@ -66,6 +74,45 @@ export type TableType =
   | "circular"
   | "rectangular-one-sided"
   | "circular-single-seat";
+interface ChangedObjects {
+  guest: Guest[];
+  node: Array<{
+    id: string;
+    type: string;
+    event_id: string;
+    position: { x: number; y: number };
+    data: {
+      label: string;
+      type: TableType;
+      seats: {
+        id: string;
+        occupiedBy: string | null;
+        occupiedByName: string | null;
+      }[];
+      width: number;
+      height: number;
+      numSeats: number;
+    };
+    style: {
+      width: string;
+      height: string;
+    };
+  }>;
+  decorativeItems: Array<{
+    // Add this new array
+    id: string;
+    type: string;
+    event_id: string;
+    position: { x: number; y: number };
+    data: {
+      label: string;
+      imageUrl: string;
+      width: number;
+      height: number;
+      category: string;
+    };
+  }>;
+}
 
 export interface TableNodeData {
   event_id: string;
@@ -124,6 +171,7 @@ interface extentNode {
 
 const nodeTypes = {
   tableNode: TableNode,
+  decorativeNode: DecorativeNode,
 };
 
 const snapGrid: [number, number] = [15, 15];
@@ -237,7 +285,10 @@ function WeddingPlanner() {
   const [changedObjects, setChangedObjects] = useState<ChangedObjects>({
     guest: [],
     node: [],
+    decorativeItems: [],
   });
+
+  console.log("changedObjects->", changedObjects.decorativeItems);
   const setDataLength = useStore((state) => state.setDataAll);
   const dataLength = useStore((state) => state.setDataLength);
   const pathName = usePathname();
@@ -351,6 +402,40 @@ function WeddingPlanner() {
     queryKey: ["seat-plan", pathName.split("/").pop()],
     queryFn: () => getAllSeatPlan(pathName.split("/").pop() as string),
   });
+  const { data: DecoratorData, isLoading: DecoratorLoading } = useQuery({
+    queryKey: ["seat-plan-decorator", pathName.split("/").pop()],
+    queryFn: () => getDecorator(pathName.split("/").pop() as string),
+  });
+  const { mutate: PostNewDecorator } = useMutation({
+    mutationKey: ["added-new-chair-deco"],
+    mutationFn: (payload: Record<string, unknown>) => postDecorator(payload),
+    onSuccess: (data) => {
+      if (data?.error) {
+        return toast.error(data?.error.message);
+      }
+    },
+  });
+  const { mutate: UpdateDecorator } = useMutation({
+    mutationKey: ["added-new-chair-deco"],
+    mutationFn: (payload: Record<string, unknown>[]) =>
+      updateDecorator(payload),
+    onSuccess: (data) => {
+      if (data?.error) {
+        return toast.error(data?.error.message);
+      }
+      setChangedObjects((prev) => ({ ...prev, decorativeItems: [] }));
+      dataLength(0);
+    },
+  });
+  const { mutate: DeleteDeco } = useMutation({
+    mutationKey: ["delte-new-chair-dec"],
+    mutationFn: (id: string) => deleteDecorator(id),
+    onSuccess: (data) => {
+      if (data?.error) {
+        return toast.error(data?.error.message);
+      }
+    },
+  });
 
   const { mutate: SeatPlan } = useMutation({
     mutationKey: ["added-new-chair"],
@@ -427,10 +512,32 @@ function WeddingPlanner() {
     },
     []
   );
+  const trackDecorativeChange = useCallback(
+    (id: string, action: "created" | "updated" | "deleted", data: any) => {
+      setChangedObjects((prev) => {
+        const filteredItems = prev.decorativeItems.filter(
+          (item) => item.id !== id
+        );
+        const newLength = filteredItems.length + (action !== "deleted" ? 1 : 0);
+        setDataLength(newLength);
+
+        return {
+          ...prev,
+          decorativeItems:
+            action === "deleted" ? filteredItems : [...filteredItems, data],
+        };
+      });
+    },
+    [setDataLength]
+  );
 
   useEffect(() => {
     const totalLength =
       changedObjects.guest.length + changedObjects.node.length;
+    /*     const totalLength =
+    changedObjects.guest.length + 
+    changedObjects.node.length + 
+    changedObjects.decorativeItems.length; */
     setDataLength(totalLength);
   }, [changedObjects.guest.length, changedObjects.node.length]);
 
@@ -869,6 +976,115 @@ function WeddingPlanner() {
     [setNodes, setGuests, trackChange, guests, mutate]
   );
 
+  const handleDeleteDecorative = useCallback(
+    (nodeId: string) => {
+      const nodeToDelete = nodes.find((n) => n.id === nodeId);
+      if (nodeToDelete) {
+        trackDecorativeChange(nodeId, "deleted", nodeToDelete);
+      }
+
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+
+      toast.info("Decorative item removed.");
+      DeleteDeco(nodeId);
+    },
+    [nodes, trackDecorativeChange]
+  );
+  const handleEditDecorative = useCallback(
+    (nodeId: string, newLabel: string) => {
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === nodeId && node.type === "decorativeNode") {
+            const updatedNode = {
+              ...node,
+              data: { ...node.data, label: newLabel },
+            };
+
+            // Track the change
+            trackDecorativeChange(nodeId, "updated", updatedNode);
+
+            // Add API call here to update in your decorative items schema
+            // updateDecorativeItem(nodeId, updatedNode);
+
+            return updatedNode;
+          }
+          return node;
+        })
+      );
+      toast.success("Decorative item updated.");
+    },
+    [trackDecorativeChange]
+  );
+
+  const handleDecorativeDrop = useCallback(
+    (event: React.DragEvent) => {
+      const decorativeItemId = event.dataTransfer.getData("decorativeItemId");
+      const decorativeItemLabel = event.dataTransfer.getData(
+        "decorativeItemLabel"
+      );
+      const decorativeItemImage = event.dataTransfer.getData(
+        "decorativeItemImage"
+      );
+      const decorativeItemWidth = parseInt(
+        event.dataTransfer.getData("decorativeItemWidth")
+      );
+      const decorativeItemHeight = parseInt(
+        event.dataTransfer.getData("decorativeItemHeight")
+      );
+
+      if (!decorativeItemId) return;
+
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      const newDecorativeId = uuidv4();
+      const newDecorativeNode = {
+        id: newDecorativeId,
+        type: "decorativeNode",
+        position: constrainTablePosition(
+          position.x,
+          position.y,
+          decorativeItemWidth,
+          decorativeItemHeight
+        ),
+        data: {
+          event_id: pathName.split("/").pop() as string,
+          label: decorativeItemLabel,
+          imageUrl: "",
+          width: decorativeItemWidth,
+          height: decorativeItemHeight,
+          category: decorativeItemId,
+          onDeleteDecorative: handleDeleteDecorative,
+          onEditDecorative: handleEditDecorative,
+        },
+      };
+
+      console.log("newDecorativeNode->", newDecorativeNode);
+
+      setNodes((nds) => nds.concat(newDecorativeNode));
+      PostNewDecorator(newDecorativeNode);
+      // Track the new decorative item
+      trackDecorativeChange(newDecorativeId, "created", newDecorativeNode);
+
+      // Add API call here to save decorative item to your separate schema
+      // saveDecorativeItem(newDecorativeNode);
+
+      /*  toast.success(`${decorativeItemLabel} added successfully!`); */
+    },
+    [
+      screenToFlowPosition,
+      constrainTablePosition,
+      pathName,
+      handleDeleteDecorative,
+      handleEditDecorative,
+      setNodes,
+      PostNewDecorator,
+      trackDecorativeChange,
+    ]
+  );
+
   const handleNodesChange = useCallback(
     (changes: any[]) => {
       changes.forEach((change) => {
@@ -887,22 +1103,34 @@ function WeddingPlanner() {
               ...node,
               position: constrainedPosition,
             };
-
+            console.log("node-types-<->", node.type);
             // Update the change object with constrained position
             change.position = constrainedPosition;
 
-            trackChange(change.id, "node", "updated", updatedNode);
+            if (node.type === "tableNode") {
+              trackChange(change.id, "node", "updated", updatedNode);
+            } else if (node.type === "decorativeNode") {
+              trackDecorativeChange(change.id, "updated", updatedNode);
+            }
           }
         }
       });
       onNodesChange(changes);
     },
-    [onNodesChange, nodes, trackChange, constrainTablePosition]
+    [
+      onNodesChange,
+      nodes,
+      trackChange,
+      constrainTablePosition,
+      trackDecorativeChange,
+    ]
   );
 
   const handleSaveChanges = useCallback(() => {
     const totalChanges =
-      changedObjects.guest.length + changedObjects.node.length;
+      changedObjects.guest.length +
+      changedObjects.node.length +
+      changedObjects.decorativeItems.length;
     if (totalChanges === 0) {
       toast.info("No changes to save.");
       return;
@@ -914,7 +1142,13 @@ function WeddingPlanner() {
       updateAllguest(changedObjects.guest);
     }
 
-    updateAllguest(changedObjects.guest);
+    if (changedObjects.decorativeItems.length > 0) {
+      // Add API call to save decorative items
+      // updateDecorativeItems(changedObjects.decorativeItems);
+      console.log("Decorative items to save:", changedObjects.decorativeItems);
+
+      UpdateDecorator(changedObjects.decorativeItems);
+    }
   }, [changedObjects, updateSeatAll, updateAllguest]);
 
   useEffect(() => {
@@ -924,7 +1158,7 @@ function WeddingPlanner() {
   }, [data]);
 
   // Load seat plan data and constrain existing tables within venue bounds
-  useEffect(() => {
+  /* useEffect(() => {
     if (seatPlandata?.data && seatPlandata.data.length > 0) {
       const nodesWithCallbacks = seatPlandata.data.map((nodeData: any) => {
         // Constrain existing tables within venue bounds
@@ -953,6 +1187,81 @@ function WeddingPlanner() {
     }, 200);
   }, [
     seatPlandata?.data,
+    constrainTablePosition,
+    getInitialViewport,
+    setViewport,
+  ]); */
+
+  // uncomment this after db setup
+  const createDecorativeNodeWithCallbacks = (nodeData: any) => ({
+    ...nodeData,
+    data: {
+      ...nodeData.data,
+      onDeleteDecorative: handleDeleteDecorative,
+      onEditDecorative: handleEditDecorative,
+    },
+  });
+
+  // Updated useEffect to load both table nodes and decorative items
+  useEffect(() => {
+    const allNodes: any[] = [];
+
+    // Load table nodes
+    if (seatPlandata?.data && seatPlandata.data.length > 0) {
+      const tableNodesWithCallbacks = seatPlandata.data.map((nodeData: any) => {
+        // Constrain existing tables within venue bounds
+        const constrainedPosition = constrainTablePosition(
+          nodeData.position.x,
+          nodeData.position.y,
+          nodeData.data.width || 100,
+          nodeData.data.height || 100
+        );
+
+        const constrainedNode = {
+          ...nodeData,
+          position: constrainedPosition,
+        };
+        return createNodeWithCallbacks(constrainedNode);
+      });
+
+      allNodes.push(...tableNodesWithCallbacks);
+    }
+
+    // Load decorative items
+    if (DecoratorData?.data && DecoratorData.data.length > 0) {
+      const decorativeNodesWithCallbacks = DecoratorData.data.map(
+        (nodeData: any) => {
+          // Constrain existing decorative items within venue bounds
+          const constrainedPosition = constrainTablePosition(
+            nodeData.position.x,
+            nodeData.position.y,
+            nodeData.data.width || 80,
+            nodeData.data.height || 80
+          );
+
+          const constrainedNode = {
+            ...nodeData,
+            position: constrainedPosition,
+            type: "decorativeNode", // Ensure correct type
+          };
+          return createDecorativeNodeWithCallbacks(constrainedNode);
+        }
+      );
+
+      allNodes.push(...decorativeNodesWithCallbacks);
+    }
+
+    // Set all nodes at once
+    setNodes(allNodes);
+
+    // Set initial centered viewport after a small delay
+    setTimeout(() => {
+      const initialViewport = getInitialViewport();
+      setViewport(initialViewport, { duration: 800 });
+    }, 200);
+  }, [
+    seatPlandata?.data,
+    DecoratorData?.data, // Add this dependency
     constrainTablePosition,
     getInitialViewport,
     setViewport,
@@ -987,9 +1296,8 @@ function WeddingPlanner() {
       return;
     }
 
-    const reactFlowPane = reactFlowWrapper.current.querySelector(
-      ".react-flow__pane"
-    ) as HTMLElement;
+    const reactFlowPane =
+      reactFlowWrapper.current.querySelector(".react-flow__pane");
     const reactFlowControls = reactFlowWrapper.current.querySelector(
       ".react-flow__controls"
     ) as HTMLElement;
@@ -1143,6 +1451,9 @@ function WeddingPlanner() {
     if (changedObjects.node.length > 0) {
       updateSeatAll(changedObjects.node);
     }
+    if (changedObjects.decorativeItems.length > 0) {
+      UpdateDecorator(changedObjects.decorativeItems);
+    }
   };
 
   useIdleTimer({
@@ -1161,6 +1472,7 @@ function WeddingPlanner() {
         showSidebar={showSidebar}
         setShowSidebar={setShowSidebar}
       />
+      {/* <DecorativeSidebar onAddDecorativeItem={() => {}} /> */}
       <div className="flex-grow h-full relative" ref={reactFlowWrapper}>
         {/* Zoom-Responsive Venue Boundary */}
         {/*  <ZoomResponsiveBoundary
@@ -1172,6 +1484,7 @@ function WeddingPlanner() {
           venueWidth={venueWidth}
           venueHeight={venueHeight}
           SCALE_FACTOR={SCALE_FACTOR}
+          venu_id={pathName.split("/").pop() as string}
         />
 
         <Button
@@ -1210,12 +1523,18 @@ function WeddingPlanner() {
             onClick={handleSaveChanges}
             variant="secondary"
             disabled={
-              changedObjects.guest.length + changedObjects.node.length === 0
+              changedObjects.guest.length +
+                changedObjects.node.length +
+                changedObjects.decorativeItems.length ===
+              0
             }
           >
             <Database className="w-4 h-4 mr-2" />
             Save Changes (
-            {changedObjects.guest.length + changedObjects.node.length})
+            {changedObjects.guest.length +
+              changedObjects.node.length +
+              changedObjects.decorativeItems.length}
+            )
           </Button>
           <Button
             onClick={handleDownloadPdf}
@@ -1243,7 +1562,9 @@ function WeddingPlanner() {
           className="bg-transparent"
           /*      onMoveEnd={onMoveEnd} */
           minZoom={0.05}
-          maxZoom={4}
+          maxZoom={2}
+          onDrop={handleDecorativeDrop}
+          onDragOver={(event) => event.preventDefault()}
           // REMOVED defaultViewport - using programmatic setViewport instead
         >
           <Controls />
@@ -1353,7 +1674,7 @@ function WeddingPlanner() {
   );
 }
 
-export function WeddingPlannerWrapper() {
+export default function WeddingPlannerWrapper() {
   return (
     <ReactFlowProvider>
       <WeddingPlanner />

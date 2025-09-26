@@ -5,6 +5,7 @@ import AdminSubscriptionsPage from "./SubScrib";
 import AdminPage from "./Plan";
 import AdminDashboard from "./AdminDashboard";
 import UserManagementDashboard from "./UserManagementDashboard";
+import ImageUploadPage from "./ImageMng";
 
 const page = () => {
   return (
@@ -15,6 +16,7 @@ const page = () => {
           <TabsTrigger value="p">Plans</TabsTrigger>
           <TabsTrigger value="user">User</TabsTrigger>
           <TabsTrigger value="k">Title</TabsTrigger>
+          <TabsTrigger value="upload">Images</TabsTrigger>
         </TabsList>
         <TabsContent value="s">
           <AdminSubscriptionsPage />
@@ -27,6 +29,9 @@ const page = () => {
         </TabsContent>
         <TabsContent value="k">
           <AdminDashboard />
+        </TabsContent>
+        <TabsContent value="upload">
+          <ImageUploadPage />
         </TabsContent>
       </Tabs>
     </div>

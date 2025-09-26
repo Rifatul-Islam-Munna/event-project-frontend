@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   Stage,
   Layer,
@@ -12,6 +12,11 @@ import {
 import { useViewport } from "reactflow";
 import { Edit3 } from "lucide-react";
 import useImage from "use-image";
+import { useZoomResponive } from "@/zustan-fn/zoomResponive";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getVanuSize, postVanuSize } from "@/actions/fetch-action";
+import { toast } from "sonner";
+import { usePathname } from "next/navigation";
 
 interface Point {
   x: number;
@@ -24,10 +29,12 @@ interface SmoothDraggableVenueShapeProps {
   SCALE_FACTOR: number; // px per meter
   onShapeChange?: (points: Point[]) => void;
   venueImage?: string; // Add image prop - can be from Zustand state
+  venu_id: string;
 }
 
 // Predefined structure for database storage
 interface VenueConfigDB {
+  id?: string;
   venue_id: string;
   venue_dimensions: {
     width_meters: number;
@@ -48,12 +55,6 @@ interface VenueConfigDB {
       height: number; // This changes when user resizes image
     };
   };
-  // Remove static/hardcoded values:
-  // - border_style (always the same)
-  // - opacity (always 0.15)
-  // - edit_mode_settings (not persistent)
-  // - created_at/updated_at (handled by DB)
-  updated_at: string;
 }
 
 const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
@@ -62,6 +63,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
   SCALE_FACTOR,
   onShapeChange,
   venueImage,
+  venu_id,
 }) => {
   const { x, y, zoom } = useViewport();
 
@@ -72,24 +74,45 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
     { x: 0, y: venueHeight },
   ]);
 
-  const [isEditMode, setIsEditMode] = useState(false);
+  const { data, isPending } = useQuery({
+    queryKey: ["vanu-size", venu_id],
+    queryFn: () => getVanuSize(venu_id),
+    enabled: !!venu_id,
+  });
+
+  const { isEditMode, setIsEditMode, imageUrl, setImageUrl } = useZoomResponive(
+    (state) => state
+  );
 
   // Image state for position and scale
   const [imageState, setImageState] = useState({
     x: 0,
     y: 0,
-    width: 0,
-    height: 0,
+    width: venueWidth * SCALE_FACTOR,
+    height: venueHeight * SCALE_FACTOR,
   });
 
   const stageRef = useRef<any>(null);
   const imageRef = useRef<any>(null);
 
-  // Load the image using use-image hook
-  const [image] = useImage(
-    venueImage ||
-      "http://localhost:9000/my-public-bucket/1756813541744-189169006.jpeg"
-  );
+  const [activeImageUrl, setActiveImageUrl] = useState<string | null>(null);
+
+  // Load DB image first when data comes in
+  useEffect(() => {
+    if (data?.data?.background_image?.image_url) {
+      setActiveImageUrl(data.data.background_image.image_url);
+    }
+  }, [data]);
+
+  // If Zustand's imageUrl changes (user selected a new image), prefer that
+  useEffect(() => {
+    if (imageUrl) {
+      setActiveImageUrl(imageUrl);
+    }
+  }, [imageUrl]);
+
+  // Use the merged "active image" as the source
+  const [image] = useImage(activeImageUrl || "");
 
   const scaledWidth = venueWidth * SCALE_FACTOR * zoom * 7;
   const scaledHeight = venueHeight * SCALE_FACTOR * zoom * 7;
@@ -109,21 +132,36 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
       }));
     }
   }, [image, scaledWidth, scaledHeight, imageState.width]);
+  const { mutate, isPending: IsUpdateing } = useMutation({
+    mutationKey: ["venue-config", venu_id],
+    mutationFn: (data: Record<string, unknown>) => postVanuSize(data),
+    onSuccess: (data) => {
+      if (data.data) {
+        toast.success("Venue Size updated successfully");
+        return;
+      }
+      toast.error("Venue Size updated Fail");
+    },
+    onError: (error) => {
+      toast.error(error?.message);
+    },
+  });
 
   // Save venue configuration to database format
   const saveVenueConfiguration = useCallback(() => {
     const venueConfig: VenueConfigDB = {
-      venue_id: `venue_${Date.now()}`,
+      venue_id: venu_id,
       venue_dimensions: {
         width_meters: venueWidth,
         height_meters: venueHeight,
         scale_factor: SCALE_FACTOR,
       },
       venue_shape: {
-        vertices: vertices, // Only dynamic shape data
+        vertices: vertices,
       },
       background_image: {
-        image_url: venueImage || null,
+        image_url:
+          activeImageUrl || data?.data?.background_image?.image_url || null,
         position: {
           x: imageState.x,
           y: imageState.y,
@@ -133,15 +171,30 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
           height: imageState.height,
         },
       },
-      updated_at: new Date().toISOString(),
+      ...(data?.data?._id && { id: data?.data?._id }),
     };
+    mutate(venueConfig);
 
     console.log(
       "🎯 OPTIMIZED VENUE CONFIG:",
       JSON.stringify(venueConfig, null, 2)
     );
     return venueConfig;
-  }, [venueWidth, venueHeight, SCALE_FACTOR, vertices, venueImage, imageState]);
+  }, [
+    venu_id,
+    venueWidth,
+    venueHeight,
+    SCALE_FACTOR,
+    vertices,
+    activeImageUrl,
+    data?.data?.background_image?.image_url,
+    data?.data?._id,
+    imageState.x,
+    imageState.y,
+    imageState.width,
+    imageState.height,
+    mutate,
+  ]);
 
   // Load venue configuration from database format
   const loadVenueConfiguration = useCallback(
@@ -149,47 +202,50 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
       console.log("🔄 LOADING OPTIMIZED CONFIG:", dbConfig);
 
       // Load only the dynamic data
-      setVertices(dbConfig.venue_shape.vertices);
+      setVertices(dbConfig?.venue_shape?.vertices);
 
       setImageState({
-        x: dbConfig.background_image.position.x,
-        y: dbConfig.background_image.position.y,
-        width: dbConfig.background_image.dimensions.width,
-        height: dbConfig.background_image.dimensions.height,
+        x: dbConfig?.background_image?.position?.x,
+        y: dbConfig?.background_image?.position?.y,
+        width: dbConfig?.background_image?.dimensions?.width,
+        height: dbConfig?.background_image?.dimensions?.height,
       });
 
       // Edit mode is always false on load (user decides when to edit)
       setIsEditMode(false);
 
       if (onShapeChange) {
-        onShapeChange(dbConfig.venue_shape.vertices);
+        onShapeChange(dbConfig?.venue_shape?.vertices);
       }
 
       console.log("✅ OPTIMIZED CONFIG LOADED");
     },
-    [onShapeChange]
+    [onShapeChange, setIsEditMode]
   );
+  useEffect(() => {
+    if (data?.data && data?.data !== null) {
+      const dbConfig = data?.data;
+      loadVenueConfiguration(dbConfig);
+      /* setVertices(dbConfig?.venue_shape?.vertices);
+      setImageState({
+        x: dbConfig?.background_image?.position?.x,
+        y: dbConfig?.background_image?.position?.y,
+        width: dbConfig?.background_image?.dimensions?.width,
+        height: dbConfig?.background_image?.dimensions?.height,
+      }); */
+    }
+  }, [data]);
 
-  // Auto-save on any change (you can debounce this)
-  /*  React.useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      saveVenueConfiguration();
-    }, 1000); // Auto-save after 1 second of inactivity
-
-    return () => clearTimeout(timeoutId);
-  }, [vertices, imageState, isEditMode, saveVenueConfiguration]); */
-
-  // Generate border path points based on current vertices
   const generateBorderPath = () => {
     const points: number[] = [];
-    vertices.forEach((v) => {
+    vertices?.forEach((v) => {
       points.push(
         v.x * SCALE_FACTOR * zoom * 7 + padding,
         v.y * SCALE_FACTOR * zoom * 7 + padding
       );
     });
     // Close the shape
-    points.push(
+    points?.push(
       vertices[0].x * SCALE_FACTOR * zoom * 7 + padding,
       vertices[0].y * SCALE_FACTOR * zoom * 7 + padding
     );
@@ -208,34 +264,38 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
       case "top-left":
         newWidth = Math.max(
           minSize,
-          imageState.x + imageState.width - (newX - padding)
+          imageState.x + imageState.width - (newX - padding) / (zoom * 7)
         );
         newHeight = Math.max(
           minSize,
-          imageState.y + imageState.height - (newY - padding)
+          imageState.y + imageState.height - (newY - padding) / (zoom * 7)
         );
-        newImageX = newX - padding;
-        newImageY = newY - padding;
+        newImageX = (newX - padding) / (zoom * 7);
+        newImageY = (newY - padding) / (zoom * 7);
         break;
       case "top-right":
-        newWidth = Math.max(minSize, newX - padding - imageState.x);
+        newWidth =
+          Math.max(minSize, newX - padding - imageState.x) / (zoom * 7);
         newHeight = Math.max(
           minSize,
-          imageState.y + imageState.height - (newY - padding)
+          imageState.y + imageState.height - (newY - padding) / (zoom * 7)
         );
-        newImageY = newY - padding;
+        newImageY = (newY - padding) / (zoom * 7);
         break;
       case "bottom-left":
         newWidth = Math.max(
           minSize,
-          imageState.x + imageState.width - (newX - padding)
+          imageState.x + imageState.width - (newX - padding) / (zoom * 7)
         );
-        newHeight = Math.max(minSize, newY - padding - imageState.y);
-        newImageX = newX - padding;
+        newHeight =
+          Math.max(minSize, newY - padding - imageState.y) / (zoom * 7);
+        newImageX = (newX - padding) / (zoom * 7);
         break;
       case "bottom-right":
-        newWidth = Math.max(minSize, newX - padding - imageState.x);
-        newHeight = Math.max(minSize, newY - padding - imageState.y);
+        newWidth =
+          Math.max(minSize, newX - padding - imageState.x) / (zoom * 7);
+        newHeight =
+          Math.max(minSize, newY - padding - imageState.y) / (zoom * 7);
         break;
     }
 
@@ -269,10 +329,10 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
               <KonvaImage
                 ref={imageRef}
                 image={image}
-                x={padding + imageState.x}
-                y={padding + imageState.y}
-                width={imageState.width}
-                height={imageState.height}
+                x={padding + imageState.x * zoom * 7}
+                y={padding + imageState.y * zoom * 7}
+                width={imageState.width * zoom * 7}
+                height={imageState.height * zoom * 7}
                 draggable={isEditMode}
                 opacity={0.15} // Very low opacity - pure background
                 listening={isEditMode}
@@ -361,8 +421,8 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
               <>
                 {/* Top-left resize handle */}
                 <Circle
-                  x={padding + imageState.x}
-                  y={padding + imageState.y}
+                  x={padding + imageState.x * zoom * 7}
+                  y={padding + imageState.y * zoom * 7}
                   radius={Math.max(8, 10 * zoom)}
                   fill="#ef4444"
                   stroke="white"
@@ -381,8 +441,8 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
 
                 {/* Top-right resize handle */}
                 <Circle
-                  x={padding + imageState.x + imageState.width}
-                  y={padding + imageState.y}
+                  x={padding + (imageState.x + imageState.width) * zoom * 7}
+                  y={padding + imageState.y * zoom * 7}
                   radius={Math.max(8, 10 * zoom)}
                   fill="#ef4444"
                   stroke="white"
@@ -401,8 +461,8 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
 
                 {/* Bottom-left resize handle */}
                 <Circle
-                  x={padding + imageState.x}
-                  y={padding + imageState.y + imageState.height}
+                  x={padding + imageState.x * zoom * 7}
+                  y={padding + (imageState.y + imageState.height) * zoom * 7}
                   radius={Math.max(8, 10 * zoom)}
                   fill="#ef4444"
                   stroke="white"
@@ -425,8 +485,8 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
 
                 {/* Bottom-right resize handle */}
                 <Circle
-                  x={padding + imageState.x + imageState.width}
-                  y={padding + imageState.y + imageState.height}
+                  x={padding + (imageState.x + imageState.width) * zoom * 7}
+                  y={padding + (imageState.y + imageState.height) * zoom * 7}
                   radius={Math.max(8, 10 * zoom)}
                   fill="#ef4444"
                   stroke="white"

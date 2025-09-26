@@ -192,7 +192,7 @@ function ReadOnlyWeddingPlanner() {
             placeholder="Search by guest name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10"
+            className="pl-10 pr-10 h-16  w-xs"
           />
           {searchQuery && (
             <button

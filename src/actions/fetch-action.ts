@@ -391,3 +391,100 @@ export async function prepareBilling() {
     clientSecret: si.client_secret!,  
   };
 }
+
+
+export const postVanuSize = async (payload:Record<string,unknown>)=>{
+    const [data,error] = await PostRequestAxios(`/vanu-size`,payload);
+    console.log("vendor-data->",data,"vendor-error->",error);
+    return {data,error}
+}
+interface VenueConfigDB {
+  _id:string
+  venue_id: string;
+  venue_dimensions: {
+    width_meters: number;
+    height_meters: number;
+    scale_factor: number;
+  };
+  venue_shape: {
+    vertices: Point[]; // This changes when user drags vertices
+  };
+  background_image: {
+    image_url: string | null; // This changes when user selects different image
+    position: {
+      x: number; // This changes when user drags image
+      y: number; // This changes when user drags image
+    };
+    dimensions: {
+      width: number; // This changes when user resizes image
+      height: number; // This changes when user resizes image
+    };
+  };
+}
+export const getVanuSize = async (venueId:string)=>{
+  const [data,error] = await GetRequestNormal<VenueConfigDB>(`/vanu-size/vanu?venue_id=${venueId}`);
+  console.log("vanue-data->",data,"vanue-error->",error);
+  return {data,error}
+}
+
+
+export const postDecorator = async (payload:Record<string,unknown>)=>{
+    const [data,error] = await PostRequestAxios(`/decorator`,payload);
+    console.log("vendor-data->",data,"vendor-error->",error);
+    return {data,error}
+}
+ type DecoratorDB = Array<{
+    // Add this new array
+    id: string;
+    type: string;
+    event_id: string;
+    position: { x: number; y: number };
+    data: {
+      label: string;
+      imageUrl: string;
+      width: number;
+      height: number;
+      category: string;
+    };
+  }>;
+export const getDecorator = async (venueId:string)=>{
+  const [data,error] = await GetRequestNormal<DecoratorDB>(`/decorator/get-all-decorator?id=${venueId}`);
+  console.log("decorator-data->",data,"decorator-error->",error);
+  return {data,error}
+}
+
+export const updateDecorator = async (payload:Record<string,unknown>[])=>{
+    const [data,error] = await PatchRequestAxios(`/decorator/update`,{data:payload});
+    console.log("vendor-data->",data,"vendor-error->",error);
+    return {data,error}
+}
+
+export const deleteDecorator = async (id:string) =>{
+    const [data,error] = await DeleteAxios(`/decorator/delete?id=${id}`);
+    console.log("guest-data-update->",data,"guest-error-update->",error);
+    return {data,error}
+}
+
+
+
+export const postImages = async (FormData:FormData)=>{
+    const [data,error] = await PostRequestAxios(`/images`,FormData);
+    console.log("vendor-data->",data,"vendor-error->",error);
+    return {data,error}
+}
+type images ={
+  _id:string,
+  imageUrl:string,
+
+}
+export const getAllImages  =async () =>{
+  const [data,error] = await GetRequestNormal<images[]>(`/images`);
+    console.log("guest-data->",data,"guest-error->",error);
+    return {data,error}
+}
+
+export const deleteImages = async (id:string) =>{
+    const [data,error] = await DeleteAxios(`/images/${id}`);
+    console.log("guest-data-update->",data,"guest-error-update->",error);
+    return {data,error}
+}

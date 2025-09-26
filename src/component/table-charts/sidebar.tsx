@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,7 +12,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import AddUser from "@/app/dashboard/AddUser";
 import type { Guest } from "@/@types/events-details";
 import type { TableType } from "./wedding-planner";
-
+import { ExtrasComponent } from "./SideBarImage";
+import { DecorativeDrawer } from "./decorative-node/decorative-sidebar";
+import RT from "@/images/sideicons/RectangularTable.png";
+import SQ from "@/images/sideicons/squre.png";
+import CQ from "@/images/sideicons/circletable.png";
+import OC from "@/images/sideicons/Rectangular-one-sided.png";
+import ON from "@/images/sideicons/oneC.png";
+import Image from "next/image";
+import { useZoomResponive } from "@/zustan-fn/zoomResponive";
 interface SidebarProps {
   onAddTableClick: (type: TableType) => void;
   guests: Guest[];
@@ -33,7 +41,12 @@ export function Sidebar({
   setShowSidebar,
 }: SidebarProps) {
   const [newGuestName, setNewGuestName] = useState("");
-
+  const { imageUrl, setImageUrl, isEditMode } = useZoomResponive(
+    (state) => state
+  );
+  useEffect(() => {
+    setImageUrl("");
+  }, []);
   const handleDragStart = (
     event: React.DragEvent,
     guestId: string,
@@ -53,7 +66,7 @@ export function Sidebar({
 
   return (
     <div
-      className={`fixed inset-y-0 left-0 z-30 w-80  bg-white/60 mt-11 md:mt-0 border-r p-4 flex flex-col h-full transition-transform duration-300 ease-in-out
+      className={`fixed inset-y-0 left-0 z-30 w-80 bg-white  md:bg-white/60 mt-11 md:mt-0 border-r p-4 flex flex-col h-full transition-transform duration-300 ease-in-out
                md:relative md:translate-x-0 ${
                  showSidebar ? "translate-x-0" : "-translate-x-full"
                } sidebar-container`} // Added sidebar-container for print styles
@@ -69,7 +82,9 @@ export function Sidebar({
           <span className="sr-only">Close Sidebar</span>
         </Button>
       </div>
+
       <h2 className="text-lg font-semibold mb-4">Add Table</h2>
+
       <div className="flex gap-1 mb-6 justify-between">
         <Button
           variant="outline"
@@ -77,7 +92,17 @@ export function Sidebar({
           className="h-10 w-10 p-0 shadow-none border border-gray-100 bg-transparent"
           onClick={() => onAddTableClick("rectangular")}
         >
-          <div className="w-4 h-2 border border-cyan-500 rounded-sm" />
+          {/*    <div className="w-4 h-2 border border-cyan-500 rounded-sm" /> */}
+          <div className="relative w-10 h-10">
+            <Image
+              width={100}
+              height={100}
+              alt="icons"
+              src={RT.src}
+              className="absolute inset-0 w-full h-full "
+            />
+            {/* <div className="absolute inset-0 bg-blue-500" /> */}
+          </div>
         </Button>
         <Button
           variant="outline"
@@ -85,7 +110,16 @@ export function Sidebar({
           className="h-10 w-10 p-0 shadow-none border border-gray-100 bg-transparent"
           onClick={() => onAddTableClick("square")}
         >
-          <Square className="w-4 h-4 text-cyan-500" />
+          <div className="relative w-10 h-10">
+            <Image
+              width={100}
+              height={100}
+              alt="icons"
+              src={SQ.src}
+              className="absolute inset-0 w-full h-full "
+            />
+            {/* <div className="absolute inset-0 bg-blue-500" /> */}
+          </div>
         </Button>
         <Button
           variant="outline"
@@ -93,7 +127,16 @@ export function Sidebar({
           className="h-10 w-10 p-0 shadow-none border border-gray-100 bg-transparent"
           onClick={() => onAddTableClick("circular")}
         >
-          <Circle className="w-4 h-4 text-cyan-500" />
+          <div className="relative w-10 h-10">
+            <Image
+              width={100}
+              height={100}
+              alt="icons"
+              src={CQ.src}
+              className="absolute inset-0 w-full h-full "
+            />
+            {/* <div className="absolute inset-0 bg-blue-500" /> */}
+          </div>
         </Button>
         <Button
           variant="outline"
@@ -101,8 +144,15 @@ export function Sidebar({
           className="h-10 w-10 p-0 shadow-none border border-gray-100 bg-transparent"
           onClick={() => onAddTableClick("rectangular-one-sided")}
         >
-          <div className="w-4 h-2 border border-cyan-500 rounded-sm relative">
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-cyan-500 opacity-20" />
+          <div className="relative w-10 h-10">
+            <Image
+              width={100}
+              height={100}
+              alt="icons"
+              src={OC.src}
+              className="absolute inset-0 w-full h-full "
+            />
+            {/* <div className="absolute inset-0 bg-blue-500" /> */}
           </div>
         </Button>
         <Button
@@ -111,11 +161,20 @@ export function Sidebar({
           className="h-10 w-10 p-0 shadow-none border border-gray-100 bg-transparent"
           onClick={() => onAddTableClick("circular-single-seat")}
         >
-          <Circle className="w-4 h-4 text-cyan-500 relative">
-            <User className="w-2 h-2 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-cyan-600" />
-          </Circle>
+          <div className="relative w-10 h-10">
+            <Image
+              width={100}
+              height={100}
+              alt="icons"
+              src={ON.src}
+              className="absolute inset-0 w-full h-full "
+            />
+            {/* <div className="absolute inset-0 bg-blue-500" /> */}
+          </div>
         </Button>
       </div>
+      <DecorativeDrawer onAddDecorativeItem={() => setShowSidebar(false)} />
+      <ExtrasComponent />
       <h2 className="text-lg font-semibold mb-4">Guests</h2>
       <div className="flex gap-2 mb-4">
         <Input
