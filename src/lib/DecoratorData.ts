@@ -22,6 +22,15 @@ import ProjectorPng from '@/images/decotaor/projector.png';
 import SmallPlantPng from '@/images/decotaor/small-plant.png';
 import SpeakerPng from '@/images/decotaor/speaker.png';
 import StagePng from '@/images/decotaor/stage.png';
+import Band from '@/images/decotaor/band.png';
+import PhotoBooth from '@/images/decotaor/Photo-Booth.png';
+import KidsArea from '@/images/decotaor/Kids-area.png';
+import Aisle from '@/images/decotaor/aisle.png';
+import VanBar from '@/images/decotaor/Van-bar.png';
+import Van from '@/images/decotaor/van.png';
+import pool from '@/images/decotaor/pool.png';
+import Church from '@/images/decotaor/Church.png';
+import Fireworks from '@/images/decotaor/Fireworks.png';
 import {
   GripVertical,
   Palette,
@@ -39,51 +48,80 @@ export const decorativeCategories = {
     label: "Decor",
        icon: TreePine,
     items: [
+    
       {
-        id: 'basic-tree',
-        label: 'Basic Tree',
-        imageUrl: BasicTreePng,
+        id: 'band-id',
+        label: 'Band',
+        imageUrl: Band,
         width,
         height,
       },
       {
-        id: 'christmas-tree',
-        label: 'Christmas Tree',
-        imageUrl: ChristmasTreePng,
+        id: 'PhotoBooth-id',
+        label: 'Photo Booth',
+        imageUrl: PhotoBooth,
         width,
         height,
       },
       {
-        id: 'basic-plant',
-        label: 'Basic Plant',
-        imageUrl: BasicPlantPng,
+        id: 'KidsArea-id',
+        label: 'Kids Area',
+        imageUrl: KidsArea,
         width,
         height,
       },
       {
-        id: 'pot-plant',
-        label: 'Pot Plant',
-        imageUrl: PotPlantPng,
-       width,
+        id: 'Aisle-id',
+        label: 'Aisle',
+        imageUrl: Aisle,
+        width,
         height,
       },
       {
-        id: 'small-plant',
-        label: 'Small Plant',
-        imageUrl: SmallPlantPng,
+        id: 'VanBar-id',
+        label: 'Van Bar',
+        imageUrl: VanBar,
+        width,
+        height,
+      },
+      {
+        id: 'Van-id',
+        label: 'Van',
+        imageUrl: Van,
+        width,
+        height,
+      },
+      {
+        id: 'pool-id',
+        label: 'pool',
+        imageUrl: pool,
+        width,
+        height,
+      },
+      {
+        id: 'Church-id',
+        label: 'Church',
+        imageUrl: Church,
+        width,
+        height,
+      },
+      {
+        id: 'Fireworks-id',
+        label: 'Fireworks',
+        imageUrl: Fireworks,
         width,
         height,
       },
       {
         id: 'flower-basket',
-        label: 'Flower Basket',
+        label: 'Flowers',
         imageUrl: FlowerBasketPng,
        width,
         height,
       },
       {
         id: 'candel',
-        label: 'Candle',
+        label: 'Standing Lamp',
         imageUrl: CandelPng,
         width,
         height,
@@ -96,14 +134,14 @@ export const decorativeCategories = {
     items: [
       {
         id: 'cake',
-        label: 'Cake Table',
+        label: 'Cake',
         imageUrl: CakePng,
         width,
         height,
       },
       {
         id: 'buffet-table',
-        label: 'Buffet Table',
+        label: 'Live Cooking Station',
         imageUrl: BuffetTablePng,
         width,
         height,
@@ -117,14 +155,14 @@ export const decorativeCategories = {
       },
       {
         id: 'gift-table',
-        label: 'Gift Table',
+        label: 'Decoration Table',
         imageUrl: GiftTablePng,
        width,
         height,
       },
       {
         id: 'piano',
-        label: 'Piano',
+        label: 'Music Instruments',
         imageUrl: PianoPng,
       width,
         height,
@@ -136,13 +174,7 @@ export const decorativeCategories = {
         width,
         height,
       },
-      {
-        id: 'awards',
-        label: 'Award Stand',
-        imageUrl: AwardsPng,
-        width,
-        height,
-      },
+     
     ]
   },
   entrance: {
@@ -151,25 +183,25 @@ export const decorativeCategories = {
     items: [
       {
         id: 'entrance',
-        label: 'Entrance',
+        label: 'Main Entrance',
         imageUrl: EntrancePng,
          width,
         height,
       },
       {
         id: 'open-door',
-        label: 'Open Door',
+        label: ' Door',
         imageUrl: OpenDoorPng,
         width,
         height,
       },
-      {
+     /*  {
         id: 'close-door',
         label: 'Closed Door',
         imageUrl: CloseDoorPng,
      width,
         height,
-      },
+      }, */
     ]
   },
   audioVideo: {
@@ -211,13 +243,13 @@ export const decorativeCategories = {
         width,
         height,
       },
-      {
+     /*  {
         id: 'projector-screen',
         label: 'Projector Screen',
         imageUrl: ProjectorScreenPng,
         width,
         height,
-      },
+      }, */
     ]
   }
 };
