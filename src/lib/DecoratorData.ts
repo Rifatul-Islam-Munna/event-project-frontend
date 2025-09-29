@@ -31,8 +31,8 @@ import {
   Volume2,
   Search,
 } from "lucide-react";
-const height = 150;
-const width = 150;
+const height = 100;
+const width = 100;
 
 export const decorativeCategories = {
   decor: {

@@ -155,7 +155,7 @@ export function Sidebar({
             {/* <div className="absolute inset-0 bg-blue-500" /> */}
           </div>
         </Button>
-        <Button
+        {/*    <Button
           variant="outline"
           size="icon"
           className="h-10 w-10 p-0 shadow-none border border-gray-100 bg-transparent"
@@ -169,9 +169,9 @@ export function Sidebar({
               src={ON.src}
               className="absolute inset-0 w-full h-full "
             />
-            {/* <div className="absolute inset-0 bg-blue-500" /> */}
+          
           </div>
-        </Button>
+        </Button> */}
       </div>
       <DecorativeDrawer onAddDecorativeItem={() => setShowSidebar(false)} />
       <ExtrasComponent />

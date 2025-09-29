@@ -324,7 +324,7 @@ function WeddingPlanner() {
     const zoomX = (containerWidth * 0.6) / venueWidthPx;
     const zoomY = (containerHeight * 0.6) / venueHeightPx;
     const optimalZoom = Math.min(zoomX, zoomY, 1.0);
-
+    const defaultZoom = Math.max(1.2, optimalZoom);
     // Center the venue in the viewport
     const centerX = (containerWidth - venueWidthPx * optimalZoom) / 2;
     const centerY = (containerHeight - venueHeightPx * optimalZoom) / 2;
@@ -332,71 +332,35 @@ function WeddingPlanner() {
     return {
       x: centerX,
       y: centerY,
-      zoom: Math.max(0.1, optimalZoom),
+      zoom: defaultZoom,
     };
   }, [venueWidthPx, venueHeightPx]);
 
   // IMPROVED: More lenient viewport constraints
-  const constrainViewport = useCallback(
-    (viewport: any) => {
-      const { x, y, zoom } = viewport;
-
-      // Get container dimensions
+  // NEW: Auto-zoom to new table when created
+  const zoomToNewTable = useCallback(
+    (tablePosition: { x: number; y: number }) => {
       const containerWidth =
         reactFlowWrapper.current?.offsetWidth || window.innerWidth - 300;
       const containerHeight =
         reactFlowWrapper.current?.offsetHeight || window.innerHeight;
 
-      // Calculate scaled venue dimensions
-      const scaledVenueWidth = venueWidthPx * zoom;
-      const scaledVenueHeight = venueHeightPx * zoom;
+      // Calculate position to center the new table with good zoom level
+      const targetZoom = 1.8; // High zoom for detailed table work
+      const targetX = containerWidth / 2 - tablePosition.x * targetZoom;
+      const targetY = containerHeight / 2 - tablePosition.y * targetZoom;
 
-      // More generous padding for better UX
-      const padding = 200;
-      const maxPanX = Math.min(
-        padding,
-        containerWidth - scaledVenueWidth + padding
+      setViewport(
+        {
+          x: targetX,
+          y: targetY,
+          zoom: targetZoom,
+        },
+        { duration: 800 } // Smooth 800ms animation
       );
-      const maxPanY = Math.min(
-        padding,
-        containerHeight - scaledVenueHeight + padding
-      );
-
-      // Allow generous panning but prevent going too far
-      // Instead of tight constraints, give more freedom
-      // Remove constraints to allow free panning
-      const constrainedX = x;
-      const constrainedY = y;
-
-      return {
-        x: constrainedX,
-        y: constrainedY,
-        zoom,
-      };
     },
-    [venueWidthPx, venueHeightPx]
+    [setViewport]
   );
-
-  // IMPROVED: Less aggressive viewport correction
-  /*   const onMoveEnd = useCallback(
-    (event: any, viewport: any) => {
-      const constrainedViewport = constrainViewport(viewport);
-
-      // Only correct if user has panned very far outside bounds
-      const threshold = 100;
-      if (
-        Math.abs(constrainedViewport.x - viewport.x) > threshold ||
-        Math.abs(constrainedViewport.y - viewport.y) > threshold
-      ) {
-        setViewport(constrainedViewport, { duration: 500 });
-      }
-    },
-    [constrainViewport, setViewport]
-  ); */
-  const onMoveEnd = useCallback((event: any, viewport: any) => {
-    // Do nothing - allow free movement
-    return;
-  }, []);
 
   const { data: seatPlandata, isLoading } = useQuery({
     queryKey: ["seat-plan", pathName.split("/").pop()],
@@ -913,7 +877,9 @@ function WeddingPlanner() {
     SeatPlan(newNode);
     setNodes((nds) => nds.concat(newNode));
     trackChange(newNodeId, "node", "created", newNode);
-
+    setTimeout(() => {
+      zoomToNewTable(constrainedPosition);
+    }, 300);
     setIsAddTableDialogOpen(false);
     toast.success(`Table "${newTableLabel}" added successfully!`);
   };
@@ -1156,41 +1122,6 @@ function WeddingPlanner() {
       setGuests(data.data);
     }
   }, [data]);
-
-  // Load seat plan data and constrain existing tables within venue bounds
-  /* useEffect(() => {
-    if (seatPlandata?.data && seatPlandata.data.length > 0) {
-      const nodesWithCallbacks = seatPlandata.data.map((nodeData: any) => {
-        // Constrain existing tables within venue bounds
-        const constrainedPosition = constrainTablePosition(
-          nodeData.position.x,
-          nodeData.position.y,
-          nodeData.data.width || 100,
-          nodeData.data.height || 100
-        );
-
-        const constrainedNode = {
-          ...nodeData,
-          position: constrainedPosition,
-        };
-        return createNodeWithCallbacks(constrainedNode);
-      });
-      setNodes(nodesWithCallbacks);
-    } else {
-      setNodes([]);
-    }
-
-    // Set initial centered viewport after a small delay
-    setTimeout(() => {
-      const initialViewport = getInitialViewport();
-      setViewport(initialViewport, { duration: 800 });
-    }, 200);
-  }, [
-    seatPlandata?.data,
-    constrainTablePosition,
-    getInitialViewport,
-    setViewport,
-  ]); */
 
   // uncomment this after db setup
   const createDecorativeNodeWithCallbacks = (nodeData: any) => ({
