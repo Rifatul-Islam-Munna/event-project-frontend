@@ -54,6 +54,7 @@ import {
 } from "@/actions/fetch-action";
 import { useIdleTimer } from "react-idle-timer";
 import { useStore } from "@/zustan-fn/save-alert";
+import { ChairNode } from "./custom-nodes/chair-node";
 import {
   Select,
   SelectContent,
@@ -73,7 +74,9 @@ export type TableType =
   | "square"
   | "circular"
   | "rectangular-one-sided"
-  | "circular-single-seat";
+  | "circular-single-seat"
+  | "chair-row"
+  | "chair-column";
 interface ChangedObjects {
   guest: Guest[];
   node: Array<{
@@ -172,6 +175,7 @@ interface extentNode {
 const nodeTypes = {
   tableNode: TableNode,
   decorativeNode: DecorativeNode,
+  chairNode: ChairNode,
 };
 
 const snapGrid: [number, number] = [15, 15];
@@ -303,7 +307,21 @@ function WeddingPlanner() {
   const { screenToFlowPosition, setViewport, getNodes, fitView, getViewport } =
     useReactFlow();
 
+  //added new
+
+  const [newChairLayout, setNewChairLayout] = useState<
+    "chair-row" | "chair-column" | null
+  >(null);
+
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+
+  const handleAddChairClick = (layout: "chair-row" | "chair-column") => {
+    setNewTableType(layout);
+    setNewChairLayout(layout);
+    setNewTableNumSeats(5); // Default 5 chairs
+    setNewTableLabel("");
+    setIsAddTableDialogOpen(true);
+  };
 
   // Use refs to store stable callback references
   const callbacksRef = useRef({
@@ -466,10 +484,31 @@ function WeddingPlanner() {
           };
         } else {
           const filteredNodes = prev.node.filter((node: any) => node.id !== id);
+          let nodeDataForDB = data;
+          if (data.type === "chairNode") {
+            console.log("🔄 Converting chair node for tracking:", data);
+            console.log("🪑 Chairs before conversion:", data.data.chairs);
+
+            nodeDataForDB = {
+              ...data,
+              data: {
+                ...data.data,
+                seats: data.data.chairs || data.data.seats || [], // ✅ Convert chairs → seats
+                numSeats: data.data.numChairs || data.data.numSeats || 0, // ✅ Convert numChairs → numSeats
+                chairs: undefined, // Remove chairs property
+                numChairs: undefined, // Remove numChairs property
+              },
+            };
+
+            console.log(
+              "💾 After conversion - seats:",
+              nodeDataForDB.data.seats
+            );
+          }
           setDataLength(filteredNodes.length);
           return {
             ...prev,
-            node: [...filteredNodes, data],
+            node: [...filteredNodes, nodeDataForDB],
           };
         }
       });
@@ -545,11 +584,16 @@ function WeddingPlanner() {
         return;
       }
 
+      // ✅ Handle removing from source table/chair
       if (fromTableId && fromSeatId && fromTableId !== nodeId) {
         setNodes((nds) =>
           nds.map((node) => {
             if (node.id === fromTableId) {
-              const updatedSeats = node.data.seats.map((seat) => {
+              // ✅ Check if it's a chair or table
+              const seatsArray =
+                node.type === "chairNode" ? node.data.chairs : node.data.seats;
+
+              const updatedSeats = seatsArray.map((seat) => {
                 if (seat.id === fromSeatId && seat.occupiedBy === guestId) {
                   return { ...seat, occupiedBy: null, occupiedByName: null };
                 }
@@ -558,7 +602,12 @@ function WeddingPlanner() {
 
               const updatedNode = {
                 ...node,
-                data: { ...node.data, seats: updatedSeats },
+                data: {
+                  ...node.data,
+                  ...(node.type === "chairNode"
+                    ? { chairs: updatedSeats }
+                    : { seats: updatedSeats }),
+                },
               };
 
               trackChange(fromTableId, "node", "updated", updatedNode);
@@ -569,31 +618,33 @@ function WeddingPlanner() {
         );
       }
 
+      // ✅ Handle adding to target table/chair
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
-            const targetSeat = node.data.seats.find(
-              (seat) => seat.id === seatId
-            );
+            // ✅ Check if it's a chair or table
+            const seatsArray =
+              node.type === "chairNode" ? node.data.chairs : node.data.seats;
+
+            const targetSeat = seatsArray.find((seat) => seat.id === seatId);
             if (targetSeat?.occupiedBy && targetSeat.occupiedBy !== guestId) {
               toast.error("This seat is already occupied");
               return node;
             }
 
-            // FIXED: Exclude the fromSeatId from the check
-            const isGuestAlreadyAssigned = node.data.seats.some(
+            const isGuestAlreadyAssigned = seatsArray.some(
               (seat) =>
                 seat.occupiedBy === guestId &&
                 seat.id !== seatId &&
-                seat.id !== fromSeatId // This is the key fix!
+                seat.id !== fromSeatId
             );
             if (isGuestAlreadyAssigned) {
               toast.error("Guest is already assigned to another seat");
               return node;
             }
 
-            const updatedSeats = node.data.seats.map((seat) => {
-              // Clear the source seat if moving within same table
+            const updatedSeats = seatsArray.map((seat) => {
+              // Clear the source seat if moving within same table/chair
               if (seat.id === fromSeatId && fromTableId === nodeId) {
                 return { ...seat, occupiedBy: null, occupiedByName: null };
               }
@@ -610,7 +661,12 @@ function WeddingPlanner() {
 
             const updatedNode = {
               ...node,
-              data: { ...node.data, seats: updatedSeats },
+              data: {
+                ...node.data,
+                ...(node.type === "chairNode"
+                  ? { chairs: updatedSeats }
+                  : { seats: updatedSeats }),
+              },
             };
 
             trackChange(nodeId, "node", "updated", updatedNode);
@@ -632,7 +688,7 @@ function WeddingPlanner() {
       );
 
       if (fromTableId && fromTableId !== nodeId) {
-        toast.success(`${guestName} moved to new table successfully!`);
+        toast.success(`${guestName} moved to new seat successfully!`);
       } else if (fromTableId && fromSeatId) {
         toast.success(`${guestName} moved to different seat successfully!`);
       } else {
@@ -647,7 +703,11 @@ function WeddingPlanner() {
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
-            const updatedSeats = node.data.seats.map((seat) => {
+            // ✅ Check if it's a chair or table
+            const seatsArray =
+              node.type === "chairNode" ? node.data.chairs : node.data.seats;
+
+            const updatedSeats = seatsArray.map((seat) => {
               if (seat.id === seatId && seat.occupiedBy === guestId) {
                 return { ...seat, occupiedBy: null, occupiedByName: null };
               }
@@ -656,7 +716,12 @@ function WeddingPlanner() {
 
             const updatedNode = {
               ...node,
-              data: { ...node.data, seats: updatedSeats },
+              data: {
+                ...node.data,
+                ...(node.type === "chairNode"
+                  ? { chairs: updatedSeats }
+                  : { seats: updatedSeats }),
+              },
             };
 
             trackChange(nodeId, "node", "updated", updatedNode);
@@ -687,7 +752,13 @@ function WeddingPlanner() {
       setNodes((nds) => {
         const nodeToDelete = nds.find((n) => n.id === nodeId);
         if (nodeToDelete) {
-          nodeToDelete.data.seats.forEach((seat) => {
+          // ✅ Check if it's a chair or table
+          const seatsArray =
+            nodeToDelete.type === "chairNode"
+              ? nodeToDelete.data.chairs
+              : nodeToDelete.data.seats;
+
+          seatsArray.forEach((seat) => {
             if (seat.occupiedBy) {
               setGuests((prevGuests) =>
                 prevGuests.map((guest) => {
@@ -706,7 +777,9 @@ function WeddingPlanner() {
       });
 
       DeteTable(nodeId);
-      toast.info(`Table has been removed.`);
+      toast.info(
+        `${nodeToDelete?.type === "chairNode" ? "Chairs" : "Table"} removed.`
+      );
     },
     [setNodes, DeteTable, trackChange]
   );
@@ -821,6 +894,85 @@ function WeddingPlanner() {
   const handleConfirmAddTable = () => {
     if (!newTableType || !newTableLabel.trim()) {
       toast.error("Please provide a table name.");
+      return;
+    }
+    if (newTableType === "chair-row" || newTableType === "chair-column") {
+      const chairs = Array.from({ length: newTableNumSeats }, () => ({
+        id: uuidv4(),
+        occupiedBy: null,
+        occupiedByName: null,
+      }));
+
+      const chairWidth = 40;
+      const chairHeight = 40;
+      const chairSpacing = 10;
+
+      const width =
+        newTableType === "chair-row"
+          ? newTableNumSeats * (chairWidth + chairSpacing) + 20
+          : chairWidth + 20;
+
+      const height =
+        newTableType === "chair-column"
+          ? newTableNumSeats * (chairHeight + chairSpacing) + 40
+          : chairHeight + 40;
+
+      const newNodeId = uuidv4();
+      const margin = 20;
+      const randomX =
+        Math.random() * (venueWidthPx - width - margin * 2) + margin;
+      const randomY =
+        Math.random() * (venueHeightPx - height - margin * 2) + margin;
+
+      // ✅ For React Flow - use 'chairs'
+      const newNodeData = {
+        id: newNodeId,
+        type: "chairNode",
+        event_id: pathName.split("/").pop() as string,
+        position: { x: randomX, y: randomY },
+        data: {
+          event_id: pathName.split("/").pop() as string,
+          label: newTableLabel,
+          type: newTableType,
+          chairs: chairs,
+          numChairs: newTableNumSeats,
+          width: width,
+          height: height,
+          onGuestDrop: callbacksRef.current.handleGuestDrop,
+          onRemoveGuestFromChair:
+            callbacksRef.current.handleRemoveGuestFromSeat,
+          onDeleteChair: callbacksRef.current.handleDeleteTable,
+          onEditChair: callbacksRef.current.handleEditTable,
+        },
+        style: { width: `${width}px`, height: `${height}px` },
+      };
+
+      // ✅ For Database - convert 'chairs' to 'seats'
+      const nodeDataForDB = {
+        id: newNodeId,
+        type: "chairNode",
+        event_id: pathName.split("/").pop() as string,
+        position: { x: randomX, y: randomY },
+        data: {
+          event_id: pathName.split("/").pop() as string,
+          label: newTableLabel,
+          type: newTableType,
+          seats: chairs,
+          numSeats: newTableNumSeats,
+          width: width,
+          height: height,
+        },
+        style: { width: `${width}px`, height: `${height}px` },
+      };
+
+      const newNode = newNodeData;
+
+      SeatPlan(nodeDataForDB);
+      setNodes((nds) => nds.concat(newNode));
+      trackChange(newNodeId, "node", "created", nodeDataForDB); // ✅ USE nodeDataForDB here, not newNode!
+      setTimeout(() => zoomToNewTable({ x: randomX, y: randomY }), 300);
+      setIsAddTableDialogOpen(false);
+      toast.success(`${newTableLabel} added successfully!`);
       return;
     }
 
@@ -1073,7 +1225,23 @@ function WeddingPlanner() {
             // Update the change object with constrained position
             change.position = constrainedPosition;
 
-            if (node.type === "tableNode") {
+            if (node.type === "chairNode") {
+              const nodeForDB = {
+                ...updatedNode,
+                data: {
+                  ...updatedNode.data,
+                  seats:
+                    updatedNode.data.chairs || updatedNode.data.seats || [],
+                  numSeats:
+                    updatedNode.data.numChairs ||
+                    updatedNode.data.numSeats ||
+                    0,
+                  chairs: undefined,
+                  numChairs: undefined,
+                },
+              };
+              trackChange(change.id, "node", "updated", nodeForDB);
+            } else if (node.type === "tableNode") {
               trackChange(change.id, "node", "updated", updatedNode);
             } else if (node.type === "decorativeNode") {
               trackDecorativeChange(change.id, "updated", updatedNode);
@@ -1137,6 +1305,8 @@ function WeddingPlanner() {
   useEffect(() => {
     const allNodes: any[] = [];
 
+    console.log("setplan data", seatPlandata);
+
     // Load table nodes
     if (seatPlandata?.data && seatPlandata.data.length > 0) {
       const tableNodesWithCallbacks = seatPlandata.data.map((nodeData: any) => {
@@ -1152,6 +1322,21 @@ function WeddingPlanner() {
           ...nodeData,
           position: constrainedPosition,
         };
+        if (nodeData.type === "chairNode") {
+          return {
+            ...constrainedNode,
+            data: {
+              ...constrainedNode.data,
+              chairs: constrainedNode.data.seats || [], // ✅ Convert seats → chairs
+              numChairs: constrainedNode.data.numSeats || 0, // ✅ Convert numSeats → numChairs
+              onGuestDrop: callbacksRef.current.handleGuestDrop,
+              onRemoveGuestFromChair:
+                callbacksRef.current.handleRemoveGuestFromSeat,
+              onDeleteChair: callbacksRef.current.handleDeleteTable,
+              onEditChair: callbacksRef.current.handleEditTable,
+            },
+          };
+        }
         return createNodeWithCallbacks(constrainedNode);
       });
 

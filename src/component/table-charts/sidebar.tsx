@@ -6,7 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import { User, Square, Circle, X, Trash2, GripHorizontal } from "lucide-react"; // Removed Save, FolderOpen
+import {
+  User,
+  Square,
+  Circle,
+  X,
+  Trash2,
+  GripHorizontal,
+  GripVertical,
+} from "lucide-react"; // Removed Save, FolderOpen
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import AddUser from "@/app/dashboard/AddUser";
@@ -173,6 +181,27 @@ export function Sidebar({
           </div>
         </Button> */}
       </div>
+
+      <h2 className="text-lg font-semibold mb-4">Add Chairs</h2>
+      <div className="flex gap-2 mb-6">
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => onAddTableClick("chair-row")}
+        >
+          <GripHorizontal className="w-4 h-4 mr-2" />
+          Row
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => onAddTableClick("chair-column")}
+        >
+          <GripVertical className="w-4 h-4 mr-2" />
+          Column
+        </Button>
+      </div>
+
       <DecorativeDrawer onAddDecorativeItem={() => setShowSidebar(false)} />
       <ExtrasComponent />
       <h2 className="text-lg font-semibold mb-4">Guests</h2>
