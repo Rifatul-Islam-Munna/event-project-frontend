@@ -601,7 +601,7 @@ function WeddingPlanner() {
           (guest.adults ?? 0) + (guest.children ?? 0)
         );
 
-        // ✅ NEW: First check if this guest is already seated at the target
+        // Check if this guest is already seated at the target
         let alreadySeated = false;
         setNodes((nds) => {
           const targetNode = nds.find((n) => n.id === nodeId);
@@ -618,15 +618,18 @@ function WeddingPlanner() {
               console.log("🚫 Guest already seated here!");
             }
           }
-          return nds; // Don't modify yet
+          return nds;
         });
 
         if (alreadySeated) {
           console.log("🚫 BLOCKED - Guest already assigned to this table");
-          return currentGuests; // Exit early
+          return currentGuests;
         }
 
         console.log("💺 TOTAL SEATS NEEDED:", totalSeatsNeeded);
+
+        // ✅ Track if the guest was successfully seated
+        let wasSuccessfullySeated = false;
 
         // Remove from source table/chair
         if (fromTableId && fromSeatId && fromTableId !== nodeId) {
@@ -676,7 +679,6 @@ function WeddingPlanner() {
                 return node;
               }
 
-              // ✅ Check if target seat is already occupied by THIS guest
               if (seatsArray[targetSeatIndex].occupiedBy === guestId) {
                 console.log("🚫 Target seat already has this guest!");
                 return node;
@@ -692,6 +694,7 @@ function WeddingPlanner() {
                     totalSeatsNeeded > 1 ? "s" : ""
                   }`
                 );
+                // ✅ Don't set wasSuccessfullySeated = true
                 return node;
               }
 
@@ -730,6 +733,7 @@ function WeddingPlanner() {
                 toast.error(
                   `Cannot find ${totalSeatsNeeded} consecutive seats!`
                 );
+                // ✅ Don't set wasSuccessfullySeated = true
                 return node;
               }
 
@@ -777,11 +781,21 @@ function WeddingPlanner() {
               };
 
               trackChange(nodeId, "node", "updated", updatedNode);
+
+              // ✅ Mark as successfully seated
+              wasSuccessfullySeated = true;
+
               return updatedNode;
             }
             return node;
           })
         );
+
+        // ✅ Only update guest status if they were successfully seated
+        if (!wasSuccessfullySeated) {
+          console.log("❌ Guest was NOT seated - keeping isAssigned as false");
+          return currentGuests; // Don't change anything
+        }
 
         const updatedGuests = currentGuests.map((g) => {
           if (g._id === guestId) {
@@ -1819,16 +1833,16 @@ function WeddingPlanner() {
               Table
             </DialogTitle>
             <DialogDescription>
-              Configure the details for your new table. Tables will be placed
-              within the venue area ({venueWidth}m × {venueHeight}m).
+              Configure the details for your new table/chair. Tables will be
+              placed within the venue area ({venueWidth}m × {venueHeight}m).
               <br />
               Estimated capacity: ~{estimatedCapacity} tables total.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-2 items-center gap-4">
               <Label htmlFor="tableName" className="text-right">
-                Table Name
+                Table/Chair Name :
               </Label>
               <Input
                 id="tableName"
@@ -1839,9 +1853,9 @@ function WeddingPlanner() {
               />
             </div>
             {newTableType !== "circular-single-seat" && (
-              <div className="grid grid-cols-4 items-center gap-4">
+              <div className="grid grid-cols-2 items-center gap-4">
                 <Label htmlFor="numSeats" className="text-right">
-                  Number of Seats
+                  Number of Seats :
                 </Label>
                 <div className="col-span-3 flex items-center gap-2">
                   <Slider
@@ -1858,9 +1872,9 @@ function WeddingPlanner() {
               </div>
             )}
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-2 items-center gap-4">
             <Label htmlFor="tableName" className="text-right">
-              Measurement Type
+              Measurement Type:
             </Label>
             <Select value={mType} onValueChange={setMtype}>
               <SelectTrigger className="w-[190px]">
@@ -1872,9 +1886,9 @@ function WeddingPlanner() {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-2 items-center gap-4">
             <Label htmlFor="tableName" className="text-right">
-              Table width
+              Table/chair width :
             </Label>
             <Input
               id="tableName"
@@ -1884,9 +1898,9 @@ function WeddingPlanner() {
               placeholder="e.g., 2.5"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-2 items-center gap-4">
             <Label htmlFor="tableName" className="text-right">
-              Table height
+              Table/chair height :
             </Label>
             <Input
               id="tableName"

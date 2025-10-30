@@ -238,7 +238,11 @@ export function Sidebar({
                   </AvatarFallback>
                 </Avatar>
                 <span className="flex-grow text-sm font-medium">
-                  {guest?.name}
+                  {guest?.name}-{" "}
+                  <span className=" text-[8px]">
+                    {" "}
+                    {guest?.adults}A-{guest?.children}C
+                  </span>
                 </span>
                 <div className="flex justify-center items-center gap-1.5">
                   <Button

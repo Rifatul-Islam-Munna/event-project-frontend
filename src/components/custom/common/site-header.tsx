@@ -67,6 +67,9 @@ export function SiteHeader() {
   const isSubscriptionActive = user?.subscription?.endDate
     ? isAfter(new Date(user.subscription.endDate), new Date())
     : false;
+  console.log("isSubscriptionActive", user?.subscription?.endDate);
+
+  console.log("isSubscriptionActive", isSubscriptionActive);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -95,9 +98,9 @@ export function SiteHeader() {
                 <RainbowButton
                   onClick={() => router.push("/#pricing")}
                   variant="outline"
-                  className="hidden ml-1.5 sm:ml-0 xs:flex p-1 sm:p-2 text-xs sm:text-sm"
+                  className="flex ml-0 p-1 sm:p-2 text-xs sm:text-sm"
                 >
-                  Upgrade <span className=" hidden  sm:inline"> to Pro </span>
+                  Upgrade <span className="hidden sm:inline">to Pro</span>
                 </RainbowButton>
               )}
 
@@ -221,9 +224,9 @@ export function SiteHeader() {
                 <RainbowButton
                   onClick={() => router.push("/#pricing")}
                   variant="outline"
-                  className="p-1 ml-1.5 sm:ml-0 sm:p-2 text-xs sm:text-sm"
+                  className="flex ml-1.5 sm:ml-0 p-1 sm:p-2 text-xs sm:text-sm"
                 >
-                  Upgrade <span className=" hidden sm:inline"> to Pro </span>
+                  Upgrade <span className="hidden sm:inline">to Pro</span>
                 </RainbowButton>
               )}
 

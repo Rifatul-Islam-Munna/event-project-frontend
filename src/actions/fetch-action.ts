@@ -1,6 +1,6 @@
 "use server"
 
-import { EventList, Vendor } from "@/@types/events-details";
+import { EventItem, EventList, Vendor } from "@/@types/events-details";
 import { DeleteAxios, GetRequestAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
 import * as XLSX from 'xlsx';
 import { Guest as Gu } from "@/@types/events-details";
@@ -34,6 +34,12 @@ export const updateEvent = async (from:FormData)=>{
 
 export const getAllEvent = async (page:number,limit:number)=>{
     const [data,error] = await GetRequestNormal<EventList>(`/events/get-all-event?limit=${limit}&page=${page}`);
+    console.log("event-data->",data,"event-error->",error);
+    return {data,error}
+
+}
+export const getOneEvent = async (id:string)=>{
+    const [data,error] = await GetRequestNormal<EventItem>(`/events/get-one-document?mongoId=${id}`);
     console.log("event-data->",data,"event-error->",error);
     return {data,error}
 

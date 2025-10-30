@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, Ref } from "react"; // Import useRef
+import { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -27,7 +27,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import type { Event } from "@/app/dashboard/page"; // Import the Event type
+import type { Event } from "@/app/dashboard/page";
 import {
   Edit,
   Trash2,
@@ -41,16 +41,17 @@ import {
 import { EditEventForm } from "./edit-event-form";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
-import qrcode from "qrcode"; // Import the qrcode library
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CreateEventForm } from "./create-event-from";
-import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllEvent } from "@/actions/fetch-action";
 import { EventItem } from "@/@types/events-details";
 import { User } from "@/@types/user-types";
 import { getUserInfo } from "@/actions/auth";
+import { useRouter } from "next/navigation";
+
 type EventTableProps = {
   events: Event[];
   onAddEvent: (event: {
@@ -82,13 +83,10 @@ export function EventTable({
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [eventToDelete, setEventToDelete] = useState<EventItem | null>(null);
   const [sharingEvent, setSharingEvent] = useState<EventItem | null>(null);
-  const qrCodeCanvasRef = useRef<HTMLCanvasElement | null>(null); // Ref for the QR code canvas
+  const qrCodeCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentEvents = events.slice(startIndex, endIndex);
   const [user, SetUser] = useState<User | null>(null);
+
   useEffect(() => {
     const getuserInfo = async () => {
       const info = await getUserInfo();
@@ -96,6 +94,7 @@ export function EventTable({
     };
     getuserInfo();
   }, []);
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -117,6 +116,7 @@ export function EventTable({
       setEventToDelete(null);
     }
   };
+  const router = useRouter();
 
   const handleShareClick = (event: EventItem) => {
     setSharingEvent(event);
@@ -126,10 +126,9 @@ export function EventTable({
   const handleDownloadQrCode = () => {
     if (!qrCodeCanvasRef.current) return;
     const url = qrCodeCanvasRef.current.toDataURL("image/png");
-
     const a = document.createElement("a");
     a.href = url;
-    a.download = `event-${"f"}-qrcode.png`;
+    a.download = `event-qrcode.png`;
     a.click();
   };
 
@@ -138,23 +137,21 @@ export function EventTable({
     queryFn: () => getAllEvent(currentPage, 10),
   });
 
-  console.log(user);
   return (
-    <Card className="border border-gray-200/10  bg-transparent p-6 shadow-none  ">
-      <div className="flex items-center justify-between mb-6   w-full">
-        <h3 className="text-2xl font-bold  text-blue-500">Your Events</h3>
+    <div className="w-full">
+      {/* Header Section - Clean and Compact */}
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-2xl font-bold text-blue-600">Your Events</h2>
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DialogTrigger asChild>
-            <Button className=" bg-gradient-to-br from-blue-400 to-blue-500 rounded-full text-primary-foreground hover:bg-primary/90 transition-colors  ">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               <Plus className="mr-2 h-4 w-4" /> Create New Event
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] border-border bg-background">
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle className="text-foreground">
-                Create New Event
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground">
+              <DialogTitle>Create New Event</DialogTitle>
+              <DialogDescription>
                 Fill in the details to set up your next event.
               </DialogDescription>
             </DialogHeader>
@@ -165,171 +162,225 @@ export function EventTable({
           </DialogContent>
         </Dialog>
       </div>
-      <div className="border border-border rounded-md overflow-hidden bg-background w-full max-w-[370px] sm:max-w-xl md:max-w-2xl lg:max-w-full ">
-        <Table className=" w-full ">
-          <TableHeader>
-            <TableRow className="bg-muted hover:bg-muted">
-              <TableHead className="text-foreground py-3">Logo</TableHead>
-              <TableHead className="text-foreground py-3">Event Name</TableHead>
-              <TableHead className="text-foreground py-3">Date</TableHead>
-              <TableHead className="text-foreground py-3">Location</TableHead>
-              <TableHead className="text-foreground py-3">
-                width/height (m)
-              </TableHead>
 
-              <TableHead className="text-foreground text-center py-3">
-                Manage
-              </TableHead>
-              <TableHead className="text-foreground  text-right py-3">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody className=" overflow-x-auto bg-transparent">
-            {data?.data?.data?.length === 0 || data?.error ? (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  No events created yet.
-                </TableCell>
+      {/* Table Card - Clean borders, no shadow */}
+      <Card className="border border-gray-200 bg-white overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            {/* Table Header - Subtle background */}
+            <TableHeader>
+              <TableRow className="bg-gray-50 border-b border-gray-200">
+                <TableHead className="font-semibold text-gray-700 py-3">
+                  Logo
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700 py-3">
+                  Event Name
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700 py-3">
+                  Date
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700 py-3">
+                  Location
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700 py-3">
+                  Size (m)
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700 text-center py-3">
+                  Manage
+                </TableHead>
+                <TableHead className="font-semibold text-gray-700 text-right py-3">
+                  Actions
+                </TableHead>
               </TableRow>
-            ) : (
-              data?.data?.data?.map((event) => (
-                <TableRow
-                  key={event._id}
-                  className="hover:bg-muted/50 transition-colors"
-                >
-                  <TableCell className="py-3">
-                    {event.logo_path ? (
-                      <Image
-                        src={(event.logo_path as string) || "/placeholder.svg"}
-                        alt={`${event.name} logo`}
-                        width={40}
-                        height={40}
-                        className="rounded-full object-cover aspect-square border border-border"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-xs border border-border">
-                        No Logo
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium text-foreground py-3">
-                    {event?.name}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground py-3">
-                    {event?.date}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground py-3">
-                    {event?.location}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground py-3">
-                    {event?.width} x {event?.height}
-                  </TableCell>
+            </TableHeader>
 
-                  <TableCell className="text-center py-3">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() =>
-                        onManageEvent(event?._id, event?.width, event?.height)
-                      }
-                      className=" text-primary-foreground hover:bg-primary/90 transition-colors bg-gradient-to-br from-blue-400 to-blue-500 rounded-full text-xs cursor-pointer "
-                    >
-                      Manage
-                    </Button>
-                  </TableCell>
-                  <TableCell className="text-right flex gap-2 justify-end py-3">
-                    {user?.plan?.permissions?.includes("qr.live") ? (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleShareClick(event)}
-                          className="text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
-                          aria-label={`Share ${event.name}`}
-                        >
-                          <Share2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditClick(event)}
-                          className="text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
-                          aria-label={`Edit ${event.name}`}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteClick(event)}
-                          className="text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
-                          aria-label={`Delete ${event.name}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : null}
+            {/* Table Body */}
+            <TableBody>
+              {data?.data?.data?.length === 0 || data?.error ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="h-32 text-center text-gray-500"
+                  >
+                    No events created yet.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : (
+                data?.data?.data?.map((event, index) => (
+                  <TableRow
+                    key={event._id}
+                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    {/* Logo */}
+                    <TableCell
+                      onClick={() =>
+                        router.push(`/dashboard/details/${event._id}`)
+                      }
+                      className="py-3 cursor-pointer"
+                    >
+                      {event.logo_path ? (
+                        <Image
+                          src={event.logo_path as string}
+                          alt={`${event.name} logo`}
+                          width={40}
+                          height={40}
+                          className="rounded-full w-10 h-10 object-cover border border-gray-200"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs border border-gray-200">
+                          No Logo
+                        </div>
+                      )}
+                    </TableCell>
+
+                    {/* Event Name */}
+                    <TableCell
+                      onClick={() =>
+                        router.push(`/dashboard/details/${event._id}`)
+                      }
+                      className="font-medium text-gray-900 py-3 cursor-pointer"
+                    >
+                      {event.name}
+                    </TableCell>
+
+                    {/* Date */}
+                    <TableCell
+                      onClick={() =>
+                        router.push(`/dashboard/details/${event._id}`)
+                      }
+                      className="text-gray-600 text-sm py-3 cursor-pointer"
+                    >
+                      {event.date}
+                    </TableCell>
+
+                    {/* Location */}
+                    <TableCell
+                      onClick={() =>
+                        router.push(`/dashboard/details/${event._id}`)
+                      }
+                      className="text-gray-600 text-sm py-3 max-w-[200px] truncate cursor-pointer"
+                    >
+                      {event.location}
+                    </TableCell>
+
+                    {/* Size */}
+                    <TableCell className="text-gray-600 text-sm py-3">
+                      {event.width} × {event.height}
+                    </TableCell>
+
+                    {/* Manage Button */}
+                    <TableCell className="text-center py-3">
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          onManageEvent(event._id, event.width, event.height)
+                        }
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4"
+                      >
+                        Manage
+                      </Button>
+                    </TableCell>
+
+                    {/* Actions */}
+                    <TableCell className="text-right py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        {user?.plan?.permissions?.includes("qr.live") && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleShareClick(event)}
+                              className="h-8 w-8 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                            >
+                              <Share2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditClick(event)}
+                              className="h-8 w-8 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteClick(event)}
+                              className="h-8 w-8 text-gray-600 hover:text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
+
+      {/* Pagination - Clean design */}
       {(data?.data?.metaData?.page ?? 0) > 1 && (
-        <Pagination className="mt-6">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={() => handlePageChange(currentPage - 1)}
-                className={
-                  currentPage === 1
-                    ? "pointer-events-none opacity-50"
-                    : "hover:bg-muted transition-colors"
-                }
-              />
-            </PaginationItem>
-            {Array.from({ length: data?.data?.metaData?.page ?? 0 }, (_, i) => (
-              <PaginationItem key={i}>
-                <PaginationLink
+        <div className="flex justify-center mt-5">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
                   href="#"
-                  onClick={() => handlePageChange(i + 1)}
-                  isActive={currentPage === i + 1}
-                  className="hover:bg-muted transition-colors"
-                >
-                  {i + 1}
-                </PaginationLink>
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "hover:bg-gray-100"
+                  }
+                />
               </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={() => handlePageChange(currentPage + 1)}
-                className={
-                  currentPage === totalPages
-                    ? "pointer-events-none opacity-50"
-                    : "hover:bg-muted transition-colors"
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+              {Array.from(
+                { length: data?.data?.metaData?.page ?? 0 },
+                (_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      href="#"
+                      onClick={() => handlePageChange(i + 1)}
+                      isActive={currentPage === i + 1}
+                      className={
+                        currentPage === i + 1
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "hover:bg-gray-100"
+                      }
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              )}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={
+                    currentPage === (data?.data?.metaData?.page ?? 0)
+                      ? "pointer-events-none opacity-50"
+                      : "hover:bg-gray-100"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       )}
-      {/* Edit Event Modal */}
+
+      {/* Edit Modal */}
       {editingEvent && (
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent className="sm:max-w-[425px] border-border bg-background">
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle className="text-foreground">Edit Event</DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                {
-                  " Make changes to your event here. Click save when you're done."
-                }
+              <DialogTitle>Edit Event</DialogTitle>
+              <DialogDescription>
+                Make changes to your event here. Click save when you're done.
               </DialogDescription>
             </DialogHeader>
             <EditEventForm
@@ -339,65 +390,65 @@ export function EventTable({
           </DialogContent>
         </Dialog>
       )}
+
       {/* Delete Confirmation Modal */}
       <Dialog
         open={isDeleteConfirmModalOpen}
         onOpenChange={setIsDeleteConfirmModalOpen}
       >
-        <DialogContent className="sm:max-w-[425px] border-border bg-background">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="text-foreground flex items-center gap-2">
-              <AlertTriangle className="h-6 w-6 text-destructive" /> Confirm
-              Deletion
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Confirm Deletion
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription>
               Are you sure you want to delete the event &quot;
-              {eventToDelete?.name}&quot;? This action cannot be undone.
+              {eventToDelete?.name}
+              &quot;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-4">
+          <DialogFooter className="gap-2">
             <Button
               variant="outline"
               onClick={() => setIsDeleteConfirmModalOpen(false)}
-              className="border-border text-foreground hover:bg-muted transition-colors"
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors text-gray-50"
+              className="bg-red-600 hover:bg-red-700 text-white"
             >
               Delete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Share Event Modal */}
+
+      {/* Share Modal */}
       {sharingEvent && (
         <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
-          <DialogContent className="sm:max-w-[425px] border-border bg-background">
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle className="text-foreground flex items-center gap-2">
-                <Share2 className="h-6 w-6 text-primary" /> Share Event:{" "}
-                {sharingEvent?.name}
+              <DialogTitle className="flex items-center gap-2">
+                <Share2 className="h-5 w-5 text-blue-600" />
+                Share Event: {sharingEvent.name}
               </DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                Share this link and QR code with your guests so they can find
-                their seats.
+              <DialogDescription>
+                Share this link and QR code with your guests.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="shareLink" className="text-foreground">
-                  Shareable Link
-                </Label>
-                <div className="flex items-center gap-2">
+            <div className="space-y-4 py-4">
+              {/* Shareable Link */}
+              <div className="space-y-2">
+                <Label htmlFor="shareLink">Shareable Link</Label>
+                <div className="flex gap-2">
                   <Input
                     id="shareLink"
                     readOnly
                     value={`${window.location.origin}/public-view/event/${sharingEvent._id}`}
-                    className="border-border focus:ring-primary focus:border-primary"
+                    className="text-sm"
                   />
                   <Button
                     variant="outline"
@@ -407,20 +458,12 @@ export function EventTable({
                         `${window.location.origin}/public-view/event/${sharingEvent._id}`
                       )
                     }
-                    className="border-border text-muted-foreground hover:bg-muted hover:text-primary"
-                    aria-label="Copy link"
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    asChild
-                    className="border-border text-muted-foreground hover:bg-muted hover:text-primary bg-transparent"
-                    aria-label="Open link"
-                  >
+                  <Button variant="outline" size="icon" asChild>
                     <a
-                      href={`${window.location.origin}/events/${sharingEvent.slug}`}
+                      href={`${window.location.origin}/public-view/event/${sharingEvent._id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -429,24 +472,21 @@ export function EventTable({
                   </Button>
                 </div>
               </div>
-              <div className="grid gap-2 text-center">
-                <Label className="text-foreground">QR Code</Label>
-                <div className="p-4 bg-white rounded-md border border-border flex justify-center">
-                  {/* Use a canvas element for QR code rendering */}
+
+              {/* QR Code */}
+              <div className="space-y-2">
+                <Label className="text-center block">QR Code</Label>
+                <div className="p-4 bg-white rounded-md border border-gray-200 flex justify-center">
                   <QRCodeCanvas
                     value={`${window.location.origin}/public-view/event/${sharingEvent._id}`}
                     ref={qrCodeCanvasRef}
-                    size={256}
+                    size={200}
                     level="H"
-                    marginSize={4}
-                    bgColor="#FFFFFF"
-                    title={`${sharingEvent.name}-Event QR Code`}
-                    fgColor="#000000"
                   />
                 </div>
                 <Button
                   onClick={handleDownloadQrCode}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors mt-2"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Download QR Code
                 </Button>
@@ -456,7 +496,6 @@ export function EventTable({
               <Button
                 variant="outline"
                 onClick={() => setIsShareModalOpen(false)}
-                className="border-border text-foreground hover:bg-muted transition-colors"
               >
                 Close
               </Button>
@@ -464,6 +503,6 @@ export function EventTable({
           </DialogContent>
         </Dialog>
       )}
-    </Card>
+    </div>
   );
 }
