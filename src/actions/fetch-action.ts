@@ -125,7 +125,6 @@ export async function updateMultipleGuest(file: File, eventId: string) {
   const children = getNumberValue(r, kchild);
 
     if (!name) continue;
-    if (!email && !phone) continue;
     if (email && !looksLikeEmail(email)) continue;
 
     result.push({ name, email, phone,adults,children,event_id: eventId });

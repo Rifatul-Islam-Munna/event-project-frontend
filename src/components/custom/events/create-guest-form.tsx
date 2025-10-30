@@ -51,7 +51,7 @@ export function CreateGuestForm({ onAddGuest, onClose }: CreateGuestFormProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!name || !email) {
+    if (!name) {
       toast.error("Please fill in all required fields.");
       return;
     }
@@ -94,7 +94,6 @@ export function CreateGuestForm({ onAddGuest, onClose }: CreateGuestFormProps) {
           placeholder="john.doe@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
           className="border-border focus:ring-primary focus:border-primary"
         />
       </div>
@@ -139,7 +138,6 @@ export function CreateGuestForm({ onAddGuest, onClose }: CreateGuestFormProps) {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           className="border-border focus:ring-primary focus:border-primary"
-          required
         />
       </div>
       {/* Removed Seat Number and Is Assigned fields */}
