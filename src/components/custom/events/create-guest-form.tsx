@@ -24,6 +24,9 @@ export function CreateGuestForm({ onAddGuest, onClose }: CreateGuestFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [adults, setAdults] = useState(0);
+  const [children, setChildren] = useState(0);
+
   const pathName = usePathname();
 
   const query = useQueryClient();
@@ -39,6 +42,8 @@ export function CreateGuestForm({ onAddGuest, onClose }: CreateGuestFormProps) {
       setName("");
       setEmail("");
       setPhone("");
+      setAdults(0);
+      setChildren(0);
       query.refetchQueries({ queryKey: ["get-all-guest"], exact: false });
       return toast.success("Guest added successfully");
     },
@@ -55,6 +60,8 @@ export function CreateGuestForm({ onAddGuest, onClose }: CreateGuestFormProps) {
       name,
       email,
       phone,
+      adults: adults,
+      children: children,
       event_id: pathName.split("/").pop(),
     };
 
@@ -91,9 +98,39 @@ export function CreateGuestForm({ onAddGuest, onClose }: CreateGuestFormProps) {
           className="border-border focus:ring-primary focus:border-primary"
         />
       </div>
+      <div className=" grid grid-cols-2 gap-2">
+        <div>
+          <Label htmlFor="guestPhone" className="text-foreground">
+            Adults
+          </Label>
+          <Input
+            id="guestPhone"
+            type="number"
+            placeholder="2  (max 7)"
+            value={adults > 0 ? adults : ""}
+            onChange={(e) => setAdults(Number(e.target.value))}
+            max={7}
+            className="border-border focus:ring-primary focus:border-primary"
+          />
+        </div>
+        <div>
+          <Label htmlFor="guestPhone" className="text-foreground">
+            Children
+          </Label>
+          <Input
+            id="guestPhone"
+            type="number"
+            placeholder="2 (max 7)"
+            max={7}
+            value={children > 0 ? children : ""}
+            onChange={(e) => setChildren(Number(e.target.value))}
+            className="border-border focus:ring-primary focus:border-primary"
+          />
+        </div>
+      </div>
       <div className="grid gap-2">
         <Label htmlFor="guestPhone" className="text-foreground">
-          Phone
+          Phone (include country code)
         </Label>
         <Input
           id="guestPhone"

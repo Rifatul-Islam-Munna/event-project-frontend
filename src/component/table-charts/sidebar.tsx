@@ -58,7 +58,8 @@ export function Sidebar({
   const handleDragStart = (
     event: React.DragEvent,
     guestId: string,
-    guestName: string
+    guestName: string,
+    guest: Guest
   ) => {
     event.dataTransfer.setData("guestId", guestId);
     event.dataTransfer.setData("guestName", guestName);
@@ -227,7 +228,9 @@ export function Sidebar({
                 key={guest._id}
                 className={` w-full grid grid-cols-3 justify-center items-center gap-2 shadow-none py-1 border border-gray-100 cursor-grab`}
                 draggable={true}
-                onDragStart={(e) => handleDragStart(e, guest._id!, guest?.name)}
+                onDragStart={(e) =>
+                  handleDragStart(e, guest._id!, guest?.name, guest)
+                }
               >
                 <Avatar className="w-8 h-8">
                   <AvatarFallback className="bg-gray-200 text-gray-600">

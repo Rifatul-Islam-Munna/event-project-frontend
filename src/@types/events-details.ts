@@ -7,6 +7,8 @@ export type Guest = {
   isAssigned?: boolean 
   event_id?:string// Still allow for data, but not in form
   _id?:string
+adults?:number
+children?:number
 }
 
 export type Vendor = {
