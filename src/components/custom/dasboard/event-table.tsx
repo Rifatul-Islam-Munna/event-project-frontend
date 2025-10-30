@@ -51,6 +51,7 @@ import { EventItem } from "@/@types/events-details";
 import { User } from "@/@types/user-types";
 import { getUserInfo } from "@/actions/auth";
 import { useRouter } from "next/navigation";
+import { isAfter } from "date-fns";
 
 type EventTableProps = {
   events: Event[];
@@ -131,6 +132,9 @@ export function EventTable({
     a.download = `event-qrcode.png`;
     a.click();
   };
+  const isSubscriptionActive = user?.subscription?.endDate
+    ? isAfter(new Date(user.subscription.endDate), new Date())
+    : false;
 
   const { data, error } = useQuery({
     queryKey: ["get-all-events", currentPage],
@@ -144,7 +148,10 @@ export function EventTable({
         <h2 className="text-2xl font-bold text-blue-600">Your Events</h2>
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button
+              disabled={isSubscriptionActive === false}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
               <Plus className="mr-2 h-4 w-4" /> Create New Event
             </Button>
           </DialogTrigger>
@@ -275,6 +282,7 @@ export function EventTable({
                         onClick={() =>
                           onManageEvent(event._id, event.width, event.height)
                         }
+                        disabled={isSubscriptionActive === false}
                         className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4"
                       >
                         Manage

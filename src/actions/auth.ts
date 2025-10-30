@@ -54,7 +54,8 @@ export const studentSignUp = async (name:string,email:string,password:string)=>{
 export const getUserInfo = async ():Promise<User> =>{
      const coookies = await cookies()
    const s = coookies.get("user_info")?.value  ?? ''
-   return JSON.parse(s)
+   return s.length ? JSON.parse(s) : ""
+
 }
 
 

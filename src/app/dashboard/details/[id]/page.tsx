@@ -9,18 +9,28 @@ import { Download, Users, Eye, ExternalLink } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { useQuery } from "@tanstack/react-query";
 import { getOneEvent } from "@/actions/fetch-action";
+import { User } from "@/@types/user-types";
+import { getUserInfo } from "@/actions/auth";
+import { isAfter } from "date-fns";
 
 export default function EventDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const eventId = params.id as string;
+  const [user, setUser] = useState<User | null>(null);
 
   const qrCodeCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // QR Code color state
   const [qrColor, setQrColor] = useState("#000000");
   const [qrBgColor, setQrBgColor] = useState("#FFFFFF");
-
+  useEffect(() => {
+    const getuserInfo = async () => {
+      const info = await getUserInfo();
+      setUser(info);
+    };
+    getuserInfo();
+  }, []);
   // Fetch event data
   const { data: eventData, isLoading } = useQuery({
     queryKey: ["event-details", eventId],
@@ -46,6 +56,9 @@ export default function EventDetailsPage() {
       `/dashboard/events/${eventId}?venueWidth=${event?.width}&venueHeight=${event?.height}`
     );
   };
+  const isSubscriptionActive = user?.subscription?.endDate
+    ? isAfter(new Date(user.subscription.endDate), new Date())
+    : false;
 
   if (isLoading) {
     return (
@@ -160,6 +173,7 @@ export default function EventDetailsPage() {
               {/* Manage Guest List */}
               <Button
                 onClick={handleManageEvent}
+                disabled={!isSubscriptionActive}
                 className="w-full bg-blue-800 hover:bg-blue-900 text-white h-11 justify-start"
               >
                 <Users className="h-4 w-4 mr-2" />
