@@ -6,7 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import { User, Square, Circle, X, Trash2, GripHorizontal } from "lucide-react"; // Removed Save, FolderOpen
+import {
+  User,
+  Square,
+  Circle,
+  X,
+  Trash2,
+  GripHorizontal,
+  GripVertical,
+} from "lucide-react"; // Removed Save, FolderOpen
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import AddUser from "@/app/dashboard/AddUser";
@@ -50,7 +58,8 @@ export function Sidebar({
   const handleDragStart = (
     event: React.DragEvent,
     guestId: string,
-    guestName: string
+    guestName: string,
+    guest: Guest
   ) => {
     event.dataTransfer.setData("guestId", guestId);
     event.dataTransfer.setData("guestName", guestName);
@@ -173,6 +182,27 @@ export function Sidebar({
           </div>
         </Button> */}
       </div>
+
+      <h2 className="text-lg font-semibold mb-4">Add Chairs</h2>
+      <div className="flex gap-2 mb-6">
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => onAddTableClick("chair-row")}
+        >
+          <GripHorizontal className="w-4 h-4 mr-2" />
+          Row
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => onAddTableClick("chair-column")}
+        >
+          <GripVertical className="w-4 h-4 mr-2" />
+          Column
+        </Button>
+      </div>
+
       <DecorativeDrawer onAddDecorativeItem={() => setShowSidebar(false)} />
       <ExtrasComponent />
       <h2 className="text-lg font-semibold mb-4">Guests</h2>
@@ -198,7 +228,9 @@ export function Sidebar({
                 key={guest._id}
                 className={` w-full grid grid-cols-3 justify-center items-center gap-2 shadow-none py-1 border border-gray-100 cursor-grab`}
                 draggable={true}
-                onDragStart={(e) => handleDragStart(e, guest._id!, guest?.name)}
+                onDragStart={(e) =>
+                  handleDragStart(e, guest._id!, guest?.name, guest)
+                }
               >
                 <Avatar className="w-8 h-8">
                   <AvatarFallback className="bg-gray-200 text-gray-600">
@@ -206,7 +238,11 @@ export function Sidebar({
                   </AvatarFallback>
                 </Avatar>
                 <span className="flex-grow text-sm font-medium">
-                  {guest?.name}
+                  {guest?.name}-{" "}
+                  <span className=" text-[8px]">
+                    {" "}
+                    {guest?.adults}A-{guest?.children}C
+                  </span>
                 </span>
                 <div className="flex justify-center items-center gap-1.5">
                   <Button

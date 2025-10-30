@@ -78,7 +78,7 @@ export function UploadCsvForm({ onClose }: UploadCsvFormProps) {
           className="border-border focus:ring-primary focus:border-primary file:text-primary file:bg-muted file:border-border file:hover:bg-muted/80"
         />
         <p className="text-sm text-muted-foreground">
-          {`Please ensure your CSV has columns for 'name', 'email', 'phone',`}
+          {`Please ensure your CSV has columns for 'name', 'email', 'phone', "adults", "children"`}
         </p>
       </div>
       <DialogFooter className="mt-4">

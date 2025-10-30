@@ -18,13 +18,15 @@ import { getAllGuest, getAllSeatPlan } from "@/actions/fetch-action";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { ReadOnlyTableNode } from "./table-node-readonly";
-
+import { ReadOnlyChairNode } from "./chair-node-readonly";
 export type TableType =
   | "rectangular"
   | "square"
   | "circular"
   | "rectangular-one-sided"
-  | "circular-single-seat";
+  | "circular-single-seat"
+  | "chair-row" // ✅ ADD THIS
+  | "chair-column"; // ✅ ADD THIS
 
 export interface TableNodeData {
   event_id: string;
@@ -42,6 +44,7 @@ export interface TableNodeData {
 
 const nodeTypes = {
   tableNode: ReadOnlyTableNode,
+  chairNode: ReadOnlyChairNode,
 };
 
 export const getRectangularSeatDistribution = (
@@ -117,18 +120,32 @@ function ReadOnlyWeddingPlanner() {
 
   useEffect(() => {
     if (seatPlandata?.data && seatPlandata.data.length > 0) {
-      const readOnlyNodes = seatPlandata.data.map((nodeData: any) => ({
-        id: nodeData.id,
-        type: "tableNode",
-        position: nodeData.position || { x: 0, y: 0 },
-        data: {
-          ...nodeData.data,
-          searchQuery,
-        },
-        ...(nodeData.style && { style: nodeData.style }),
-        ...(nodeData.width && { width: nodeData.width }),
-        ...(nodeData.height && { height: nodeData.height }),
-      }));
+      const readOnlyNodes = seatPlandata.data.map((nodeData: any) => {
+        // ✅ Determine node type (default to tableNode for backward compatibility)
+        const nodeType = nodeData.type || "tableNode";
+
+        // ✅ For chairNode, convert 'seats' to 'chairs' if needed
+        const processedData = { ...nodeData.data };
+        if (nodeType === "chairNode") {
+          processedData.chairs =
+            nodeData.data.chairs || nodeData.data.seats || [];
+          processedData.numChairs =
+            nodeData.data.numChairs || nodeData.data.numSeats || 0;
+        }
+
+        return {
+          id: nodeData.id,
+          type: nodeType,
+          position: nodeData.position || { x: 0, y: 0 },
+          data: {
+            ...processedData,
+            searchQuery,
+          },
+          ...(nodeData.style && { style: nodeData.style }),
+          ...(nodeData.width && { width: nodeData.width }),
+          ...(nodeData.height && { height: nodeData.height }),
+        };
+      });
 
       console.log("[v0] Setting nodes:", readOnlyNodes);
       setNodes(readOnlyNodes);
@@ -153,7 +170,10 @@ function ReadOnlyWeddingPlanner() {
     }> = [];
 
     nodes.forEach((node) => {
-      node.data.seats.forEach((seat) => {
+      // ✅ Handle both 'seats' (tables) and 'chairs' (chair nodes)
+      const seatsArray = (node.data as any).chairs || node.data.seats || [];
+
+      seatsArray.forEach((seat: any) => {
         if (
           seat.occupiedByName &&
           seat.occupiedByName.toLowerCase().includes(searchQuery.toLowerCase())

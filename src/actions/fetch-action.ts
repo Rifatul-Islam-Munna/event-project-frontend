@@ -1,6 +1,6 @@
 "use server"
 
-import { EventList, Vendor } from "@/@types/events-details";
+import { EventItem, EventList, Vendor } from "@/@types/events-details";
 import { DeleteAxios, GetRequestAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
 import * as XLSX from 'xlsx';
 import { Guest as Gu } from "@/@types/events-details";
@@ -38,6 +38,12 @@ export const getAllEvent = async (page:number,limit:number)=>{
     return {data,error}
 
 }
+export const getOneEvent = async (id:string)=>{
+    const [data,error] = await GetRequestNormal<EventItem>(`/events/get-one-document?mongoId=${id}`);
+    console.log("event-data->",data,"event-error->",error);
+    return {data,error}
+
+}
 
 export const deleteEvent = async (id:string)=>{
     const [data,error] = await DeleteAxios(`/events/delete-document?mongoId=${id}`);
@@ -52,6 +58,8 @@ export type Guest = {
   email: string;
   phone: string;
   event_id?:string
+  adults?:number
+  children?:number
 };
 
 type AnyRow = Record<string, unknown>;
@@ -94,23 +102,33 @@ export async function updateMultipleGuest(file: File, eventId: string) {
   });
 
   const result: Guest[] = [];
+  function getNumberValue(row: RawRow, key: string | null): number {
+  if (!key) return 0;
+  const value = row[key];
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(num) ? num : 0;
+}
 
   for (const r of rawRows) {
   
     const kName  = findKey(r, ['name', 'full name', 'full_name']);
     const kEmail = findKey(r, ['email', 'e-mail', 'mail']);
     const kPhone = findKey(r, ['phone', 'phone number', 'mobile', 'contact']);
+    const kaduls = findKey(r, ['adults', 'ADULTS', 'adult', 'adult count']);
+    const kchild = findKey(r, ['children', 'child', '', 'adult count']);
 
     const name  = String(kName  ? r[kName]  : '').trim();
+  
     const email = String(kEmail ? r[kEmail] : '').trim().toLowerCase();
     const phone = normalizePhone(String(kPhone ? r[kPhone] : ''));
-
+    const adults = getNumberValue(r, kaduls);
+  const children = getNumberValue(r, kchild);
 
     if (!name) continue;
     if (!email && !phone) continue;
     if (email && !looksLikeEmail(email)) continue;
 
-    result.push({ name, email, phone,event_id: eventId });
+    result.push({ name, email, phone,adults,children,event_id: eventId });
   }
 
  
@@ -126,6 +144,8 @@ export async function updateMultipleGuest(file: File, eventId: string) {
 }
 
 export const uploadOneGuest =async (payload:Record<string,unknown>)=>{
+  console.log("payload->",payload);
+  
 
     const [data,error] = await PostRequestAxios(`/guest/create-one-guest`,payload);
     console.log("guest-data->",data,"guest-error->",error);
