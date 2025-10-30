@@ -86,7 +86,7 @@ export function CreateGuestForm({ onAddGuest, onClose }: CreateGuestFormProps) {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="guestEmail" className="text-foreground">
-          Email
+          Email (optional)
         </Label>
         <Input
           id="guestEmail"
