@@ -26,6 +26,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -476,74 +477,73 @@ function WeddingPlanner() {
       data: any
     ) => {
       setChangedObjects((prev) => {
+        const newChangedObjects = { ...prev };
+
         if (type === "guest") {
+          // Remove duplicate guest by ID, then add new one
           const filteredGuests = prev.guest.filter((guest) => guest._id !== id);
-          setDataLength(filteredGuests.length);
-          return {
-            ...prev,
-            guest: [...filteredGuests, data],
-          };
+          newChangedObjects.guest = [...filteredGuests, data];
         } else {
+          // Remove duplicate node by ID, then add new one
           const filteredNodes = prev.node.filter((node: any) => node.id !== id);
           let nodeDataForDB = data;
-          if (data.type === "chairNode") {
-            console.log("🔄 Converting chair node for tracking:", data);
-            console.log("🪑 Chairs before conversion:", data.data.chairs);
 
+          if (data.type === "chairNode") {
             nodeDataForDB = {
               ...data,
               data: {
                 ...data.data,
-                seats: data.data.chairs || data.data.seats || [], // ✅ Convert chairs → seats
-                numSeats: data.data.numChairs || data.data.numSeats || 0, // ✅ Convert numChairs → numSeats
-                chairs: undefined, // Remove chairs property
-                numChairs: undefined, // Remove numChairs property
+                seats: data.data.chairs || data.data.seats || [],
+                numSeats: data.data.numChairs || data.data.numSeats || 0,
+                chairs: undefined,
+                numChairs: undefined,
               },
             };
-
-            console.log(
-              "💾 After conversion - seats:",
-              nodeDataForDB.data.seats
-            );
           }
-          setDataLength(filteredNodes.length);
-          return {
-            ...prev,
-            node: [...filteredNodes, nodeDataForDB],
-          };
+
+          newChangedObjects.node = [...filteredNodes, nodeDataForDB];
         }
+
+        // ✅ Update store with CORRECT total count
+        const totalLength =
+          newChangedObjects.guest.length +
+          newChangedObjects.node.length +
+          newChangedObjects.decorativeItems.length;
+        setDataLength(totalLength);
+
+        return newChangedObjects;
       });
     },
-    []
+    [setDataLength] // ✅ Add setDataLength as dependency
   );
+
   const trackDecorativeChange = useCallback(
     (id: string, action: "created" | "updated" | "deleted", data: any) => {
       setChangedObjects((prev) => {
         const filteredItems = prev.decorativeItems.filter(
           (item) => item.id !== id
         );
-        const newLength = filteredItems.length + (action !== "deleted" ? 1 : 0);
-        setDataLength(newLength);
 
-        return {
+        const newDecoItems =
+          action === "deleted" ? filteredItems : [...filteredItems, data];
+
+        const newChangedObjects = {
           ...prev,
-          decorativeItems:
-            action === "deleted" ? filteredItems : [...filteredItems, data],
+          decorativeItems: newDecoItems,
         };
+
+        // ✅ Update store with CORRECT total count
+        const totalLength =
+          newChangedObjects.guest.length +
+          newChangedObjects.node.length +
+          newChangedObjects.decorativeItems.length;
+        setDataLength(totalLength);
+
+        return newChangedObjects;
       });
     },
-    [setDataLength]
+    [setDataLength] // ✅ Add dependency
   );
-
-  useEffect(() => {
-    const totalLength =
-      changedObjects.guest.length + changedObjects.node.length;
-    /*     const totalLength =
-    changedObjects.guest.length + 
-    changedObjects.node.length + 
-    changedObjects.decorativeItems.length; */
-    setDataLength(totalLength);
-  }, [changedObjects.guest.length, changedObjects.node.length]);
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -1015,6 +1015,68 @@ function WeddingPlanner() {
       return { x, y };
     },
     []
+  );
+  // ✅ NEW: Dedicated handler for drag stop - tracks position changes reliably
+  const handleNodeDragStop = useCallback(
+    (event: React.MouseEvent, node: any) => {
+      console.log("🎯 Node drag stopped:", node.id, node.position);
+
+      // Get the latest node data from state
+      const currentNode = nodes.find((n) => n.id === node.id);
+
+      if (!currentNode) return;
+
+      // Constrain position if needed
+      const constrainedPosition = constrainTablePosition(
+        node.position.x,
+        node.position.y,
+        currentNode.data.width,
+        currentNode.data.height
+      );
+
+      // Create updated node with new position
+      const updatedNode = {
+        ...currentNode,
+        position: constrainedPosition,
+      };
+
+      // ✅ Track based on node type
+      if (currentNode.type === "chairNode") {
+        const nodeForDB = {
+          ...updatedNode,
+          data: {
+            ...updatedNode.data,
+            seats: updatedNode.data.chairs || updatedNode.data.seats || [],
+            numSeats:
+              updatedNode.data.numChairs || updatedNode.data.numSeats || 0,
+            chairs: undefined,
+            numChairs: undefined,
+          },
+        };
+        trackChange(node.id, "node", "updated", nodeForDB);
+        console.log("✅ Chair position tracked:", node.id);
+      } else if (currentNode.type === "tableNode") {
+        trackChange(node.id, "node", "updated", updatedNode);
+        console.log("✅ Table position tracked:", node.id);
+      } else if (currentNode.type === "decorativeNode") {
+        trackDecorativeChange(node.id, "updated", updatedNode);
+        console.log("✅ Decorative item position tracked:", node.id);
+      }
+
+      // ✅ Update the node in React Flow state with constrained position
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === node.id ? { ...n, position: constrainedPosition } : n
+        )
+      );
+    },
+    [
+      nodes,
+      trackChange,
+      trackDecorativeChange,
+      constrainTablePosition,
+      setNodes,
+    ]
   );
 
   const handleConfirmAddTable = () => {
@@ -1806,6 +1868,7 @@ function WeddingPlanner() {
           snapToGrid={true}
           snapGrid={snapGrid}
           className="bg-transparent"
+          onNodeDragStop={handleNodeDragStop}
           /*      onMoveEnd={onMoveEnd} */
           minZoom={0.05}
           maxZoom={2}
