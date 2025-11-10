@@ -113,14 +113,9 @@ export function FeaturesSection() {
       description: "Cron job for delivery",
     },
   ];
-  const trustIndicators = [
-    { icon: Users, text: "1000+ Events", subtext: "Successfully Managed" },
-    { icon: Star, text: "4.9/5 Rating", subtext: "Customer Satisfaction" },
-    { icon: Shield, text: "100% Secure", subtext: "Data Protection" },
-  ];
 
   return (
-    <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
+    <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-slate-50 via-orange-50/30 to-red-50/50">
       <div className="container mx-auto px-4 md:px-6 max-w-7xl">
         {/* Header Section */}
         <motion.div
@@ -130,7 +125,7 @@ export function FeaturesSection() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="text-center mb-20"
         >
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent mb-4">
             Key Features
           </h2>
           <p className="max-w-3xl mx-auto text-lg text-slate-600 leading-relaxed">
@@ -149,11 +144,11 @@ export function FeaturesSection() {
         >
           {/* Seating Arrangement System */}
           <motion.div variants={cardVariants} className="group relative">
-            <div className="h-full p-8 rounded-2xl bg-gradient-to-br from-white to-blue-50/50 border-2 border-blue-100/60 hover:border-blue-200/80 transition-all duration-300">
+            <div className="h-full p-8 rounded-2xl bg-gradient-to-br from-white to-orange-50/50 border-2 border-orange-100/60 hover:border-orange-200/80 transition-all duration-300">
               {/* Card Header */}
               <div className="flex items-center gap-4 mb-8">
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
                     <CheckCircle className="h-8 w-8 text-white" />
                   </div>
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
@@ -162,7 +157,7 @@ export function FeaturesSection() {
                   <h3 className="text-2xl font-bold text-slate-900 mb-1">
                     Seating Arrangement System
                   </h3>
-                  <p className="text-sm text-blue-600 font-medium">
+                  <p className="text-sm text-orange-600 font-medium">
                     Complete Event Management
                   </p>
                 </div>
@@ -189,13 +184,13 @@ export function FeaturesSection() {
                     <motion.div
                       key={index}
                       variants={featureVariants}
-                      className="flex items-start gap-4 p-3 rounded-xl hover:bg-blue-50/50 transition-colors duration-200 group/item"
+                      className="flex items-start gap-4 p-3 rounded-xl hover:bg-orange-50/50 transition-colors duration-200 group/item"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-blue-200 transition-colors">
-                        <IconComponent className="h-5 w-5 text-blue-600" />
+                      <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-orange-200 transition-colors">
+                        <IconComponent className="h-5 w-5 text-orange-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-slate-800 mb-1 group-hover/item:text-blue-700 transition-colors">
+                        <h4 className="font-semibold text-slate-800 mb-1 group-hover/item:text-orange-700 transition-colors">
                           {feature.title}
                         </h4>
                         <p className="text-sm text-slate-600 leading-relaxed">
@@ -211,20 +206,20 @@ export function FeaturesSection() {
 
           {/* Vendor Reminder System */}
           <motion.div variants={cardVariants} className="group relative">
-            <div className="h-full p-8 rounded-2xl bg-gradient-to-br from-white to-indigo-50/50 border-2 border-indigo-100/60 hover:border-indigo-200/80 transition-all duration-300">
+            <div className="h-full p-8 rounded-2xl bg-gradient-to-br from-white to-red-50/50 border-2 border-red-100/60 hover:border-red-200/80 transition-all duration-300">
               {/* Card Header */}
               <div className="flex items-center gap-4 mb-8">
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
                     <CheckCircle className="h-8 w-8 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-400 rounded-full border-2 border-white"></div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-400 rounded-full border-2 border-white"></div>
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-slate-900 mb-1">
                     Vendor Reminder System
                   </h3>
-                  <p className="text-sm text-indigo-600 font-medium">
+                  <p className="text-sm text-red-600 font-medium">
                     Smart Communication Hub
                   </p>
                 </div>
@@ -251,13 +246,13 @@ export function FeaturesSection() {
                     <motion.div
                       key={index}
                       variants={featureVariants}
-                      className="flex items-start gap-4 p-3 rounded-xl hover:bg-indigo-50/50 transition-colors duration-200 group/item"
+                      className="flex items-start gap-4 p-3 rounded-xl hover:bg-red-50/50 transition-colors duration-200 group/item"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-indigo-200 transition-colors">
-                        <IconComponent className="h-5 w-5 text-indigo-600" />
+                      <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-red-200 transition-colors">
+                        <IconComponent className="h-5 w-5 text-red-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-slate-800 mb-1 group-hover/item:text-indigo-700 transition-colors">
+                        <h4 className="font-semibold text-slate-800 mb-1 group-hover/item:text-red-700 transition-colors">
                           {feature.title}
                         </h4>
                         <p className="text-sm text-slate-600 leading-relaxed">
@@ -271,44 +266,6 @@ export function FeaturesSection() {
             </div>
           </motion.div>
         </motion.div>
-      </div>
-      <div className="flex flex-wrap mt-6   justify-items-center  sm:justify-center items-center gap-6 mb-12 p-6 rounded-2xl backdrop-blur-sm  w-full">
-        {trustIndicators.map((indicator, index) => {
-          const IconComponent = indicator.icon;
-          return (
-            <div key={index} className="flex items-center gap-3">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center"
-              >
-                <IconComponent className="h-6 w-6 text-white" />
-              </motion.div>
-              <div>
-                <motion.div
-                  initial={{ opacity: 0, filter: "blur(4px)" }}
-                  whileInView={{ opacity: 1, filter: "blur(0px)" }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                  className="font-bold text-slate-900 text-sm"
-                >
-                  {indicator.text}
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, filter: "blur(4px)" }}
-                  whileInView={{ opacity: 1, filter: "blur(0px)" }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                  className="text-xs text-slate-600"
-                >
-                  {indicator.subtext}
-                </motion.div>
-              </div>
-            </div>
-          );
-        })}
       </div>
     </section>
   );

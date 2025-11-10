@@ -20,10 +20,10 @@ export default function Home() {
         <HeroSection />
         <FeaturesSection />
         <HowItWorksSection />
-        <CallToActionSection />
+        {/*   <CallToActionSection /> */}
         <BenefitsSection />
         <PricingSection />
-        <TestimonialsSection />
+        {/*   <TestimonialsSection /> */}
         <FAQSection />
       </main>
     </div>

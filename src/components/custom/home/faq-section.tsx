@@ -22,7 +22,7 @@ export function FAQSection() {
     {
       title: "Pricing & Payments",
       icon: CreditCard,
-      color: "blue",
+      color: "orange",
       faqs: [
         {
           question: "Is it a subscription or a one-time payment?",
@@ -61,7 +61,7 @@ export function FAQSection() {
     {
       title: "Guest Experience",
       icon: Users,
-      color: "purple",
+      color: "red",
       faqs: [
         {
           question: "How do guests find the event?",
@@ -113,13 +113,13 @@ export function FAQSection() {
 
   const getColorConfig = (color) => {
     const configs = {
-      blue: {
-        bg: "bg-blue-50/60",
-        border: "border-blue-200/50",
-        icon: "text-blue-600",
-        iconBg: "bg-blue-100",
-        accent: "text-blue-600",
-        hover: "hover:bg-blue-50/80",
+      orange: {
+        bg: "bg-orange-50/60",
+        border: "border-orange-200/50",
+        icon: "text-orange-600",
+        iconBg: "bg-orange-100",
+        accent: "text-orange-600",
+        hover: "hover:bg-orange-50/80",
       },
       emerald: {
         bg: "bg-emerald-50/60",
@@ -129,21 +129,13 @@ export function FAQSection() {
         accent: "text-emerald-600",
         hover: "hover:bg-emerald-50/80",
       },
-      purple: {
-        bg: "bg-purple-50/60",
-        border: "border-purple-200/50",
-        icon: "text-purple-600",
-        iconBg: "bg-purple-100",
-        accent: "text-purple-600",
-        hover: "hover:bg-purple-50/80",
-      },
-      orange: {
-        bg: "bg-orange-50/60",
-        border: "border-orange-200/50",
-        icon: "text-orange-600",
-        iconBg: "bg-orange-100",
-        accent: "text-orange-600",
-        hover: "hover:bg-orange-50/80",
+      red: {
+        bg: "bg-red-50/60",
+        border: "border-red-200/50",
+        icon: "text-red-600",
+        iconBg: "bg-red-100",
+        accent: "text-red-600",
+        hover: "hover:bg-red-50/80",
       },
       rose: {
         bg: "bg-rose-50/60",
@@ -158,19 +150,19 @@ export function FAQSection() {
   };
 
   return (
-    <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-white via-slate-50/30 to-blue-50/20">
+    <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-white via-slate-50/30 to-orange-50/20">
       <div className="container mx-auto px-4 md:px-6 max-w-6xl">
         {/* Header Section */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-slate-200/50 mb-6">
-            <HelpCircle className="h-4 w-4 text-blue-500" />
+            <HelpCircle className="h-4 w-4 text-orange-500" />
             <span className="text-slate-700 font-medium text-sm">
               Got Questions?
             </span>
           </div>
 
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
               Frequently Asked
             </span>{" "}
             <span className="text-slate-900">Questions</span>
@@ -245,9 +237,9 @@ export function FAQSection() {
         </div>
 
         {/* Bottom Help Section */}
-        <div className="mt-16 text-center p-8 rounded-3xl bg-gradient-to-br from-blue-50/80 via-indigo-50/80 to-purple-50/80 backdrop-blur-sm border border-blue-200/40">
+        <div className="mt-16 text-center p-8 rounded-3xl bg-gradient-to-br from-orange-50/80 via-red-50/80 to-orange-50/80 backdrop-blur-sm border border-orange-200/40">
           <div className="max-w-3xl mx-auto">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
               <Phone className="h-8 w-8 text-white" />
             </div>
 
@@ -268,13 +260,13 @@ export function FAQSection() {
                 </span>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
-                <Clock className="h-4 w-4 text-blue-500" />
+                <Clock className="h-4 w-4 text-orange-500" />
                 <span className="text-sm font-medium text-slate-700">
                   24/7 Support
                 </span>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
-                <Phone className="h-4 w-4 text-indigo-500" />
+                <Phone className="h-4 w-4 text-red-600" />
                 <span className="text-sm font-medium text-slate-700">
                   Phone Support
                 </span>

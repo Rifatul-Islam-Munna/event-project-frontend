@@ -20,6 +20,8 @@ import {
   Monitor,
   Smartphone,
 } from "lucide-react";
+import Image from "next/image";
+import sideImage from "@/assets/side_image.avif";
 
 export function BenefitsSection() {
   const containerVariants = {
@@ -66,7 +68,7 @@ export function BenefitsSection() {
       subtitle: "Per Event Setup",
       description:
         "Transform days of manual coordination into minutes of automated magic. Our smart platform handles the complex stuff while you focus on creating amazing experiences.",
-      color: "blue",
+      color: "orange",
       stat: "90% Time Saved",
       beforeText: "Before: 12+ hours of manual work",
       afterText: "After: 2 hours of effortless setup",
@@ -99,7 +101,7 @@ export function BenefitsSection() {
       subtitle: "Every Single Time",
       description:
         "Never miss a detail again. Automated vendor reminders ensure every supplier delivers exactly what you need, exactly when you need it.",
-      color: "purple",
+      color: "red",
       stat: "100% Reliability",
       beforeText: "Before: Missed details and delays",
       afterText: "After: Flawless event execution",
@@ -121,7 +123,7 @@ export function BenefitsSection() {
       subtitle: "Impress Every Client",
       description:
         "Showcase your expertise with polished seating charts and seamless coordination. Turn every event into a referral opportunity.",
-      color: "indigo",
+      color: "amber",
       stat: "5-Star Reviews",
       beforeText: "Before: Amateur-looking setup",
       afterText: "After: Professional excellence",
@@ -130,14 +132,14 @@ export function BenefitsSection() {
 
   const getColorConfig = (color) => {
     const configs = {
-      blue: {
-        bg: "from-blue-50/80 to-blue-100/50",
-        border: "border-blue-200/60",
-        icon: "from-blue-500 to-blue-600",
+      orange: {
+        bg: "from-orange-50/80 to-orange-100/50",
+        border: "border-orange-200/60",
+        icon: "from-orange-500 to-orange-600",
         iconText: "text-white",
-        accent: "text-blue-600",
-        stat: "from-blue-500 to-cyan-500",
-        hover: "hover:from-blue-100/90 hover:to-blue-150/60",
+        accent: "text-orange-600",
+        stat: "from-orange-500 to-red-500",
+        hover: "hover:from-orange-100/90 hover:to-orange-150/60",
       },
       emerald: {
         bg: "from-emerald-50/80 to-emerald-100/50",
@@ -157,32 +159,23 @@ export function BenefitsSection() {
         stat: "from-rose-500 to-pink-500",
         hover: "hover:from-rose-100/90 hover:to-rose-150/60",
       },
-      purple: {
-        bg: "from-purple-50/80 to-purple-100/50",
-        border: "border-purple-200/60",
-        icon: "from-purple-500 to-purple-600",
+      red: {
+        bg: "from-red-50/80 to-red-100/50",
+        border: "border-red-200/60",
+        icon: "from-red-500 to-red-600",
         iconText: "text-white",
-        accent: "text-purple-600",
-        stat: "from-purple-500 to-violet-500",
-        hover: "hover:from-purple-100/90 hover:to-purple-150/60",
+        accent: "text-red-600",
+        stat: "from-red-500 to-rose-500",
+        hover: "hover:from-red-100/90 hover:to-red-150/60",
       },
-      orange: {
-        bg: "from-orange-50/80 to-orange-100/50",
-        border: "border-orange-200/60",
-        icon: "from-orange-500 to-orange-600",
+      amber: {
+        bg: "from-amber-50/80 to-amber-100/50",
+        border: "border-amber-200/60",
+        icon: "from-amber-500 to-amber-600",
         iconText: "text-white",
-        accent: "text-orange-600",
-        stat: "from-orange-500 to-amber-500",
-        hover: "hover:from-orange-100/90 hover:to-orange-150/60",
-      },
-      indigo: {
-        bg: "from-indigo-50/80 to-indigo-100/50",
-        border: "border-indigo-200/60",
-        icon: "from-indigo-500 to-indigo-600",
-        iconText: "text-white",
-        accent: "text-indigo-600",
-        stat: "from-indigo-500 to-purple-500",
-        hover: "hover:from-indigo-100/90 hover:to-indigo-150/60",
+        accent: "text-amber-600",
+        stat: "from-amber-500 to-orange-500",
+        hover: "hover:from-amber-100/90 hover:to-amber-150/60",
       },
     };
     return configs[color];
@@ -190,11 +183,11 @@ export function BenefitsSection() {
 
   return (
     <LazyMotion features={domAnimation}>
-      <section className="relative w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-white via-slate-50/30 to-blue-50/20 overflow-hidden">
+      <section className="relative w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-white via-slate-50/30 to-orange-50/20 overflow-hidden">
         {/* Subtle Background Elements */}
         <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-orange-200/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-200/20 rounded-full blur-3xl"></div>
         </div>
 
         <div className="container mx-auto px-4 md:px-6 max-w-7xl relative z-10">
@@ -207,7 +200,7 @@ export function BenefitsSection() {
             className="text-center mb-16"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-slate-200/50 mb-6">
-              <Sparkles className="h-4 w-4 text-indigo-500" />
+              <Sparkles className="h-4 w-4 text-orange-500" />
               <span className="text-slate-700 font-medium text-sm">
                 Transform Your Event Planning
               </span>
@@ -215,7 +208,7 @@ export function BenefitsSection() {
 
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 mb-4">
               Why Event Organizers{" "}
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
                 Love Our Platform
               </span>
             </h2>
@@ -231,7 +224,7 @@ export function BenefitsSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="grid lg:grid-cols-2 gap-12 items-center mb-20 p-8 rounded-3xl bg-gradient-to-br from-indigo-50/60 to-purple-50/60 backdrop-blur-sm border border-indigo-200/40"
+            className="grid lg:grid-cols-2 gap-12 items-center mb-20 p-8 rounded-3xl bg-gradient-to-br from-orange-50/60 to-red-50/60 backdrop-blur-sm border border-orange-200/40"
           >
             {/* Left Side - Content */}
             <div className="space-y-6">
@@ -242,7 +235,7 @@ export function BenefitsSection() {
 
               <h3 className="text-2xl md:text-3xl font-bold text-slate-900">
                 From Spreadsheet Chaos to{" "}
-                <span className="text-indigo-600">Beautiful Automation</span>
+                <span className="text-orange-600">Beautiful Automation</span>
               </h3>
 
               <p className="text-lg text-slate-600 leading-relaxed">
@@ -261,8 +254,8 @@ export function BenefitsSection() {
                   const FeatureIcon = feature.icon;
                   return (
                     <div key={index} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <FeatureIcon className="h-4 w-4 text-indigo-600" />
+                      <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+                        <FeatureIcon className="h-4 w-4 text-orange-600" />
                       </div>
                       <span className="text-slate-700 font-medium">
                         {feature.text}
@@ -281,109 +274,20 @@ export function BenefitsSection() {
               viewport={{ once: true, amount: 0.3 }}
               className="relative"
             >
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-white">
-                {/* Mock Platform Interface */}
-                <div className="aspect-[4/3] bg-gradient-to-br from-slate-100 to-slate-200 p-6">
-                  {/* Header Bar */}
-                  <div className="flex items-center gap-2 mb-4 p-3 bg-white rounded-lg shadow-sm">
-                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                    <div className="ml-4 text-sm font-medium text-slate-600">
-                      Event Seating Manager
-                    </div>
-                  </div>
-
-                  {/* Mock Seating Chart */}
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
-                    <div className="grid grid-cols-6 gap-2 mb-4">
-                      {Array.from({ length: 24 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className={`w-full aspect-square rounded-lg ${
-                            i % 3 === 0
-                              ? "bg-green-200"
-                              : i % 5 === 0
-                              ? "bg-blue-200"
-                              : "bg-slate-200"
-                          }`}
-                        ></div>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>24 seats arranged</span>
-                      <div className="flex gap-2">
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                          <span>Assigned</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-slate-300 rounded-full"></div>
-                          <span>Available</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Floating Success Indicators */}
-                <m.div
-                  initial={{ opacity: 0, scale: 0.8, x: -20 }}
-                  whileInView={{ opacity: 1, scale: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 0.5 }}
-                  className="absolute top-6 left-6 bg-green-500 text-white px-3 py-2 rounded-full text-xs font-bold shadow-lg"
-                >
-                  ✓ Setup Complete
-                </m.div>
-
-                <m.div
-                  initial={{ opacity: 0, scale: 0.8, x: 20 }}
-                  whileInView={{ opacity: 1, scale: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 0.7 }}
-                  className="absolute bottom-6 right-6 bg-blue-500 text-white px-3 py-2 rounded-full text-xs font-bold shadow-lg"
-                >
-                  24/24 Guests Seated
-                </m.div>
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                <Image
+                  src={sideImage}
+                  alt="Event Management Platform"
+                  className="w-full h-auto"
+                  width={1500}
+                  height={1500}
+                />
               </div>
 
               {/* Decorative Elements */}
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full opacity-20 blur-xl"></div>
-              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full opacity-15 blur-2xl"></div>
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-orange-400 to-red-500 rounded-full opacity-20 blur-xl"></div>
+              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-gradient-to-br from-orange-400 to-red-500 rounded-full opacity-15 blur-2xl"></div>
             </m.div>
-          </m.div>
-
-          {/* Hero Stats */}
-          <m.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16 max-w-4xl mx-auto"
-          >
-            {[
-              { number: "1000+", label: "Events Managed", icon: Calendar },
-              { number: "10+", label: "Hours Saved", icon: Clock },
-              { number: "98%", label: "Happy Clients", icon: Heart },
-              { number: "4.9/5", label: "User Rating", icon: Star },
-            ].map((stat, index) => {
-              const StatIcon = stat.icon;
-              return (
-                <div
-                  key={index}
-                  className="text-center p-4 rounded-2xl bg-white/60 backdrop-blur-sm border border-slate-200/40"
-                >
-                  <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center">
-                    <StatIcon className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="text-2xl font-bold text-slate-900">
-                    {stat.number}
-                  </div>
-                  <div className="text-sm text-slate-600">{stat.label}</div>
-                </div>
-              );
-            })}
           </m.div>
 
           {/* Enhanced Benefits Grid */}
@@ -499,12 +403,12 @@ export function BenefitsSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-center mt-20 p-8 md:p-12 rounded-3xl bg-gradient-to-br from-indigo-50/80 via-blue-50/80 to-purple-50/80 backdrop-blur-sm border border-indigo-200/40"
+            className="text-center mt-20 p-8 md:p-12 rounded-3xl bg-gradient-to-br from-orange-50/80 via-red-50/80 to-orange-50/80 backdrop-blur-sm border border-orange-200/40"
           >
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center justify-center gap-2 mb-6">
-                <Users className="h-6 w-6 text-indigo-500" />
-                <span className="text-indigo-600 font-semibold">
+                <Users className="h-6 w-6 text-orange-500" />
+                <span className="text-orange-600 font-semibold">
                   Join 1000+ Happy Event Organizers
                 </span>
               </div>
@@ -525,7 +429,7 @@ export function BenefitsSection() {
                   <span>Free 14-day trial</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
-                  <Shield className="h-4 w-4 text-blue-500" />
+                  <Shield className="h-4 w-4 text-orange-500" />
                   <span>No setup fees</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-600">

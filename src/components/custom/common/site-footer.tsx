@@ -20,13 +20,19 @@ export function SiteFooter() {
           <Link href="#" className="text-sm hover:underline underline-offset-4">
             Home
           </Link>
-          <Link href="#" className="text-sm hover:underline underline-offset-4">
+          <Link
+            href="/terms-condition"
+            className="text-sm hover:underline underline-offset-4"
+          >
             Terms
           </Link>
           <Link href="#" className="text-sm hover:underline underline-offset-4">
             Contact Us
           </Link>
-          <Link href="#" className="text-sm hover:underline underline-offset-4">
+          <Link
+            href="/privacy"
+            className="text-sm hover:underline underline-offset-4"
+          >
             Privacy
           </Link>
         </nav>

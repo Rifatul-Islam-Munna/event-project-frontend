@@ -1,6 +1,10 @@
 "use client";
 import { LazyMotion, domAnimation, m } from "motion/react";
 import { ArrowRight, Calendar, Users, Share2 } from "lucide-react";
+import Image from "next/image";
+import image1 from "@/assets/image1.avif";
+import image2 from "@/assets/image2.avif";
+import image3 from "@/assets/image3.avif";
 
 export function HowItWorksSection() {
   const containerVariants = {
@@ -59,10 +63,9 @@ export function HowItWorksSection() {
       title: "Create Your Event",
       description:
         "Set up your event with essential details like name, date, location, and logo.",
-      gradient: "from-blue-500 to-indigo-600",
-      accentColor: "blue",
-      iconBg: "bg-blue-100",
-      dotColor: "bg-blue-500",
+      gradient: "from-orange-500 to-red-600",
+      accentColor: "orange",
+      image: image1,
     },
     {
       number: "2",
@@ -70,10 +73,9 @@ export function HowItWorksSection() {
       title: "Manage Guests & Seating",
       description:
         "Import guest lists, design interactive seating charts with drag-and-drop, and assign seats.",
-      gradient: "from-indigo-500 to-purple-600",
-      accentColor: "indigo",
-      iconBg: "bg-indigo-100",
-      dotColor: "bg-indigo-500",
+      gradient: "from-red-500 to-rose-600",
+      accentColor: "red",
+      image: image2,
     },
     {
       number: "3",
@@ -81,10 +83,9 @@ export function HowItWorksSection() {
       title: "Share with Guests",
       description:
         "Generate shareable links and QR codes for guests to easily find their seats.",
-      gradient: "from-purple-500 to-pink-600",
-      accentColor: "purple",
-      iconBg: "bg-purple-100",
-      dotColor: "bg-purple-500",
+      gradient: "from-orange-600 to-amber-600",
+      accentColor: "orange",
+      image: image3,
     },
   ];
 
@@ -92,7 +93,7 @@ export function HowItWorksSection() {
     <LazyMotion features={domAnimation}>
       <section
         id="how-it-works"
-        className="w-full py-12 sm:py-16 md:py-20 lg:py-24 xl:py-32 bg-gradient-to-br from-white via-slate-50/50 to-blue-50/30"
+        className="w-full py-12 sm:py-16 md:py-20 lg:py-24 xl:py-32 bg-gradient-to-br from-white via-slate-50/50 to-orange-50/30"
       >
         <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-6 max-w-7xl">
           {/* Header Section */}
@@ -103,7 +104,7 @@ export function HowItWorksSection() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="text-center mb-12 sm:mb-16 md:mb-20"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3 sm:mb-4 px-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent mb-3 sm:mb-4 px-4">
               How It Works
             </h2>
             <p className="max-w-2xl sm:max-w-3xl lg:max-w-4xl mx-auto text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed px-4">
@@ -132,51 +133,48 @@ export function HowItWorksSection() {
                     variants={stepVariants}
                     className="group relative flex flex-col items-center text-center flex-1 min-w-0 space-y-4 sm:space-y-6 p-4 sm:p-6 rounded-2xl hover:bg-white/60 transition-all duration-300 w-full max-w-sm lg:max-w-xs"
                   >
-                    {/* Icon Container */}
-                    <div className="relative">
-                      {/* Main Circle with Big Icon */}
-                      <m.div
-                        whileHover={{ scale: 1.05, rotate: 5 }}
-                        transition={{ duration: 0.2 }}
-                        className={`w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl sm:rounded-3xl bg-gradient-to-br ${step.gradient} flex items-center justify-center relative overflow-hidden group-hover:shadow-lg transition-all duration-300`}
-                      >
-                        {/* Background Pattern */}
-                        <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+                    {/* Image Container with Icon Overlay */}
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg mb-2">
+                      <Image
+                        src={step.image}
+                        alt={step.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
 
-                        {/* Main Big Icon */}
-                        <m.div
-                          variants={iconVariants}
-                          whileHover={{ scale: 1.1 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <IconComponent className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-white relative z-10" />
-                        </m.div>
-                      </m.div>
+                      {/* Dark Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+
+                      {/* Icon directly on image */}
 
                       {/* Step Number Badge */}
                       <m.div
                         variants={iconVariants}
-                        className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full flex items-center justify-center border-2 border-white group-hover:scale-110 transition-transform duration-200"
+                        className="absolute top-3 left-3 sm:top-4 sm:left-4 w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center shadow-lg"
                       >
                         <span
-                          className={`text-xs sm:text-sm font-bold text-${step.accentColor}-600`}
+                          className={`text-sm sm:text-base font-bold text-${step.accentColor}-600`}
                         >
                           {step.number}
                         </span>
                       </m.div>
 
-                      {/* Status Indicator */}
-                      <div
-                        className={`absolute -bottom-1 sm:-bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 sm:w-6 sm:h-6 rounded-full ${step.iconBg} flex items-center justify-center border-2 border-white`}
-                      >
-                        <div
-                          className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${step.dotColor}`}
-                        ></div>
-                      </div>
+                      {/* Arrow positioned at bottom right of image */}
 
-                      {/* Progress Line for Mobile */}
+                      {/* Mobile Arrow below image */}
                       {index < steps.length - 1 && (
-                        <div className="lg:hidden absolute top-full left-1/2 -translate-x-1/2 mt-3 sm:mt-4 w-0.5 h-8 sm:h-12 bg-gradient-to-b from-slate-300 to-transparent"></div>
+                        <m.div
+                          variants={arrowVariants}
+                          className="absolute -bottom-6 left-1/2 -translate-x-1/2 lg:hidden z-20"
+                        >
+                          <m.div
+                            whileHover={{ scale: 1.1, y: 3 }}
+                            transition={{ duration: 0.2 }}
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white shadow-xl flex items-center justify-center border-2 border-orange-200"
+                          >
+                            <ArrowRight className="h-5 w-5 text-orange-500 rotate-90" />
+                          </m.div>
+                        </m.div>
                       )}
                     </div>
 
@@ -188,9 +186,7 @@ export function HowItWorksSection() {
                       transition={{ duration: 0.5, delay: 0.4 }}
                       className="space-y-2 sm:space-y-3 max-w-xs sm:max-w-sm lg:max-w-xs px-2 sm:px-0"
                     >
-                      <h3
-                        className={`text-lg sm:text-xl md:text-xl font-bold text-slate-900 group-hover:text-${step.accentColor}-700 transition-colors duration-200`}
-                      >
+                      <h3 className="text-lg sm:text-xl md:text-xl font-bold text-slate-900 group-hover:text-orange-700 transition-colors duration-200">
                         {step.title}
                       </h3>
                       <p className="text-slate-600 leading-relaxed text-xs sm:text-sm md:text-sm">
@@ -198,32 +194,6 @@ export function HowItWorksSection() {
                       </p>
                     </m.div>
                   </m.div>
-
-                  {/* Arrow Between Steps */}
-                  {index < steps.length - 1 && (
-                    <m.div
-                      variants={arrowVariants}
-                      className="flex items-center justify-center mx-2 my-2 sm:my-4 lg:my-0"
-                    >
-                      {/* Desktop Arrow */}
-                      <m.div
-                        whileHover={{ scale: 1.1, x: 3 }}
-                        transition={{ duration: 0.2 }}
-                        className="hidden lg:flex w-10 h-10 xl:w-14 xl:h-14 rounded-full bg-gradient-to-r from-slate-100 via-white to-blue-50 items-center justify-center border border-slate-200/60 hover:border-blue-200 transition-all duration-200"
-                      >
-                        <ArrowRight className="h-5 w-5 xl:h-6 xl:w-6 text-blue-500" />
-                      </m.div>
-
-                      {/* Mobile Arrow */}
-                      <m.div
-                        whileHover={{ scale: 1.1, y: 3 }}
-                        transition={{ duration: 0.2 }}
-                        className="flex lg:hidden w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-b from-slate-100 via-white to-blue-50 items-center justify-center border border-slate-200/60 hover:border-blue-200 transition-all duration-200"
-                      >
-                        <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 rotate-90" />
-                      </m.div>
-                    </m.div>
-                  )}
                 </div>
               );
             })}
@@ -235,7 +205,7 @@ export function HowItWorksSection() {
             whileInView={{ opacity: 1, scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 1 }}
-            className="mt-12 sm:mt-16 mx-auto w-24 sm:w-32 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full"
+            className="mt-12 sm:mt-16 mx-auto w-24 sm:w-32 h-1 bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 rounded-full"
           />
         </div>
       </section>

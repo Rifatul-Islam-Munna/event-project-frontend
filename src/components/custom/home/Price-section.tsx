@@ -60,40 +60,40 @@ export function PricingSection() {
   const getPlanConfig = (index: number) => {
     const configs = [
       {
-        gradient: "from-blue-50 to-indigo-50",
-        border: "border-blue-200/60",
-        button: "from-blue-600 via-blue-700 to-indigo-600",
-        buttonShadow: "shadow-[0_8px_32px_rgba(59,130,246,0.4)]",
-        buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(59,130,246,0.6)]",
+        gradient: "from-orange-50 to-red-50",
+        border: "border-orange-200/60",
+        button: "from-orange-500 via-orange-600 to-red-600",
+        buttonShadow: "shadow-[0_8px_32px_rgba(249,115,22,0.4)]",
+        buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(249,115,22,0.6)]",
         icon: Rocket,
-        iconColor: "text-blue-600",
-        accent: "blue",
+        iconColor: "text-orange-600",
+        accent: "orange",
         buttonText: "Start Building",
         buttonIcon: Rocket,
         tier: "Starter",
       },
       {
-        gradient: "from-indigo-50 to-purple-50",
-        border: "border-indigo-200/60",
-        button: "from-indigo-600 via-purple-600 to-pink-600",
-        buttonShadow: "shadow-[0_8px_32px_rgba(129,140,248,0.4)]",
-        buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(129,140,248,0.6)]",
+        gradient: "from-red-50 to-rose-50",
+        border: "border-red-200/60",
+        button: "from-red-500 via-red-600 to-rose-600",
+        buttonShadow: "shadow-[0_8px_32px_rgba(239,68,68,0.4)]",
+        buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(239,68,68,0.6)]",
         icon: Crown,
-        iconColor: "text-indigo-600",
-        accent: "indigo",
+        iconColor: "text-red-600",
+        accent: "red",
         buttonText: "Claim Your Plan",
         buttonIcon: Crown,
         tier: "Professional",
       },
       {
-        gradient: "from-purple-50 to-pink-50",
-        border: "border-purple-200/60",
-        button: "from-purple-600 via-pink-600 to-rose-600",
-        buttonShadow: "shadow-[0_8px_32px_rgba(168,85,247,0.4)]",
-        buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(168,85,247,0.6)]",
+        gradient: "from-orange-50 to-amber-50",
+        border: "border-orange-200/60",
+        button: "from-orange-600 via-amber-600 to-orange-500",
+        buttonShadow: "shadow-[0_8px_32px_rgba(251,146,60,0.4)]",
+        buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(251,146,60,0.6)]",
         icon: Diamond,
-        iconColor: "text-purple-600",
-        accent: "purple",
+        iconColor: "text-orange-600",
+        accent: "orange",
         buttonText: "Go Premium",
         buttonIcon: Diamond,
         tier: "Enterprise",
@@ -169,7 +169,7 @@ export function PricingSection() {
     <LazyMotion features={domAnimation}>
       <section
         id="pricing"
-        className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-b from-white to-slate-50/50"
+        className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-b from-white to-orange-50/50"
       >
         <div className="container mx-auto px-4 md:px-6 max-w-7xl">
           {/* Enhanced Header with Icons */}
@@ -181,13 +181,13 @@ export function PricingSection() {
             className="text-center mb-16"
           >
             <div className="flex items-center justify-center gap-2 mb-4">
-              <Sparkles className="h-6 w-6 text-indigo-500" />
-              <span className="text-sm font-semibold text-indigo-600 tracking-wide uppercase">
+              <Sparkles className="h-6 w-6 text-orange-500" />
+              <span className="text-sm font-semibold text-orange-600 tracking-wide uppercase">
                 Pricing Plans
               </span>
-              <Sparkles className="h-6 w-6 text-indigo-500" />
+              <Sparkles className="h-6 w-6 text-orange-500" />
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-orange-800 to-red-800 bg-clip-text text-transparent mb-4">
               Choose Your Perfect Plan
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
@@ -226,7 +226,7 @@ export function PricingSection() {
                     } border ${
                       config.border
                     } rounded-2xl transition-all duration-300 hover:shadow-lg ${
-                      isPopular ? "ring-2 ring-indigo-300 scale-105" : ""
+                      isPopular ? "ring-2 ring-red-300 scale-105" : ""
                     }`}
                   >
                     {/* Enhanced Popular Badge */}
@@ -236,7 +236,7 @@ export function PricingSection() {
                         animate="animate"
                         className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10"
                       >
-                        <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg">
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg">
                           <Crown className="h-4 w-4" />
                           Most Popular
                           <Sparkles className="h-3 w-3" />
@@ -412,7 +412,7 @@ export function PricingSection() {
             whileInView={{ opacity: 1, scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="mt-16 mx-auto w-32 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full shadow-lg"
+            className="mt-16 mx-auto w-32 h-1 bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 rounded-full shadow-lg"
           />
         </div>
       </section>
