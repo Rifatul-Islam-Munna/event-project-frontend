@@ -1121,6 +1121,7 @@ function WeddingPlanner() {
           category: newTableType, // "line-horizontal" or "line-vertical"
           onDeleteDecorative: handleDeleteDecorative,
           onEditDecorative: handleEditDecorative,
+          onDecorativeResize: handleDecorativeResize,
         },
         style: { width: `${width}px`, height: `${height}px` },
       };
@@ -1349,6 +1350,38 @@ function WeddingPlanner() {
     },
     [nodes, trackDecorativeChange]
   );
+
+  // ✅ ADD THIS NEW FUNCTION - Handle line/decorative item resize
+  const handleDecorativeResize = useCallback(
+    (nodeId: string, newWidth: number, newHeight: number) => {
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === nodeId && node.type === "decorativeNode") {
+            const updatedNode = {
+              ...node,
+              data: {
+                ...node.data,
+                width: newWidth,
+                height: newHeight,
+              },
+              style: {
+                ...node.style,
+                width: `${newWidth}px`,
+                height: `${newHeight}px`,
+              },
+            };
+
+            // Track the change for database update
+            trackDecorativeChange(nodeId, "updated", updatedNode);
+
+            return updatedNode;
+          }
+          return node;
+        })
+      );
+    },
+    [setNodes, trackDecorativeChange]
+  );
   const handleEditDecorative = useCallback(
     (nodeId: string, newLabel: string) => {
       setNodes((nds) =>
@@ -1417,6 +1450,7 @@ function WeddingPlanner() {
           category: decorativeItemId,
           onDeleteDecorative: handleDeleteDecorative,
           onEditDecorative: handleEditDecorative,
+          onDecorativeResize: handleDecorativeResize,
         },
       };
 
@@ -1441,6 +1475,7 @@ function WeddingPlanner() {
       setNodes,
       PostNewDecorator,
       trackDecorativeChange,
+      handleDecorativeResize,
     ]
   );
 
@@ -1543,6 +1578,7 @@ function WeddingPlanner() {
       ...nodeData.data,
       onDeleteDecorative: handleDeleteDecorative,
       onEditDecorative: handleEditDecorative,
+      onDecorativeResize: handleDecorativeResize,
     },
   });
 
@@ -1645,37 +1681,6 @@ function WeddingPlanner() {
     queryFn: () => getHeader(),
     gcTime: 1000 * 60 * 60,
   });
-  // ✅ ADD THIS NEW FUNCTION - Handle line/decorative item resize
-  const handleDecorativeResize = useCallback(
-    (nodeId: string, newWidth: number, newHeight: number) => {
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === nodeId && node.type === "decorativeNode") {
-            const updatedNode = {
-              ...node,
-              data: {
-                ...node.data,
-                width: newWidth,
-                height: newHeight,
-              },
-              style: {
-                ...node.style,
-                width: `${newWidth}px`,
-                height: `${newHeight}px`,
-              },
-            };
-
-            // Track the change for database update
-            trackDecorativeChange(nodeId, "updated", updatedNode);
-
-            return updatedNode;
-          }
-          return node;
-        })
-      );
-    },
-    [setNodes, trackDecorativeChange]
-  );
 
   const [isPdfDownloading, setIsPdfDownloading] = useState(false);
 
