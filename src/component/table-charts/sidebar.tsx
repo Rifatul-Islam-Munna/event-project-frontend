@@ -202,6 +202,46 @@ export function Sidebar({
           Column
         </Button>
       </div>
+      <h2 className="text-lg font-semibold mb-4">Add Chairs</h2>
+      <div className="flex gap-2 mb-6">
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => onAddTableClick("chair-row")}
+        >
+          <GripHorizontal className="w-4 h-4 mr-2" />
+          Row
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => onAddTableClick("chair-column")}
+        >
+          <GripVertical className="w-4 h-4 mr-2" />
+          Column
+        </Button>
+      </div>
+
+      {/* ✅ ADD THIS NEW SECTION */}
+      <h2 className="text-lg font-semibold mb-4">Add Lines/Walls</h2>
+      <div className="flex gap-2 mb-6">
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => onAddTableClick("line-horizontal")}
+        >
+          <GripHorizontal className="w-4 h-4 mr-2" />
+          Horizontal
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => onAddTableClick("line-vertical")}
+        >
+          <GripVertical className="w-4 h-4 mr-2" />
+          Vertical
+        </Button>
+      </div>
 
       <DecorativeDrawer onAddDecorativeItem={() => setShowSidebar(false)} />
       <ExtrasComponent />

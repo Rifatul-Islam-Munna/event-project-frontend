@@ -77,7 +77,9 @@ export type TableType =
   | "rectangular-one-sided"
   | "circular-single-seat"
   | "chair-row"
-  | "chair-column";
+  | "chair-column"
+  | "line-horizontal" // ✅ ADD THIS
+  | "line-vertical"; // ✅ ADD THIS
 interface ChangedObjects {
   guest: Guest[];
   node: Array<{
@@ -1084,6 +1086,57 @@ function WeddingPlanner() {
       toast.error("Please provide a table name.");
       return;
     }
+
+    // ✅ HANDLE LINE CREATION
+    if (
+      newTableType === "line-horizontal" ||
+      newTableType === "line-vertical"
+    ) {
+      const lineThickness = tWidth || 5; // Thickness
+      const lineLength = tHeight || 100; // Length
+
+      const width =
+        newTableType === "line-horizontal" ? lineLength : lineThickness;
+      const height =
+        newTableType === "line-vertical" ? lineLength : lineThickness;
+
+      const newNodeId = uuidv4();
+      const margin = 20;
+      const randomX =
+        Math.random() * (venueWidthPx - width - margin * 2) + margin;
+      const randomY =
+        Math.random() * (venueHeightPx - height - margin * 2) + margin;
+
+      const newLineNode = {
+        id: newNodeId,
+        type: "decorativeNode",
+        event_id: pathName.split("/").pop() as string,
+        position: { x: randomX, y: randomY },
+        data: {
+          event_id: pathName.split("/").pop() as string,
+          label: newTableLabel,
+          imageUrl: "",
+          width: width,
+          height: height,
+          category: newTableType, // "line-horizontal" or "line-vertical"
+          onDeleteDecorative: handleDeleteDecorative,
+          onEditDecorative: handleEditDecorative,
+        },
+        style: { width: `${width}px`, height: `${height}px` },
+      };
+
+      setNodes((nds) => nds.concat(newLineNode));
+      PostNewDecorator(newLineNode);
+      trackDecorativeChange(newNodeId, "created", newLineNode);
+
+      setTimeout(() => zoomToNewTable({ x: randomX, y: randomY }), 300);
+      setIsAddTableDialogOpen(false);
+      setTWidth(0);
+      setTHeight(0);
+      toast.success(`${newTableLabel} line added successfully!`);
+      return;
+    }
+
     if (newTableType === "chair-row" || newTableType === "chair-column") {
       const chairs = Array.from({ length: newTableNumSeats }, () => ({
         id: uuidv4(),
@@ -1157,7 +1210,7 @@ function WeddingPlanner() {
 
       SeatPlan(nodeDataForDB);
       setNodes((nds) => nds.concat(newNode));
-      trackChange(newNodeId, "node", "created", nodeDataForDB); // ✅ USE nodeDataForDB here, not newNode!
+      trackChange(newNodeId, "node", "created", nodeDataForDB);
       setTimeout(() => zoomToNewTable({ x: randomX, y: randomY }), 300);
       setIsAddTableDialogOpen(false);
       toast.success(`${newTableLabel} added successfully!`);
@@ -1592,6 +1645,38 @@ function WeddingPlanner() {
     queryFn: () => getHeader(),
     gcTime: 1000 * 60 * 60,
   });
+  // ✅ ADD THIS NEW FUNCTION - Handle line/decorative item resize
+  const handleDecorativeResize = useCallback(
+    (nodeId: string, newWidth: number, newHeight: number) => {
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id === nodeId && node.type === "decorativeNode") {
+            const updatedNode = {
+              ...node,
+              data: {
+                ...node.data,
+                width: newWidth,
+                height: newHeight,
+              },
+              style: {
+                ...node.style,
+                width: `${newWidth}px`,
+                height: `${newHeight}px`,
+              },
+            };
+
+            // Track the change for database update
+            trackDecorativeChange(nodeId, "updated", updatedNode);
+
+            return updatedNode;
+          }
+          return node;
+        })
+      );
+    },
+    [setNodes, trackDecorativeChange]
+  );
+
   const [isPdfDownloading, setIsPdfDownloading] = useState(false);
 
   const handleDownloadPdf = useCallback(() => {
@@ -1890,92 +1975,144 @@ function WeddingPlanner() {
           <DialogHeader>
             <DialogTitle>
               Add New{" "}
-              {newTableType
+              {newTableType?.includes("line")
+                ? "Line"
+                : newTableType
                 ? newTableType.charAt(0).toUpperCase() + newTableType.slice(1)
                 : ""}{" "}
-              Table
+              {!newTableType?.includes("line") && "Table"}
             </DialogTitle>
             <DialogDescription>
-              Configure the details for your new table/chair. Tables will be
-              placed within the venue area ({venueWidth}m × {venueHeight}m).
-              <br />
-              Estimated capacity: ~{estimatedCapacity} tables total.
+              {newTableType?.includes("line")
+                ? "Configure the line thickness and initial length. You can drag to adjust length after creation."
+                : `Configure the details for your new table/chair. Tables will be placed within the venue area (${venueWidth}m × ${venueHeight}m). Estimated capacity: ~${estimatedCapacity} tables total.`}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 items-center gap-4">
               <Label htmlFor="tableName" className="text-right">
-                Table/Chair Name :
+                {newTableType?.includes("line") ? "Line" : "Table/Chair"} Name :
               </Label>
               <Input
                 id="tableName"
                 value={newTableLabel}
                 onChange={(e) => setNewTableLabel(e.target.value)}
                 className="col-span-3"
-                placeholder="e.g., Wedding Table, Fancy Table"
+                placeholder={
+                  newTableType?.includes("line")
+                    ? "e.g., Wall, Divider"
+                    : "e.g., Wedding Table, Fancy Table"
+                }
               />
             </div>
-            {newTableType !== "circular-single-seat" && (
-              <div className="grid grid-cols-2 items-center gap-4">
-                <Label htmlFor="numSeats" className="text-right">
-                  Number of Seats :
-                </Label>
-                <div className="col-span-3 flex items-center gap-2">
-                  <Slider
-                    id="numSeats"
-                    min={2}
-                    max={20}
-                    step={1}
-                    value={[newTableNumSeats]}
-                    onValueChange={(val) => setNewTableNumSeats(val[0])}
-                    className="w-[calc(100%-40px)]"
+
+            {/* ✅ LINE-SPECIFIC INPUTS */}
+            {newTableType?.includes("line") && (
+              <>
+                <div className="grid grid-cols-2 items-center gap-4">
+                  <Label htmlFor="lineThickness" className="text-right">
+                    Thickness (px):
+                  </Label>
+                  <Input
+                    id="lineThickness"
+                    type="number"
+                    value={tWidth > 0 ? tWidth : ""}
+                    onChange={(e) => setTWidth(Number(e.target.value))}
+                    className="col-span-3"
+                    placeholder="e.g., 5"
+                    min={1}
+                    max={50}
                   />
-                  <span className="w-10 text-right">{newTableNumSeats}</span>
                 </div>
-              </div>
+                <div className="grid grid-cols-2 items-center gap-4">
+                  <Label htmlFor="lineLength" className="text-right">
+                    Initial Length (px):
+                  </Label>
+                  <Input
+                    id="lineLength"
+                    type="number"
+                    value={tHeight > 0 ? tHeight : ""}
+                    onChange={(e) => setTHeight(Number(e.target.value))}
+                    className="col-span-3"
+                    placeholder="e.g., 200"
+                    min={10}
+                    max={2000}
+                  />
+                </div>
+              </>
             )}
-          </div>
-          <div className="grid grid-cols-2 items-center gap-4">
-            <Label htmlFor="tableName" className="text-right">
-              Measurement Type:
-            </Label>
-            <Select value={mType} onValueChange={setMtype}>
-              <SelectTrigger className="w-[190px]">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ft">ft</SelectItem>
-                <SelectItem value="m">meter</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 items-center gap-4">
-            <Label htmlFor="tableName" className="text-right">
-              Table/chair width :
-            </Label>
-            <Input
-              id="tableName"
-              value={tWidth > 0 ? tWidth : ""}
-              onChange={(e) => setTWidth(Number(e.target.value))}
-              className="col-span-3"
-              placeholder="e.g., 2.5"
-            />
-          </div>
-          <div className="grid grid-cols-2 items-center gap-4">
-            <Label htmlFor="tableName" className="text-right">
-              Table/chair height :
-            </Label>
-            <Input
-              id="tableName"
-              value={tHeight > 0 ? tHeight : ""}
-              onChange={(e) => setTHeight(Number(e.target.value))}
-              className="col-span-3"
-              placeholder="e.g., 1.5"
-            />
+
+            {/* TABLE/CHAIR SEAT COUNT - HIDE FOR LINES */}
+            {!newTableType?.includes("line") &&
+              newTableType !== "circular-single-seat" && (
+                <div className="grid grid-cols-2 items-center gap-4">
+                  <Label htmlFor="numSeats" className="text-right">
+                    Number of Seats :
+                  </Label>
+                  <div className="col-span-3 flex items-center gap-2">
+                    <Slider
+                      id="numSeats"
+                      min={2}
+                      max={20}
+                      step={1}
+                      value={[newTableNumSeats]}
+                      onValueChange={(val) => setNewTableNumSeats(val[0])}
+                      className="w-[calc(100%-40px)]"
+                    />
+                    <span className="w-10 text-right">{newTableNumSeats}</span>
+                  </div>
+                </div>
+              )}
+
+            {/* TABLE MEASUREMENT INPUTS - HIDE FOR LINES */}
+            {!newTableType?.includes("line") && (
+              <>
+                <div className="grid grid-cols-2 items-center gap-4">
+                  <Label htmlFor="tableName" className="text-right">
+                    Measurement Type:
+                  </Label>
+                  <Select value={mType} onValueChange={setMtype}>
+                    <SelectTrigger className="w-[190px]">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ft">ft</SelectItem>
+                      <SelectItem value="m">meter</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 items-center gap-4">
+                  <Label htmlFor="tableName" className="text-right">
+                    Table/chair width :
+                  </Label>
+                  <Input
+                    id="tableName"
+                    value={tWidth > 0 ? tWidth : ""}
+                    onChange={(e) => setTWidth(Number(e.target.value))}
+                    className="col-span-3"
+                    placeholder="e.g., 2.5"
+                  />
+                </div>
+                <div className="grid grid-cols-2 items-center gap-4">
+                  <Label htmlFor="tableName" className="text-right">
+                    Table/chair height :
+                  </Label>
+                  <Input
+                    id="tableName"
+                    value={tHeight > 0 ? tHeight : ""}
+                    onChange={(e) => setTHeight(Number(e.target.value))}
+                    className="col-span-3"
+                    placeholder="e.g., 1.5"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <DialogFooter>
-            <Button onClick={handleConfirmAddTable}>Add Table</Button>
+            <Button onClick={handleConfirmAddTable}>
+              Add {newTableType?.includes("line") ? "Line" : "Table"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
