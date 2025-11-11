@@ -6,6 +6,8 @@ import AdminPage from "./Plan";
 import AdminDashboard from "./AdminDashboard";
 import UserManagementDashboard from "./UserManagementDashboard";
 import ImageUploadPage from "./ImageMng";
+import TermsAndConditionsDashboard from "./TermsAndConditionsDashboard";
+import PrivacyPolicyDashboard from "./Privacy-policy";
 
 const page = () => {
   return (
@@ -17,6 +19,8 @@ const page = () => {
           <TabsTrigger value="user">User</TabsTrigger>
           <TabsTrigger value="k">Title</TabsTrigger>
           <TabsTrigger value="upload">Images</TabsTrigger>
+          <TabsTrigger value="terms&con">Terms&Con</TabsTrigger>
+          <TabsTrigger value="privacy">Privacy</TabsTrigger>
         </TabsList>
         <TabsContent value="s">
           <AdminSubscriptionsPage />
@@ -32,6 +36,12 @@ const page = () => {
         </TabsContent>
         <TabsContent value="upload">
           <ImageUploadPage />
+        </TabsContent>
+        <TabsContent value="terms&con">
+          <TermsAndConditionsDashboard />
+        </TabsContent>
+        <TabsContent value="privacy">
+          <PrivacyPolicyDashboard />
         </TabsContent>
       </Tabs>
     </div>

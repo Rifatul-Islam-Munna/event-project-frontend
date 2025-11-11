@@ -60,9 +60,9 @@ export function HowItWorksSection() {
     {
       number: "1",
       icon: Calendar,
-      title: "Create Your Event",
+      title: "Δημιουργήστε την Εκδήλωσή σας",
       description:
-        "Set up your event with essential details like name, date, location, and logo.",
+        "Δημιουργήστε την Εκδήλωσή σας.\nΟργανώστε την εκδήλωσή σας με βασικές λεπτομέρειες όπως όνομα, ημερομηνία, τοποθεσία και λογότυπο.",
       gradient: "from-orange-500 to-red-600",
       accentColor: "orange",
       image: image1,
@@ -70,9 +70,9 @@ export function HowItWorksSection() {
     {
       number: "2",
       icon: Users,
-      title: "Manage Guests & Seating",
+      title: "Διαχειριστείτε Καλεσμένους & Καθίσματα",
       description:
-        "Import guest lists, design interactive seating charts with drag-and-drop, and assign seats.",
+        "Διαχειριστείτε τους Καλεσμένους & τα Καθίσματα. Εισάγετε τις λίστες καλεσμένων, σχεδιάστε διαδραστικούς χάρτες καθισμάτων με drag & drop και αναθέστε θέσεις.",
       gradient: "from-red-500 to-rose-600",
       accentColor: "red",
       image: image2,
@@ -80,9 +80,9 @@ export function HowItWorksSection() {
     {
       number: "3",
       icon: Share2,
-      title: "Share with Guests",
+      title: "Μοιραστείτε τη με τους Καλεσμένους",
       description:
-        "Generate shareable links and QR codes for guests to easily find their seats.",
+        "Μοιραστείτε με τους Καλεσμένους.\nΔημιουργήστε συνδέσμους και QR codes για εύκολη εύρεση των θέσεων των καλεσμένων.",
       gradient: "from-orange-600 to-amber-600",
       accentColor: "orange",
       image: image3,
@@ -105,11 +105,11 @@ export function HowItWorksSection() {
             className="text-center mb-12 sm:mb-16 md:mb-20"
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent mb-3 sm:mb-4 px-4">
-              How It Works
+              Τρόπος Λειτουργίας
             </h2>
             <p className="max-w-2xl sm:max-w-3xl lg:max-w-4xl mx-auto text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed px-4">
-              Our intuitive platform makes managing your event seating and
-              vendor communications simple.
+              Η εύχρηστη πλατφόρμα μας απλοποιεί τη διαχείριση καθισμάτων της
+              εκδήλωσής σας και την επικοινωνία με τους προμηθευτές
             </p>
           </m.div>
 
@@ -121,6 +121,7 @@ export function HowItWorksSection() {
             variants={containerVariants}
             className="max-w-6xl mx-auto flex flex-col sm:flex-col lg:flex-row items-center justify-center gap-6 sm:gap-8 lg:gap-4 xl:gap-6"
           >
+            {/* Step Cards */}
             {steps.map((step, index) => {
               const IconComponent = step.icon;
               return (

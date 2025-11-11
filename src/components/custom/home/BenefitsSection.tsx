@@ -64,69 +64,69 @@ export function BenefitsSection() {
   const benefits = [
     {
       icon: Timer,
-      title: "Save 10+ Hours",
-      subtitle: "Per Event Setup",
+      title: "Εξοικονομήστε 10+ Ώρες",
+      subtitle: "Ανά Εκδήλωση",
       description:
-        "Transform days of manual coordination into minutes of automated magic. Our smart platform handles the complex stuff while you focus on creating amazing experiences.",
+        "Μετατρέψτε μέρες χειροκίνητου συντονισμού σε λεπτά αυτοματοποιημένης μαγείας. Η έξυπνη πλατφόρμα μας αναλαμβάνει τα πολύπλοκα καθώς εσείς εστιάζετε στη δημιουργία καταπληκτικών εμπειριών.",
       color: "orange",
-      stat: "90% Time Saved",
-      beforeText: "Before: 12+ hours of manual work",
-      afterText: "After: 2 hours of effortless setup",
+      stat: "90% Εξοικονόμηση Χρόνου",
+      beforeText: "Πριν: 12+ ώρες χειροκίνητης εργασίας",
+      afterText: "Μετά: 2 ώρες αβίαστης ρύθμισης",
     },
     {
       icon: Smile,
-      title: "Zero Stress Planning",
-      subtitle: "Worry-Free Events",
+      title: "Μηδενικό Άγχος Οργάνωσης",
+      subtitle: "Εκδηλώσεις Χωρίς Ανησυχίες",
       description:
-        "Say goodbye to sleepless nights and last-minute panic. Automated reminders and real-time updates keep everything running smoothly.",
+        "Πείτε αντίο στις αϋπνίες και τον πανικό της τελευταίας στιγμής. Οι αυτοματοποιημένες υπενθυμίσεις και οι ενημερώσεις σε πραγματικό χρόνο διατηρούν τα πάντα ομαλά.",
       color: "emerald",
-      stat: "100% Peace of Mind",
-      beforeText: "Before: Constant worry and stress",
-      afterText: "After: Relaxed, confident planning",
+      stat: "100% Ηρεμία",
+      beforeText: "Πριν: Συνεχής ανησυχία και άγχος",
+      afterText: "Μετά: Χαλαρή, σίγουρη οργάνωση",
     },
     {
       icon: Heart,
-      title: "Happy Guests Always",
-      subtitle: "Memorable Experiences",
+      title: "Ευχαριστημένοι Καλεσμένοι Πάντα",
+      subtitle: "Αξέχαστες Εμπειρίες",
       description:
-        "Delight your guests with seamless check-ins, easy seat finding, and smooth event flow. QR codes make everything instant and effortless.",
+        "Ενθουσιάστε τους καλεσμένους σας με απρόσκοπτο check-in, εύκολη εύρεση θέσεων και ομαλή ροή εκδήλωσης. Τα QR codes κάνουν τα πάντα άμεσα και αβίαστα.",
       color: "rose",
-      stat: "98% Guest Satisfaction",
-      beforeText: "Before: Confused, frustrated guests",
-      afterText: "After: Delighted, impressed attendees",
+      stat: "98% Ικανοποίηση Καλεσμένων",
+      beforeText: "Πριν: Μπερδεμένοι, απογοητευμένοι καλεσμένοι",
+      afterText: "Μετά: Ενθουσιασμένοι, εντυπωσιασμένοι καλεσμένοι",
     },
     {
       icon: Target,
-      title: "Perfect Execution",
-      subtitle: "Every Single Time",
+      title: "Τέλεια Εκτέλεση",
+      subtitle: "Κάθε Φορά",
       description:
-        "Never miss a detail again. Automated vendor reminders ensure every supplier delivers exactly what you need, exactly when you need it.",
+        "Μην ξεχάσετε ποτέ ξανά καμία λεπτομέρεια. Οι αυτοματοποιημένες υπενθυμίσεις προμηθευτών διασφαλίζουν ότι κάθε προμηθευτής παραδίδει ακριβώς αυτό που χρειάζεστε, ακριβώς όταν το χρειάζεστε.",
       color: "red",
-      stat: "100% Reliability",
-      beforeText: "Before: Missed details and delays",
-      afterText: "After: Flawless event execution",
+      stat: "100% Αξιοπιστία",
+      beforeText: "Πριν: Χαμένες λεπτομέρειες και καθυστερήσεις",
+      afterText: "Μετά: Άψογη εκτέλεση εκδήλωσης",
     },
     {
       icon: TrendingUp,
-      title: "Scale Without Limits",
-      subtitle: "Any Event Size",
+      title: "Κλιμάκωση Χωρίς Όρια",
+      subtitle: "Οποιοδήποτε Μέγεθος Εκδήλωσης",
       description:
-        "From intimate dinners to grand celebrations. Our platform grows with your ambitions, handling any event size with the same ease.",
+        "Από οικεία δείπνα μέχρι μεγάλες εορτές. Η πλατφόρμα μας αναπτύσσεται μαζί με τις φιλοδοξίες σας, διαχειριζόμενη οποιοδήποτε μέγεθος εκδήλωσης με την ίδια ευκολία.",
       color: "orange",
-      stat: "Unlimited Growth",
-      beforeText: "Before: Limited by complexity",
-      afterText: "After: Handle any event size",
+      stat: "Απεριόριστη Ανάπτυξη",
+      beforeText: "Πριν: Περιορισμένοι από την πολυπλοκότητα",
+      afterText: "Μετά: Διαχειριστείτε οποιοδήποτε μέγεθος",
     },
     {
       icon: Star,
-      title: "Professional Image",
-      subtitle: "Impress Every Client",
+      title: "Επαγγελματική Εικόνα",
+      subtitle: "Εντυπωσιάστε Κάθε Πελάτη",
       description:
-        "Showcase your expertise with polished seating charts and seamless coordination. Turn every event into a referral opportunity.",
+        "Επιδείξτε την εμπειρία σας με εκλεπτυσμένους χάρτες καθισμάτων και απρόσκοπτο συντονισμό. Μετατρέψτε κάθε εκδήλωση σε ευκαιρία συστάσεων.",
       color: "amber",
-      stat: "5-Star Reviews",
-      beforeText: "Before: Amateur-looking setup",
-      afterText: "After: Professional excellence",
+      stat: "Κριτικές 5 Αστέρων",
+      beforeText: "Πριν: Ερασιτεχνική ρύθμιση",
+      afterText: "Μετά: Επαγγελματική αριστεία",
     },
   ];
 
@@ -202,19 +202,19 @@ export function BenefitsSection() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-slate-200/50 mb-6">
               <Sparkles className="h-4 w-4 text-orange-500" />
               <span className="text-slate-700 font-medium text-sm">
-                Transform Your Event Planning
+                Μεταμορφώστε την Οργάνωση Εκδηλώσεών σας
               </span>
             </div>
 
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 mb-4">
-              Why Event Organizers{" "}
+              Γιατί οι Διοργανωτές Εκδηλώσεων{" "}
               <span className="bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
-                Love Our Platform
+                Λατρεύουν την Πλατφόρμα μας
               </span>
             </h2>
             <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              From chaos to clarity. See how our intelligent platform solves the
-              biggest challenges in event planning.
+              Από το χάος στη σαφήνεια. Δείτε πώς η έξυπνη πλατφόρμα μας λύνει
+              τις μεγαλύτερες προκλήσεις στην οργάνωση εκδηλώσεων.
             </p>
           </m.div>
 
@@ -230,26 +230,32 @@ export function BenefitsSection() {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">
                 <CheckCircle className="h-4 w-4" />
-                See It In Action
+                Δείτε το Σε Δράση
               </div>
 
               <h3 className="text-2xl md:text-3xl font-bold text-slate-900">
-                From Spreadsheet Chaos to{" "}
-                <span className="text-orange-600">Beautiful Automation</span>
+                Από το Χάος των Υπολογιστικών Φύλλων στην{" "}
+                <span className="text-orange-600">Όμορφη Αυτοματοποίηση</span>
               </h3>
 
               <p className="text-lg text-slate-600 leading-relaxed">
-                Watch how our platform transforms complex event coordination
-                into a simple, visual experience. No more endless spreadsheets
-                or forgotten details.
+                Δείτε πώς η πλατφόρμα μας μετατρέπει τον περίπλοκο συντονισμό
+                εκδηλώσεων σε μια απλή, οπτική εμπειρία. Όχι άλλα ατελείωτα
+                υπολογιστικά φύλλα ή ξεχασμένες λεπτομέρειες.
               </p>
 
               {/* Quick Features */}
               <div className="space-y-3">
                 {[
-                  { icon: Monitor, text: "Drag & drop seating chart builder" },
-                  { icon: Smartphone, text: "Mobile-friendly for guests" },
-                  { icon: Zap, text: "Instant vendor notifications" },
+                  {
+                    icon: Monitor,
+                    text: "Δημιουργός χαρτών καθισμάτων με σύρσιμο και απόθεση",
+                  },
+                  {
+                    icon: Smartphone,
+                    text: "Φιλικό για κινητά για τους καλεσμένους",
+                  },
+                  { icon: Zap, text: "Άμεσες ειδοποιήσεις προμηθευτών" },
                 ].map((feature, index) => {
                   const FeatureIcon = feature.icon;
                   return (
@@ -277,7 +283,7 @@ export function BenefitsSection() {
               <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                 <Image
                   src={sideImage}
-                  alt="Event Management Platform"
+                  alt="Πλατφόρμα Διαχείρισης Εκδηλώσεων"
                   className="w-full h-auto"
                   width={1500}
                   height={1500}
@@ -364,7 +370,7 @@ export function BenefitsSection() {
                         </div>
                         <div>
                           <p className="text-xs font-semibold text-red-700 mb-1">
-                            BEFORE
+                            ΠΡΙΝ
                           </p>
                           <p className="text-sm text-slate-700">
                             {benefit.beforeText}
@@ -378,7 +384,7 @@ export function BenefitsSection() {
                         </div>
                         <div>
                           <p className="text-xs font-semibold text-green-700 mb-1">
-                            AFTER
+                            ΜΕΤΑ
                           </p>
                           <p className="text-sm text-slate-700">
                             {benefit.afterText}
@@ -409,32 +415,33 @@ export function BenefitsSection() {
               <div className="flex items-center justify-center gap-2 mb-6">
                 <Users className="h-6 w-6 text-orange-500" />
                 <span className="text-orange-600 font-semibold">
-                  Join 1000+ Happy Event Organizers
+                  Ενταχθείτε σε 1000+ Ευχαριστημένους Διοργανωτές Εκδηλώσεων
                 </span>
               </div>
 
               <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
-                Ready to Transform Your Events?
+                Έτοιμοι να Μεταμορφώσετε τις Εκδηλώσεις σας;
               </h3>
 
               <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
-                Stop letting event planning stress consume your time. Start
-                creating memorable experiences with confidence and ease.
+                Σταματήστε να αφήνετε το άγχος της οργάνωσης εκδηλώσεων να
+                καταναλώνει τον χρόνο σας. Αρχίστε να δημιουργείτε αξέχαστες
+                εμπειρίες με αυτοπεποίθηση και ευκολία.
               </p>
 
               {/* Trust Signals */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
                   <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Free 14-day trial</span>
+                  <span>Δωρεάν δοκιμή 14 ημερών</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
                   <Shield className="h-4 w-4 text-orange-500" />
-                  <span>No setup fees</span>
+                  <span>Χωρίς τέλη εγκατάστασης</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
                   <Heart className="h-4 w-4 text-rose-500" />
-                  <span>Cancel anytime</span>
+                  <span>Ακύρωση ανά πάσα στιγμή</span>
                 </div>
               </div>
             </div>

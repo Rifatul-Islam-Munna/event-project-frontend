@@ -507,3 +507,60 @@ export const deleteImages = async (id:string) =>{
     console.log("guest-data-update->",data,"guest-error-update->",error);
     return {data,error}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Add these functions to your fetch-action.ts file
+
+// Get all terms and conditions
+export const getAllTermsAndConditions = async (type:string) => {
+  const [data, error] = await GetRequestNormal<Record<string, unknown>[]>(
+    `/terms-and-conditions?type=${type}`
+  );
+  console.log("terms-data->", data, "terms-error->", error);
+  return { data, error };
+};
+
+// Create a new terms and condition section
+export const createTermsAndCondition = async (
+  payload: Record<string, unknown>
+) => {
+  console.log("payload->", payload);
+  const [data, error] = await PostRequestAxios(
+    `/terms-and-conditions`,
+    payload
+  );
+  console.log("terms-create-data->", data, "terms-create-error->", error);
+  return { data, error };
+};
+
+// Update a terms and condition section (optional - if you need it)
+export const updateTermsAndCondition = async (
+  payload: Record<string, unknown>
+) => {
+  const [data, error] = await PatchRequestAxios(
+    `/terms-and-conditions/update-terms`,
+    payload
+  );
+  console.log("terms-update-data->", data, "terms-update-error->", error);
+  return { data, error };
+};
+
+// Delete a terms and condition section
+export const deleteTermsAndCondition = async (id: string) => {
+  const [data, error] = await DeleteAxios(
+    `/terms-and-conditions/${id}`
+  );
+  console.log("terms-delete-data->", data, "terms-delete-error->", error);
+  return { data, error };
+};

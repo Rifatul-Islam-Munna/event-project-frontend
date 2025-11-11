@@ -56,61 +56,61 @@ export function FeaturesSection() {
   const seatingFeatures = [
     {
       icon: Users,
-      title: "User Registration & Login",
-      description: "Secure authentication system",
+      title: "Εγγραφή & Σύνδεση Χρηστών",
+      description: "Ασφαλές σύστημα πιστοποίησης",
     },
     {
       icon: Calendar,
-      title: "Event Creation",
-      description: "Name, Date, Location, Logo setup",
+      title: "Δημιουργία Εκδήλωσης",
+      description: "Όνομα, Ημερομηνία, Τοποθεσία, Ρύθμιση Λογοτύπου",
     },
     {
       icon: UserPlus,
-      title: "Guest List Management",
-      description: "Add/Import via CSV",
+      title: "Διαχείριση Λίστας Προσκεκλημένων",
+      description: "Προσθήκη/Εισαγωγή μέσω CSV",
     },
     {
       icon: Layout,
-      title: "Interactive Seating Chart Builder",
-      description: "Drag & Drop tables & seats",
+      title: "Διαδραστικός Δημιουργός Διαγράμματος Καθισμάτων",
+      description: "Σύρε & Άφησε τραπέζια και θέσεις",
     },
     {
       icon: MapPin,
-      title: "Smart Guest Assignment",
-      description: "Assign guests to seats with lookup",
+      title: "Έξυπνη Ανάθεση Καλεσμένων",
+      description: "Ανάθεση καλεσμένων σε θέσεις με αναζήτηση",
     },
     {
       icon: Share2,
-      title: "Shareable Event Page",
-      description: "Link & QR Code generation",
+      title: "Σελίδα Εκδήλωσης για Κοινή Χρήση",
+      description: "Δημιουργία Συνδέσμου & QR Code",
     },
   ];
 
   const vendorFeatures = [
     {
       icon: FileText,
-      title: "Vendor Form Creation",
-      description: "Name, Email, WhatsApp, Custom fields",
+      title: "Δημιουργία Φόρμας Προμηθευτή",
+      description: "Όνομα, Email, WhatsApp, Προσαρμοσμένα πεδία",
     },
     {
       icon: Mail,
-      title: "Auto Email Reminders",
-      description: "Scheduled email notifications",
+      title: "Αυτόματες Υπενθυμίσεις Email",
+      description: "Προγραμματισμένες ειδοποιήσεις email",
     },
     {
       icon: MessageCircle,
-      title: "WhatsApp Integration",
-      description: "API-powered messaging",
+      title: "Ενσωμάτωση WhatsApp",
+      description: "Μηνύματα μέσω API",
     },
     {
       icon: Settings,
-      title: "Client Dashboard",
-      description: "View/Edit/Delete reminders",
+      title: "Πίνακας Ελέγχου Πελάτη",
+      description: "Προβολή/Επεξεργασία/Διαγραφή υπενθυμίσεων",
     },
     {
       icon: Clock,
-      title: "Automated Scheduling",
-      description: "Cron job for delivery",
+      title: "Αυτοματοποιημένος Προγραμματισμός",
+      description: "Cron job για αποστολή",
     },
   ];
 
@@ -126,11 +126,12 @@ export function FeaturesSection() {
           className="text-center mb-20"
         >
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent mb-4">
-            Key Features
+            Βασικά Χαρακτηριστικά
           </h2>
           <p className="max-w-3xl mx-auto text-lg text-slate-600 leading-relaxed">
-            Our platform offers comprehensive tools for event organizers to
-            manage seating and communicate with vendors effortlessly.
+            Η πλατφόρμα μας προσφέρει ολοκληρωμένα εργαλεία για διοργανωτές
+            εκδηλώσεων, ώστε να διαχειρίζονται την θέση των καλεσμένων και να
+            επικοινωνούν με τους προμηθευτές εύκολα
           </p>
         </motion.div>
 
@@ -155,10 +156,10 @@ export function FeaturesSection() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-slate-900 mb-1">
-                    Seating Arrangement System
+                    Σύστημα Τοποθέτησης Καθισμάτων
                   </h3>
                   <p className="text-sm text-orange-600 font-medium">
-                    Complete Event Management
+                    Ολοκληρωμένη Διαχείριση Εκδηλώσεων
                   </p>
                 </div>
               </div>
@@ -217,10 +218,10 @@ export function FeaturesSection() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-slate-900 mb-1">
-                    Vendor Reminder System
+                    Πλατφόρμα Υπενθυμίσεων Προμηθευτών
                   </h3>
                   <p className="text-sm text-red-600 font-medium">
-                    Smart Communication Hub
+                    Έξυπνη Πλατφόρμα Επικοινωνίας
                   </p>
                 </div>
               </div>

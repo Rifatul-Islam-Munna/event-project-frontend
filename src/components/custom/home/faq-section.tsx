@@ -20,92 +20,93 @@ import {
 export function FAQSection() {
   const faqCategories = [
     {
-      title: "Pricing & Payments",
+      title: "Τιμολόγηση & Πληρωμές",
       icon: CreditCard,
       color: "orange",
       faqs: [
         {
-          question: "Is it a subscription or a one-time payment?",
+          question: "Είναι συνδρομή ή εφάπαξ πληρωμή;",
           answer:
-            "Our platform offers flexible pricing plans, including both one-time event passes and subscription options for frequent users. Details are available on our pricing page with transparent pricing for every need.",
+            "Η πλατφόρμα μας προσφέρει ευέλικτα πλάνα τιμολόγησης, συμπεριλαμβανομένων εφάπαξ πληρωμών για μεμονωμένες εκδηλώσεις και επιλογών συνδρομής για συχνούς χρήστες. Οι λεπτομέρειες είναι διαθέσιμες στη σελίδα τιμολόγησής μας με διαφανή τιμολόγηση για κάθε ανάγκη.",
         },
         {
-          question: "How far in advance should I purchase?",
+          question: "Πόσο νωρίτερα πρέπει να αγοράσω;",
           answer:
-            "You can purchase and set up your event at any time. We recommend doing so as soon as you have your guest list and seating plan finalized to allow ample time for sharing.",
+            "Μπορείτε να αγοράσετε και να ρυθμίσετε την εκδήλωσή σας ανά πάσα στιγμή. Συνιστούμε να το κάνετε μόλις έχετε οριστικοποιήσει τη λίστα καλεσμένων και το σχέδιο καθισμάτων σας για να έχετε άφθονο χρόνο για κοινοποίηση.",
         },
       ],
     },
     {
-      title: "QR Codes & Access",
+      title: "QR Codes & Πρόσβαση",
       icon: QrCode,
       color: "emerald",
       faqs: [
         {
-          question: "Does the QR code change?",
+          question: "Αλλάζει το QR code;",
           answer:
-            "No, once generated for your event, the QR code remains static and will always link to your event's public seating page. This ensures reliability for printed materials.",
+            "Όχι, μόλις δημιουργηθεί για την εκδήλωσή σας, το QR code παραμένει στατικό και θα συνδέεται πάντα με τη δημόσια σελίδα καθισμάτων της εκδήλωσής σας. Αυτό διασφαλίζει την αξιοπιστία για έντυπα υλικά.",
         },
         {
-          question: "Does the seating chart QR code expire?",
+          question: "Λήγει το QR code του χάρτη καθισμάτων;",
           answer:
-            "The QR code does not expire as long as your event remains active on our platform. Your guests can access it anytime during your event period.",
+            "Το QR code δεν λήγει όσο η εκδήλωσή σας παραμένει ενεργή στην πλατφόρμα μας. Οι καλεσμένοι σας μπορούν να έχουν πρόσβαση ανά πάσα στιγμή κατά τη διάρκεια της εκδήλωσής σας.",
         },
         {
-          question: "Can you make changes even though the QR code is printed?",
+          question:
+            "Μπορείτε να κάνετε αλλαγές αν και το QR code είναι εκτυπωμένο;",
           answer:
-            "Yes, you can make changes to your seating chart and guest assignments at any time. The public event page will automatically update, so guests scanning the QR code will always see the latest version.",
+            "Ναι, μπορείτε να κάνετε αλλαγές στο χάρτη καθισμάτων και στις αναθέσεις καλεσμένων ανά πάσα στιγμή. Η δημόσια σελίδα της εκδήλωσης θα ενημερωθεί αυτόματα, επομένως οι καλεσμένοι που σαρώνουν το QR code θα βλέπουν πάντα την πιο πρόσφατη έκδοση.",
         },
       ],
     },
     {
-      title: "Guest Experience",
+      title: "Εμπειρία Καλεσμένων",
       icon: Users,
       color: "red",
       faqs: [
         {
-          question: "How do guests find the event?",
+          question: "Πώς βρίσκουν οι καλεσμένοι την εκδήλωση;",
           answer:
-            "Guests can find their assigned seats by scanning the QR code or by clicking the shareable link you provide, then entering their name in the lookup search box. It's that simple!",
+            "Οι καλεσμένοι μπορούν να βρουν τις ανατεθειμένες θέσεις τους σαρώνοντας το QR code ή κάνοντας κλικ στον σύνδεσμο κοινής χρήσης που παρέχετε, στη συνέχεια εισάγοντας το όνομά τους στο πλαίσιο αναζήτησης. Είναι τόσο απλό!",
         },
         {
-          question: "Does anyone share guest lookup?",
+          question: "Μοιράζεται δημόσια η αναζήτηση καλεσμένων;",
           answer:
-            "Guest lookup is only accessible via the unique event link or QR code, which you share with your guests. We do not publicly share guest information and maintain strict privacy standards.",
+            "Η αναζήτηση καλεσμένων είναι προσβάσιμη μόνο μέσω του μοναδικού συνδέσμου εκδήλωσης ή QR code, τον οποίο εσείς μοιράζεστε με τους καλεσμένους σας. Δεν κοινοποιούμε δημόσια πληροφορίες καλεσμένων και τηρούμε αυστηρά πρότυπα ιδιωτικότητας.",
         },
       ],
     },
     {
-      title: "Platform Features",
+      title: "Χαρακτηριστικά Πλατφόρμας",
       icon: Settings,
       color: "orange",
       faqs: [
         {
-          question: "What other services does Digital Seating provide?",
+          question: "Τι άλλες υπηρεσίες παρέχει το Digital Seating;",
           answer:
-            "Beyond seating arrangements, we offer a comprehensive vendor reminder system via email and WhatsApp, guest list management, CSV import, event sharing tools, and real-time updates.",
+            "Πέρα από τη διευθέτηση καθισμάτων, προσφέρουμε ένα ολοκληρωμένο σύστημα υπενθυμίσεων προμηθευτών μέσω email και WhatsApp, διαχείριση λίστας καλεσμένων, εισαγωγή CSV, εργαλεία κοινής χρήσης εκδηλώσεων και ενημερώσεις σε πραγματικό χρόνο.",
         },
         {
-          question: "Does this app guide?",
+          question: "Παρέχει οδηγίες αυτή η εφαρμογή;",
           answer:
-            "Yes, our platform features an intuitive interface with clear instructions, tooltips, and step-by-step guidance to help you through every aspect of event creation and management.",
+            "Ναι, η πλατφόρμα μας διαθέτει ένα διαισθητικό περιβάλλον με σαφείς οδηγίες, υποδείξεις εργαλείων και βήμα προς βήμα καθοδήγηση για να σας βοηθήσει σε κάθε πτυχή της δημιουργίας και διαχείρισης εκδηλώσεων.",
         },
       ],
     },
     {
-      title: "Support & Technical",
+      title: "Υποστήριξη & Τεχνική Βοήθεια",
       icon: Phone,
       color: "rose",
       faqs: [
         {
-          question: "QR Code download not working on my phone?",
+          question: "Η λήψη QR Code δεν λειτουργεί στο τηλέφωνό μου;",
           answer:
-            "Ensure your browser has permission to download files. Try using a different browser or clearing your cache. If issues persist, our support team is here to help you resolve it quickly.",
+            "Βεβαιωθείτε ότι το πρόγραμμα περιήγησής σας έχει άδεια λήψης αρχείων. Δοκιμάστε να χρησιμοποιήσετε διαφορετικό πρόγραμμα περιήγησης ή να διαγράψετε την προσωρινή μνήμη σας. Εάν τα προβλήματα συνεχίζονται, η ομάδα υποστήριξής μας είναι εδώ για να σας βοηθήσει να το λύσετε γρήγορα.",
         },
         {
-          question: "Do you offer customer support?",
+          question: "Προσφέρετε υποστήριξη πελατών;",
           answer:
-            "We offer dedicated customer support via email, live chat, and phone to assist you with any questions or issues. Our team is committed to ensuring your event planning success.",
+            "Προσφέρουμε αφοσιωμένη υποστήριξη πελατών μέσω email, ζωντανής συνομιλίας και τηλεφώνου για να σας βοηθήσουμε με οποιεσδήποτε ερωτήσεις ή ζητήματα. Η ομάδα μας είναι αφοσιωμένη στη διασφάλιση της επιτυχίας της οργάνωσης εκδηλώσεών σας.",
         },
       ],
     },
@@ -157,20 +158,20 @@ export function FAQSection() {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-slate-200/50 mb-6">
             <HelpCircle className="h-4 w-4 text-orange-500" />
             <span className="text-slate-700 font-medium text-sm">
-              Got Questions?
+              Έχετε Ερωτήσεις;
             </span>
           </div>
 
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
             <span className="bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
-              Frequently Asked
+              Συχνές Ερωτήσεις
             </span>{" "}
-            <span className="text-slate-900">Questions</span>
+            <span className="text-slate-900">& Απαντήσεις</span>
           </h2>
           <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            Find answers to common questions about our Digital Seating
-            Arrangement platform. Can't find what you're looking for? Contact
-            our support team.
+            Βρείτε απαντήσεις σε κοινές ερωτήσεις σχετικά με την πλατφόρμα
+            Ψηφιακής Διευθέτησης Καθισμάτων μας. Δεν βρίσκετε αυτό που ψάχνετε;
+            Επικοινωνήστε με την ομάδα υποστήριξής μας.
           </p>
         </div>
 
@@ -194,7 +195,7 @@ export function FAQSection() {
                       {category.title}
                     </h3>
                     <p className="text-sm text-slate-500">
-                      {category.faqs.length} questions
+                      {category.faqs.length} ερωτήσεις
                     </p>
                   </div>
                 </div>
@@ -244,31 +245,32 @@ export function FAQSection() {
             </div>
 
             <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
-              Still Have Questions?
+              Έχετε Ακόμα Ερωτήσεις;
             </h3>
 
             <p className="text-lg text-slate-600 mb-6">
-              Our friendly support team is here to help you make your event
-              planning experience seamless and stress-free.
+              Η φιλική ομάδα υποστήριξής μας είναι εδώ για να σας βοηθήσει να
+              κάνετε την εμπειρία οργάνωσης εκδηλώσεών σας απρόσκοπτη και χωρίς
+              άγχος.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-sm font-medium text-slate-700">
-                  Live Chat Available
+                  Ζωντανή Συνομιλία Διαθέσιμη
                 </span>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
                 <Clock className="h-4 w-4 text-orange-500" />
                 <span className="text-sm font-medium text-slate-700">
-                  24/7 Support
+                  Υποστήριξη 24/7
                 </span>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
                 <Phone className="h-4 w-4 text-red-600" />
                 <span className="text-sm font-medium text-slate-700">
-                  Phone Support
+                  Τηλεφωνική Υποστήριξη
                 </span>
               </div>
             </div>

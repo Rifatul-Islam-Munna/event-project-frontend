@@ -15,10 +15,10 @@ import banner from "./hero-image.jpg";
 
 export function HeroSection() {
   const benefits = [
-    "✨ Setup in under 5 minutes",
-    "🎯 No technical skills required",
-    "📱 Mobile-friendly for guests",
-    "⚡ Instant QR code generation",
+    "✨  Δημιουργία σε λιγότερο από 2 λεπτά",
+    "🎯 Δεν απαιτούνται τεχνικές δεξιότητες",
+    "📱 Φιλικό προς κινητές συσκευές για τους καλεσμένους",
+    "⚡  Άμεση δημιουργία QR code",
   ];
 
   return (
@@ -39,31 +39,32 @@ export function HeroSection() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-100 to-red-100 border border-orange-200/60 self-center lg:self-start backdrop-blur-sm">
               <Sparkles className="h-4 w-4 text-orange-600" />
               <span className="text-orange-700 font-semibold text-sm">
-                Event Planning Made Simple
+                H oργάνωση Εκδηλώσεων Έγινε Απλή
               </span>
             </div>
 
             {/* Main Heading */}
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-                <span className="text-slate-900">Your</span>{" "}
+                <span className="text-slate-900">H διαχείριση</span>{" "}
                 <span className="bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 bg-clip-text text-transparent">
-                  Seating Chart
+                  του πλάνου θέσεων των καλεσμένων
                 </span>
                 <br />
-                <span className="text-slate-900">Made</span>{" "}
+                <span className="text-slate-900"> σας εγινε</span>{" "}
                 <span className="relative">
-                  <span className="text-slate-900">Easy</span>
+                  <span className="text-slate-900">εύκολη</span>
                   <div className="absolute -bottom-2 left-0 right-0 h-3 bg-gradient-to-r from-orange-300/60 to-red-300/60 -rotate-1 rounded-sm"></div>
                 </span>
               </h1>
 
               <p className="text-lg md:text-xl text-slate-600 leading-relaxed">
-                Create stunning seating charts in minutes. Generate QR codes for
-                guests to find their seats instantly.
+                Ετοιμάστε μοναδικές λίστες σε λίγα λεπτά. Δημιουργήστε QR code
+                για τους καλεσμένους ώστε να βρίσκουν άμεσα τις θέσεις τους
                 <span className="font-semibold text-slate-700">
                   {" "}
-                  No stress, no confusion—just perfect events.
+                  Χωρίς άγχος, χωρίς στρες—το κατάλληλο εργαλείο για μοναδικές
+                  εκδηλώσεις.
                 </span>
               </p>
             </div>

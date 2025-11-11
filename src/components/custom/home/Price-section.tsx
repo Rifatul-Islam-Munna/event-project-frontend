@@ -183,16 +183,16 @@ export function PricingSection() {
             <div className="flex items-center justify-center gap-2 mb-4">
               <Sparkles className="h-6 w-6 text-orange-500" />
               <span className="text-sm font-semibold text-orange-600 tracking-wide uppercase">
-                Pricing Plans
+                Προγράμματα Τιμών
               </span>
               <Sparkles className="h-6 w-6 text-orange-500" />
             </div>
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-orange-800 to-red-800 bg-clip-text text-transparent mb-4">
-              Choose Your Perfect Plan
+              Επιλέξτε το Τέλειο Σχέδιο
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Professional seating management made simple. Start your event
-              planning journey today.
+              Η επαγγελματική διαχείριση καθισμάτων γίνεται απλή. Ξεκινήστε το
+              ταξίδι σχεδιασμού της εκδήλωσής σας σήμερα.
             </p>
           </m.div>
 
