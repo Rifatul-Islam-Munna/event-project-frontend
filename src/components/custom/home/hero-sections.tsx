@@ -22,12 +22,12 @@ export function HeroSection() {
   ];
 
   return (
-    <section className="relative w-full min-h-screen py-12 md:py-20 lg:py-24 px-4 md:px-6 bg-gradient-to-br from-slate-50 via-orange-50/80 to-red-100/60 overflow-hidden">
+    <section className="relative w-full min-h-screen py-12 md:py-20 lg:py-24 px-4 md:px-6 bg-gradient-to-br from-slate-50 via-lime-50/80 to-lime-100/60 overflow-hidden">
       {/* Background Decorative Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-orange-300/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-red-300/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-orange-200/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-lime-300/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-lime-300/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-lime-200/10 rounded-full blur-3xl"></div>
       </div>
 
       <div className=" w-full relative z-10 lg:px-10">
@@ -36,9 +36,9 @@ export function HeroSection() {
           {/* Left Content */}
           <div className="flex flex-col justify-center space-y-6 text-center lg:text-left">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-100 to-red-100 border border-orange-200/60 self-center lg:self-start backdrop-blur-sm">
-              <Sparkles className="h-4 w-4 text-orange-600" />
-              <span className="text-orange-700 font-semibold text-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-lime-100 to-lime-100 border border-lime-200/60 self-center lg:self-start backdrop-blur-sm">
+              <Sparkles className="h-4 w-4 text-lime-600" />
+              <span className="text-lime-700 font-semibold text-sm">
                 H oργάνωση Εκδηλώσεων Έγινε Απλή
               </span>
             </div>
@@ -47,14 +47,14 @@ export function HeroSection() {
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
                 <span className="text-slate-900">H διαχείριση</span>{" "}
-                <span className="bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-lime-500 via-lime-600 to-lime-600 bg-clip-text text-transparent">
                   του πλάνου θέσεων των καλεσμένων
                 </span>
                 <br />
                 <span className="text-slate-900"> σας εγινε</span>{" "}
                 <span className="relative">
                   <span className="text-slate-900">εύκολη</span>
-                  <div className="absolute -bottom-2 left-0 right-0 h-3 bg-gradient-to-r from-orange-300/60 to-red-300/60 -rotate-1 rounded-sm"></div>
+                  <div className="absolute -bottom-2 left-0 right-0 h-3 bg-gradient-to-r from-lime-300/60 to-lime-300/60 -rotate-1 rounded-sm"></div>
                 </span>
               </h1>
 
@@ -86,7 +86,7 @@ export function HeroSection() {
               <Link href="/dashboard">
                 <Button
                   size="lg"
-                  className="group relative bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 text-white font-bold text-lg px-8 py-6 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 overflow-hidden min-w-[200px]"
+                  className="group relative bg-gradient-to-r from-lime-500 via-lime-600 to-lime-600 text-white font-bold text-lg px-8 py-6 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 overflow-hidden min-w-[200px]"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
                   <span className="relative z-10 flex items-center justify-center gap-3">
@@ -110,7 +110,7 @@ export function HeroSection() {
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
-                      className="h-4 w-4 fill-orange-400 text-orange-400"
+                      className="h-4 w-4 fill-lime-400 text-lime-400"
                     />
                   ))}
                 </div>
@@ -131,7 +131,7 @@ export function HeroSection() {
             {/* Main Image Container */}
             <div className="relative">
               {/* Background Glow */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-3xl blur-2xl"></div>
+              <div className="absolute -inset-4 bg-gradient-to-r from-lime-500/20 to-lime-500/20 rounded-3xl blur-2xl"></div>
 
               {/* Image */}
               <div className="relative h-[400px] w-full lg:h-[500px] xl:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/20 backdrop-blur-sm">
@@ -158,14 +158,14 @@ export function HeroSection() {
 
                 <div className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-orange-500" />
+                    <Clock className="h-4 w-4 text-lime-500" />
                     <span className="text-sm font-semibold text-slate-800">
                       Setup in 5 min
                     </span>
                   </div>
                 </div>
 
-                <div className="absolute top-6 right-6 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl px-4 py-3 shadow-lg">
+                <div className="absolute top-6 right-6 bg-gradient-to-r from-lime-500 to-lime-600 text-white rounded-2xl px-4 py-3 shadow-lg">
                   <div className="text-xs font-semibold">✨ NEW FEATURE</div>
                   <div className="text-sm">QR Code Magic</div>
                 </div>
@@ -173,8 +173,8 @@ export function HeroSection() {
             </div>
 
             {/* Decorative Elements */}
-            <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-orange-400 to-red-500 rounded-full opacity-20 blur-xl"></div>
-            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-br from-orange-400 to-red-500 rounded-full opacity-15 blur-2xl"></div>
+            <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-lime-400 to-lime-500 rounded-full opacity-20 blur-xl"></div>
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-br from-lime-400 to-lime-500 rounded-full opacity-15 blur-2xl"></div>
           </div>
         </div>
       </div>

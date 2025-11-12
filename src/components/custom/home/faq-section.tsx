@@ -22,7 +22,7 @@ export function FAQSection() {
     {
       title: "Τιμολόγηση & Πληρωμές",
       icon: CreditCard,
-      color: "orange",
+      color: "lime",
       faqs: [
         {
           question: "Είναι συνδρομή ή εφάπαξ πληρωμή;",
@@ -62,7 +62,7 @@ export function FAQSection() {
     {
       title: "Εμπειρία Καλεσμένων",
       icon: Users,
-      color: "red",
+      color: "green",
       faqs: [
         {
           question: "Πώς βρίσκουν οι καλεσμένοι την εκδήλωση;",
@@ -79,7 +79,7 @@ export function FAQSection() {
     {
       title: "Χαρακτηριστικά Πλατφόρμας",
       icon: Settings,
-      color: "orange",
+      color: "lime",
       faqs: [
         {
           question: "Τι άλλες υπηρεσίες παρέχει το Digital Seating;",
@@ -96,7 +96,7 @@ export function FAQSection() {
     {
       title: "Υποστήριξη & Τεχνική Βοήθεια",
       icon: Phone,
-      color: "rose",
+      color: "green",
       faqs: [
         {
           question: "Η λήψη QR Code δεν λειτουργεί στο τηλέφωνό μου;",
@@ -114,13 +114,13 @@ export function FAQSection() {
 
   const getColorConfig = (color) => {
     const configs = {
-      orange: {
-        bg: "bg-orange-50/60",
-        border: "border-orange-200/50",
-        icon: "text-orange-600",
-        iconBg: "bg-orange-100",
-        accent: "text-orange-600",
-        hover: "hover:bg-orange-50/80",
+      lime: {
+        bg: "bg-lime-50/60",
+        border: "border-lime-200/50",
+        icon: "text-lime-600",
+        iconBg: "bg-lime-100",
+        accent: "text-lime-600",
+        hover: "hover:bg-lime-50/80",
       },
       emerald: {
         bg: "bg-emerald-50/60",
@@ -130,40 +130,32 @@ export function FAQSection() {
         accent: "text-emerald-600",
         hover: "hover:bg-emerald-50/80",
       },
-      red: {
-        bg: "bg-red-50/60",
-        border: "border-red-200/50",
-        icon: "text-red-600",
-        iconBg: "bg-red-100",
-        accent: "text-red-600",
-        hover: "hover:bg-red-50/80",
-      },
-      rose: {
-        bg: "bg-rose-50/60",
-        border: "border-rose-200/50",
-        icon: "text-rose-600",
-        iconBg: "bg-rose-100",
-        accent: "text-rose-600",
-        hover: "hover:bg-rose-50/80",
+      green: {
+        bg: "bg-green-50/60",
+        border: "border-green-200/50",
+        icon: "text-green-600",
+        iconBg: "bg-green-100",
+        accent: "text-green-600",
+        hover: "hover:bg-green-50/80",
       },
     };
     return configs[color];
   };
 
   return (
-    <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-white via-slate-50/30 to-orange-50/20">
+    <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-white via-slate-50/30 to-lime-50/20">
       <div className="container mx-auto px-4 md:px-6 max-w-6xl">
         {/* Header Section */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-slate-200/50 mb-6">
-            <HelpCircle className="h-4 w-4 text-orange-500" />
+            <HelpCircle className="h-4 w-4 text-lime-500" />
             <span className="text-slate-700 font-medium text-sm">
               Έχετε Ερωτήσεις;
             </span>
           </div>
 
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-            <span className="bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-lime-500 to-lime-600 bg-clip-text text-transparent">
               Συχνές Ερωτήσεις
             </span>{" "}
             <span className="text-slate-900">& Απαντήσεις</span>
@@ -238,9 +230,9 @@ export function FAQSection() {
         </div>
 
         {/* Bottom Help Section */}
-        <div className="mt-16 text-center p-8 rounded-3xl bg-gradient-to-br from-orange-50/80 via-red-50/80 to-orange-50/80 backdrop-blur-sm border border-orange-200/40">
+        <div className="mt-16 text-center p-8 rounded-3xl bg-gradient-to-br from-lime-50/80 via-green-50/80 to-lime-50/80 backdrop-blur-sm border border-lime-200/40">
           <div className="max-w-3xl mx-auto">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-lime-500 to-green-600 flex items-center justify-center">
               <Phone className="h-8 w-8 text-white" />
             </div>
 
@@ -262,13 +254,13 @@ export function FAQSection() {
                 </span>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
-                <Clock className="h-4 w-4 text-orange-500" />
+                <Clock className="h-4 w-4 text-lime-500" />
                 <span className="text-sm font-medium text-slate-700">
                   Υποστήριξη 24/7
                 </span>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
-                <Phone className="h-4 w-4 text-red-600" />
+                <Phone className="h-4 w-4 text-green-600" />
                 <span className="text-sm font-medium text-slate-700">
                   Τηλεφωνική Υποστήριξη
                 </span>

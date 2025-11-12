@@ -2,9 +2,9 @@
 import { LazyMotion, domAnimation, m } from "motion/react";
 import { ArrowRight, Calendar, Users, Share2 } from "lucide-react";
 import Image from "next/image";
-import image1 from "@/assets/image1.avif";
-import image2 from "@/assets/image2.avif";
-import image3 from "@/assets/image3.avif";
+import image1 from "@/assets/hero/image1.avif";
+import image2 from "@/assets/hero/image2.avif";
+import image3 from "@/assets/hero/image3.avif";
 
 export function HowItWorksSection() {
   const containerVariants = {
@@ -63,8 +63,8 @@ export function HowItWorksSection() {
       title: "Δημιουργήστε την Εκδήλωσή σας",
       description:
         "Δημιουργήστε την Εκδήλωσή σας.\nΟργανώστε την εκδήλωσή σας με βασικές λεπτομέρειες όπως όνομα, ημερομηνία, τοποθεσία και λογότυπο.",
-      gradient: "from-orange-500 to-red-600",
-      accentColor: "orange",
+      gradient: "from-lime-500 to-lime-600",
+      accentColor: "lime",
       image: image1,
     },
     {
@@ -73,8 +73,8 @@ export function HowItWorksSection() {
       title: "Διαχειριστείτε Καλεσμένους & Καθίσματα",
       description:
         "Διαχειριστείτε τους Καλεσμένους & τα Καθίσματα. Εισάγετε τις λίστες καλεσμένων, σχεδιάστε διαδραστικούς χάρτες καθισμάτων με drag & drop και αναθέστε θέσεις.",
-      gradient: "from-red-500 to-rose-600",
-      accentColor: "red",
+      gradient: "from-green-500 to-green-600",
+      accentColor: "green",
       image: image2,
     },
     {
@@ -83,8 +83,8 @@ export function HowItWorksSection() {
       title: "Μοιραστείτε τη με τους Καλεσμένους",
       description:
         "Μοιραστείτε με τους Καλεσμένους.\nΔημιουργήστε συνδέσμους και QR codes για εύκολη εύρεση των θέσεων των καλεσμένων.",
-      gradient: "from-orange-600 to-amber-600",
-      accentColor: "orange",
+      gradient: "from-lime-600 to-lime-600",
+      accentColor: "lime",
       image: image3,
     },
   ];
@@ -93,7 +93,7 @@ export function HowItWorksSection() {
     <LazyMotion features={domAnimation}>
       <section
         id="how-it-works"
-        className="w-full py-12 sm:py-16 md:py-20 lg:py-24 xl:py-32 bg-gradient-to-br from-white via-slate-50/50 to-orange-50/30"
+        className="w-full py-12 sm:py-16 md:py-20 lg:py-24 xl:py-32 bg-gradient-to-br from-white via-slate-50/50 to-lime-50/30"
       >
         <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-6 max-w-7xl">
           {/* Header Section */}
@@ -104,7 +104,7 @@ export function HowItWorksSection() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="text-center mb-12 sm:mb-16 md:mb-20"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent mb-3 sm:mb-4 px-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight bg-gradient-to-r from-lime-500 to-lime-600 bg-clip-text text-transparent mb-3 sm:mb-4 px-4">
               Τρόπος Λειτουργίας
             </h2>
             <p className="max-w-2xl sm:max-w-3xl lg:max-w-4xl mx-auto text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed px-4">
@@ -171,9 +171,9 @@ export function HowItWorksSection() {
                           <m.div
                             whileHover={{ scale: 1.1, y: 3 }}
                             transition={{ duration: 0.2 }}
-                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white shadow-xl flex items-center justify-center border-2 border-orange-200"
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white shadow-xl flex items-center justify-center border-2 border-lime-200"
                           >
-                            <ArrowRight className="h-5 w-5 text-orange-500 rotate-90" />
+                            <ArrowRight className="h-5 w-5 text-lime-500 rotate-90" />
                           </m.div>
                         </m.div>
                       )}
@@ -187,7 +187,7 @@ export function HowItWorksSection() {
                       transition={{ duration: 0.5, delay: 0.4 }}
                       className="space-y-2 sm:space-y-3 max-w-xs sm:max-w-sm lg:max-w-xs px-2 sm:px-0"
                     >
-                      <h3 className="text-lg sm:text-xl md:text-xl font-bold text-slate-900 group-hover:text-orange-700 transition-colors duration-200">
+                      <h3 className="text-lg sm:text-xl md:text-xl font-bold text-slate-900 group-hover:text-lime-700 transition-colors duration-200">
                         {step.title}
                       </h3>
                       <p className="text-slate-600 leading-relaxed text-xs sm:text-sm md:text-sm">
@@ -206,7 +206,7 @@ export function HowItWorksSection() {
             whileInView={{ opacity: 1, scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 1 }}
-            className="mt-12 sm:mt-16 mx-auto w-24 sm:w-32 h-1 bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 rounded-full"
+            className="mt-12 sm:mt-16 mx-auto w-24 sm:w-32 h-1 bg-gradient-to-r from-lime-500 via-green-500 to-lime-600 rounded-full"
           />
         </div>
       </section>
