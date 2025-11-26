@@ -80,14 +80,14 @@ export function SiteHeader() {
             <Image
               src={data?.data?.imageUrl}
               alt="Logo"
-              width={50}
-              height={50}
-              className="w-6 h-6 sm:w-7 sm:h-7"
+              width={300}
+              height={200}
+              className="aspect-video w-3xs "
             />
           )}
-          <span className="font-bold text-sm sm:text-lg truncate">
+          {/*      <span className="font-bold text-sm sm:text-lg truncate">
             {data?.data?.title}
-          </span>
+          </span> */}
         </Link>
         <div className=" flex items-center gap-1">
           {user ? (
