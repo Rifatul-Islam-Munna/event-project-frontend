@@ -82,7 +82,7 @@ export function SiteHeader() {
               alt="Logo"
               width={300}
               height={200}
-              className="aspect-video w-3xs "
+              className="aspect-video w-2xs  object-cover"
             />
           )}
           {/*      <span className="font-bold text-sm sm:text-lg truncate">
