@@ -11,7 +11,7 @@ import {
   Clock,
   Heart,
 } from "lucide-react";
-import banner from "./hero-image.jpg";
+import banner from "./banner.avif";
 
 export function HeroSection() {
   const benefits = [

@@ -2,9 +2,9 @@
 import { LazyMotion, domAnimation, m } from "motion/react";
 import { ArrowRight, Calendar, Users, Share2 } from "lucide-react";
 import Image from "next/image";
-import image1 from "@/assets/hero/image1.avif";
-import image2 from "@/assets/hero/image2.avif";
-import image3 from "@/assets/hero/image3.avif";
+import image1 from "@/assets/hero/image1.jpeg";
+import image2 from "@/assets/hero/image2.jpeg";
+import image3 from "@/assets/hero/image3.jpeg";
 
 export function HowItWorksSection() {
   const containerVariants = {
@@ -119,7 +119,7 @@ export function HowItWorksSection() {
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
             variants={containerVariants}
-            className="max-w-6xl mx-auto flex flex-col sm:flex-col lg:flex-row items-center justify-center gap-6 sm:gap-8 lg:gap-4 xl:gap-6"
+            className="max-w-7xl mx-auto flex flex-col sm:flex-col lg:flex-row items-center justify-center gap-6 sm:gap-8 lg:gap-4 xl:gap-6"
           >
             {/* Step Cards */}
             {steps.map((step, index) => {
@@ -132,10 +132,10 @@ export function HowItWorksSection() {
                   {/* Step Card */}
                   <m.div
                     variants={stepVariants}
-                    className="group relative flex flex-col items-center text-center flex-1 min-w-0 space-y-4 sm:space-y-6 p-4 sm:p-6 rounded-2xl hover:bg-white/60 transition-all duration-300 w-full max-w-sm lg:max-w-xs"
+                    className="group relative flex flex-col items-center text-center flex-1 min-w-0 space-y-5 sm:space-y-7 p-5 sm:p-7 rounded-2xl hover:bg-white/60 transition-all duration-300 w-full max-w-lg lg:max-w-md"
                   >
-                    {/* Image Container with Icon Overlay */}
-                    <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg mb-2">
+                    {/* Image Container with Icon Overlay - BIGGER */}
+                    <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden shadow-lg mb-2">
                       <Image
                         src={step.image}
                         alt={step.title}
@@ -151,10 +151,10 @@ export function HowItWorksSection() {
                       {/* Step Number Badge */}
                       <m.div
                         variants={iconVariants}
-                        className="absolute top-3 left-3 sm:top-4 sm:left-4 w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center shadow-lg"
+                        className="absolute top-3 left-3 sm:top-4 sm:left-4 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-lg"
                       >
                         <span
-                          className={`text-sm sm:text-base font-bold text-${step.accentColor}-600`}
+                          className={`text-base sm:text-lg font-bold text-${step.accentColor}-600`}
                         >
                           {step.number}
                         </span>
@@ -179,18 +179,18 @@ export function HowItWorksSection() {
                       )}
                     </div>
 
-                    {/* Content */}
+                    {/* Content - BIGGER TEXT */}
                     <m.div
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: 0.4 }}
-                      className="space-y-2 sm:space-y-3 max-w-xs sm:max-w-sm lg:max-w-xs px-2 sm:px-0"
+                      className="space-y-3 sm:space-y-4 max-w-md sm:max-w-lg lg:max-w-md px-2 sm:px-0"
                     >
-                      <h3 className="text-lg sm:text-xl md:text-xl font-bold text-slate-900 group-hover:text-lime-700 transition-colors duration-200">
+                      <h3 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl font-bold text-slate-900 group-hover:text-lime-700 transition-colors duration-200">
                         {step.title}
                       </h3>
-                      <p className="text-slate-600 leading-relaxed text-xs sm:text-sm md:text-sm">
+                      <p className="text-slate-600 leading-relaxed text-sm sm:text-base md:text-base lg:text-lg">
                         {step.description}
                       </p>
                     </m.div>
