@@ -10,6 +10,8 @@ import {
   Sparkles,
   Clock,
   Heart,
+  Award,
+  TrendingUp,
 } from "lucide-react";
 import banner from "./banner.jpeg";
 
@@ -22,7 +24,7 @@ export function HeroSection() {
   ];
 
   return (
-    <section className="relative w-full min-h-screen py-12 md:py-20 lg:py-24 px-4 md:px-6 bg-gradient-to-br from-slate-50 via-lime-50/80 to-lime-100/60 overflow-hidden">
+    <section className="relative w-full h-fit py-12 md:py-16 lg:py-20 px-4 md:px-6 bg-gradient-to-br from-slate-50 via-lime-50/80 to-lime-100/60 overflow-hidden">
       {/* Background Decorative Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-lime-300/20 rounded-full blur-3xl"></div>
@@ -30,39 +32,32 @@ export function HeroSection() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-lime-200/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className=" w-full relative z-10 lg:px-10">
+      <div className=" container mx-auto w-full relative z-10">
         {/* Main Hero Content */}
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center w-full">
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16 items-center w-full">
           {/* Left Content */}
           <div className="flex flex-col justify-center space-y-6 text-center lg:text-left">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-lime-100 to-lime-100 border border-lime-200/60 self-center lg:self-start backdrop-blur-sm">
-              <Sparkles className="h-4 w-4 text-lime-600" />
-              <span className="text-lime-700 font-semibold text-sm">
-                Η οργάνωση εκδηλώσεων έγινε απλή υπόθεση!
+            {/* Professional Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-lime-300/50 shadow-sm self-center lg:self-start">
+              <Shield className="h-4 w-4 text-lime-600" />
+              <span className="text-slate-700 font-semibold text-sm">
+                Αξιόπιστη Πλατφόρμα Εκδηλώσεων
               </span>
             </div>
 
-            {/* Main Heading */}
+            {/* Main Heading - NEW TEXT */}
             <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-                <span className="text-slate-900">Το πλάνο θέσεων</span>{" "}
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl 2xl:text-6xl font-bold tracking-tight leading-tight">
                 <span className="bg-gradient-to-r from-lime-500 via-lime-600 to-lime-600 bg-clip-text text-transparent">
-                  των καλεσμένων σας
-                </span>
-                <br />
-                <span className="text-slate-900">
-                  που κάποτε έμοιαζε με γρίφο, τώρα
+                  Η οργάνωση εκδηλώσεων
                 </span>{" "}
-                <span className="relative">
-                  <span className="text-slate-900">δημιουργείται εύκολα</span>
-                  <div className="absolute -bottom-2 left-0 right-0 h-3 bg-gradient-to-r from-lime-300/60 to-lime-300/60 -rotate-1 rounded-sm"></div>
-                </span>
+                <span className="text-slate-900">έγινε απλή υπόθεση!</span>
               </h1>
 
-              <p className="text-lg md:text-xl text-slate-600 leading-relaxed">
-                Δημιουργείται μέσα σε λίγα λεπτά. Οι καλεσμένοι βρίσκουν μόνοι
-                τους τη θέση τους με ένα QR Code
+              <p className="text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed max-w-2xl">
+                Το πλάνο θέσεων των καλεσμένων σας, που κάποτε έμοιαζε με γρίφο,
+                τώρα δημιουργείται μέσα σε λίγα λεπτά. Οι καλεσμένοι βρίσκουν
+                μόνοι τους τη θέση τους με ένα QR Code
                 <span className="font-semibold text-slate-700">
                   {" "}
                   — και το άγχος της προετοιμασίας εξαφανίζεται!
@@ -71,7 +66,7 @@ export function HeroSection() {
             </div>
 
             {/* Benefits List */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {benefits.map((benefit, index) => (
                 <div
                   key={index}
@@ -82,7 +77,7 @@ export function HeroSection() {
               ))}
             </div>
 
-            {/* New Section - What the Platform Offers */}
+            {/* What the Platform Offers */}
             <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-5 border border-lime-200/40">
               <h3 className="text-lg font-bold text-slate-900 mb-2">
                 Τι προσφέρει η πλατφόρμα
@@ -109,61 +104,33 @@ export function HeroSection() {
                   </span>
                 </Button>
               </Link>
-
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Δωρεάν δοκιμή • Χωρίς πιστωτική κάρτα</span>
-              </div>
-            </div>
-
-            {/* Social Proof */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 text-sm text-slate-600 justify-center lg:justify-start">
-              <div className="flex items-center gap-1">
-                <div className="flex">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className="h-4 w-4 fill-lime-400 text-lime-400"
-                    />
-                  ))}
-                </div>
-                <span className="ml-2 font-medium">
-                  4.9/5 από 500+ αξιολογήσεις
-                </span>
-              </div>
-              <div className="hidden sm:block w-1 h-1 bg-slate-400 rounded-full"></div>
-              <div className="flex items-center gap-2">
-                <Heart className="h-4 w-4 text-rose-500" />
-                <span>Αγαπημένο από διοργανωτές παγκοσμίως</span>
-              </div>
             </div>
           </div>
 
-          {/* Right Content - Enhanced Image */}
+          {/* Right Content - Image */}
           <div className="relative w-full">
-            {/* Main Image Container */}
             <div className="relative">
               {/* Background Glow */}
               <div className="absolute -inset-4 bg-gradient-to-r from-lime-500/20 to-lime-500/20 rounded-3xl blur-2xl"></div>
 
-              {/* Image */}
-              <div className="relative h-[400px] w-full lg:h-[500px] xl:h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-white/20 backdrop-blur-sm">
+              {/* Image Container */}
+              <div className="relative h-[400px] md:h-[450px] lg:h-[500px] xl:h-[550px] max-h-[600px] w-full rounded-3xl overflow-hidden shadow-2xl border border-white/20 backdrop-blur-sm">
                 <Image
                   src={banner.src}
                   alt="Interactive Seating Chart - Create beautiful seating arrangements with drag and drop"
-                  width={3000}
-                  height={3000}
+                  fill
                   className="object-cover"
                   priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
                 />
 
-                {/* Image Overlay with Stats */}
+                {/* Image Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
 
-                {/* Floating Success Badges */}
+                {/* Floating Badges */}
                 <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                     <span className="text-sm font-semibold text-slate-800">
                       Ζωντανή Επίδειξη
                     </span>
@@ -181,7 +148,7 @@ export function HeroSection() {
 
                 <div className="absolute top-6 right-6 bg-gradient-to-r from-lime-500 to-lime-600 text-white rounded-2xl px-4 py-3 shadow-lg">
                   <div className="text-xs font-semibold">✨ ΝΕΟ</div>
-                  <div className="text-sm">QR Code</div>
+                  <div className="text-sm font-bold">QR Code</div>
                 </div>
               </div>
             </div>

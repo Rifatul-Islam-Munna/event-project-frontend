@@ -191,23 +191,11 @@ export function FAQSection() {
               άγχος.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex justify-center items-center">
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="w-2 h-2 bg-yellow-500 rounded-full" />
                 <span className="text-sm font-medium text-slate-700">
-                  Ζωντανή Συνομιλία Διαθέσιμη
-                </span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
-                <Clock className="h-4 w-4 text-lime-500" />
-                <span className="text-sm font-medium text-slate-700">
-                  Υποστήριξη 24/7
-                </span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
-                <Phone className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium text-slate-700">
-                  Email & Live Chat
+                  Ζωντανή υποστήριξη σύντομα
                 </span>
               </div>
             </div>

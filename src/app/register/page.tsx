@@ -59,19 +59,19 @@ export default function RegisterPage() {
 
   return (
     <div className="relative flex min-h-[calc(100vh-64px)] items-center justify-center overflow-hidden">
-      {/* Soft Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        <div className="absolute inset-0 bg-gradient-to-tl from-purple-50/80 via-pink-50/60 to-cyan-50/70"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-50/40 via-transparent to-violet-50/40"></div>
+      {/* Soft Gradient Background - Lime Theme */}
+      <div className="absolute inset-0 bg-gradient-to-br from-lime-50 via-emerald-50 to-teal-100">
+        <div className="absolute inset-0 bg-gradient-to-tl from-lime-50/80 via-emerald-50/60 to-teal-50/70"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-lime-50/40 via-transparent to-emerald-50/40"></div>
       </div>
 
       {/* Floating Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Large soft shapes */}
-        <div className="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-gradient-to-br from-blue-200/30 to-cyan-200/20 blur-3xl animate-gentle-float"></div>
-        <div className="absolute -bottom-28 -right-28 h-72 w-72 rounded-full bg-gradient-to-br from-purple-200/25 to-pink-200/20 blur-3xl animate-gentle-float delay-1000"></div>
-        <div className="absolute top-1/2 left-1/4 h-56 w-56 rounded-full bg-gradient-to-br from-emerald-200/20 to-teal-200/15 blur-3xl animate-gentle-float delay-500"></div>
-        <div className="absolute top-1/4 right-1/3 h-64 w-64 rounded-full bg-gradient-to-br from-indigo-200/25 to-blue-200/20 blur-3xl animate-gentle-float delay-1500"></div>
+        <div className="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-gradient-to-br from-lime-200/30 to-emerald-200/20 blur-3xl animate-gentle-float"></div>
+        <div className="absolute -bottom-28 -right-28 h-72 w-72 rounded-full bg-gradient-to-br from-emerald-200/25 to-teal-200/20 blur-3xl animate-gentle-float delay-1000"></div>
+        <div className="absolute top-1/2 left-1/4 h-56 w-56 rounded-full bg-gradient-to-br from-teal-200/20 to-lime-200/15 blur-3xl animate-gentle-float delay-500"></div>
+        <div className="absolute top-1/4 right-1/3 h-64 w-64 rounded-full bg-gradient-to-br from-lime-200/25 to-emerald-200/20 blur-3xl animate-gentle-float delay-1500"></div>
       </div>
 
       {/* Floating Icons */}
@@ -82,7 +82,7 @@ export default function RegisterPage() {
           return (
             <Icon
               key={i}
-              className="absolute text-indigo-300/20 animate-icon-float"
+              className="absolute text-lime-400/40 animate-icon-float"
               style={{
                 left: `${Math.random() * 90 + 5}%`,
                 top: `${Math.random() * 90 + 5}%`,
@@ -114,26 +114,26 @@ export default function RegisterPage() {
       </div>
 
       {/* Register Card */}
-      <Card className="relative z-10 w-full max-w-md bg-white/85 backdrop-blur-2xl border border-white/30 shadow-xl shadow-blue-500/10 rounded-3xl overflow-hidden">
+      <Card className="relative z-10 w-full max-w-md bg-white/85 backdrop-blur-2xl border border-white/30 shadow-xl shadow-lime-500/10 rounded-3xl overflow-hidden">
         {/* Card gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-blue-500/5 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-lime-500/5 pointer-events-none"></div>
 
         <CardHeader className="relative text-center pb-6 pt-10">
           {/* Decorative icon */}
           <div className="flex justify-center mb-4">
             <div className="relative">
-              <UserPlus className="h-12 w-12 text-blue-600" />
-              <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-indigo-500 animate-pulse" />
+              <UserPlus className="h-12 w-12 text-lime-600" />
+              <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-emerald-500 animate-pulse" />
             </div>
           </div>
 
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-lime-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
             Create Account
           </CardTitle>
 
           {/* Decorative underline */}
           <div className="flex justify-center mb-4">
-            <div className="h-1 w-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"></div>
+            <div className="h-1 w-20 bg-gradient-to-r from-lime-500 to-emerald-500 rounded-full"></div>
           </div>
 
           <CardDescription className="text-gray-600 text-sm leading-relaxed">
@@ -149,7 +149,7 @@ export default function RegisterPage() {
                 htmlFor="name"
                 className="text-sm font-semibold text-gray-700 flex items-center gap-2"
               >
-                <User className="h-4 w-4 text-blue-500" />
+                <User className="h-4 w-4 text-lime-500" />
                 Full Name
               </Label>
               <div className="relative group">
@@ -159,9 +159,9 @@ export default function RegisterPage() {
                   type="text"
                   placeholder="Enter your full name"
                   required
-                  className="h-12 pl-4 pr-12 border-2 border-gray-200/50 rounded-2xl bg-white/60 backdrop-blur-sm focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-300 text-gray-700 placeholder:text-gray-400 group-hover:border-blue-300"
+                  className="h-12 pl-4 pr-12 border-2 border-gray-200/50 rounded-2xl bg-white/60 backdrop-blur-sm focus:bg-white focus:border-lime-400 focus:ring-4 focus:ring-lime-400/20 transition-all duration-300 text-gray-700 placeholder:text-gray-400 group-hover:border-lime-300"
                 />
-                <User className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 group-focus-within:text-blue-500 transition-colors duration-200" />
+                <User className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 group-focus-within:text-lime-500 transition-colors duration-200" />
               </div>
             </div>
 
@@ -171,7 +171,7 @@ export default function RegisterPage() {
                 htmlFor="email"
                 className="text-sm font-semibold text-gray-700 flex items-center gap-2"
               >
-                <Mail className="h-4 w-4 text-blue-500" />
+                <Mail className="h-4 w-4 text-lime-500" />
                 Email Address
               </Label>
               <div className="relative group">
@@ -181,9 +181,9 @@ export default function RegisterPage() {
                   type="email"
                   placeholder="Enter your email address"
                   required
-                  className="h-12 pl-4 pr-12 border-2 border-gray-200/50 rounded-2xl bg-white/60 backdrop-blur-sm focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-300 text-gray-700 placeholder:text-gray-400 group-hover:border-blue-300"
+                  className="h-12 pl-4 pr-12 border-2 border-gray-200/50 rounded-2xl bg-white/60 backdrop-blur-sm focus:bg-white focus:border-lime-400 focus:ring-4 focus:ring-lime-400/20 transition-all duration-300 text-gray-700 placeholder:text-gray-400 group-hover:border-lime-300"
                 />
-                <Mail className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 group-focus-within:text-blue-500 transition-colors duration-200" />
+                <Mail className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 group-focus-within:text-lime-500 transition-colors duration-200" />
               </div>
             </div>
 
@@ -193,7 +193,7 @@ export default function RegisterPage() {
                 htmlFor="password"
                 className="text-sm font-semibold text-gray-700 flex items-center gap-2"
               >
-                <Lock className="h-4 w-4 text-blue-500" />
+                <Lock className="h-4 w-4 text-lime-500" />
                 Password
               </Label>
               <div className="relative group">
@@ -203,16 +203,16 @@ export default function RegisterPage() {
                   type="password"
                   placeholder="Create a secure password"
                   required
-                  className="h-12 pl-4 pr-12 border-2 border-gray-200/50 rounded-2xl bg-white/60 backdrop-blur-sm focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-300 text-gray-700 placeholder:text-gray-400 group-hover:border-blue-300"
+                  className="h-12 pl-4 pr-12 border-2 border-gray-200/50 rounded-2xl bg-white/60 backdrop-blur-sm focus:bg-white focus:border-lime-400 focus:ring-4 focus:ring-lime-400/20 transition-all duration-300 text-gray-700 placeholder:text-gray-400 group-hover:border-lime-300"
                 />
-                <Lock className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 group-focus-within:text-blue-500 transition-colors duration-200" />
+                <Lock className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 group-focus-within:text-lime-500 transition-colors duration-200" />
               </div>
             </div>
 
-            {/* Subtle Register Button with Animation */}
+            {/* Eye-catching Register Button */}
             <Button
               type="submit"
-              className="w-full h-14 mt-8 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold rounded-2xl shadow-lg shadow-slate-500/20 hover:shadow-blue-500/30 transform transition-all duration-500 hover:scale-[1.02] focus:ring-4 focus:ring-blue-500/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none group relative overflow-hidden"
+              className="w-full h-14 mt-8 bg-gradient-to-r from-lime-600 via-emerald-600 to-teal-600 hover:from-lime-700 hover:via-emerald-700 hover:to-teal-700 text-white font-semibold rounded-2xl shadow-lg shadow-lime-500/30 hover:shadow-lime-500/50 transform transition-all duration-500 hover:scale-[1.02] focus:ring-4 focus:ring-lime-500/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none group relative overflow-hidden"
               disabled={isPending}
             >
               {/* Subtle shimmer effect */}
@@ -248,10 +248,10 @@ export default function RegisterPage() {
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="font-semibold text-blue-600 hover:text-blue-700 transition-all duration-200 relative group"
+                className="font-semibold bg-gradient-to-r from-lime-600 to-emerald-600 bg-clip-text text-transparent hover:from-lime-700 hover:to-emerald-700 transition-all duration-200 relative group"
               >
                 Sign In Here
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-lime-600 to-emerald-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
             </p>
           </div>

@@ -16,7 +16,7 @@ export function GuestBenefitsSection() {
     },
     {
       icon: Users,
-      title: "Ομαλή ροή στην είσοδο και καθισμάτων",
+      title: "Ομαλή ροή στην είσοδο",
       description: "Χωρίς συνωστισμό και σύγχυση",
     },
     {
@@ -27,21 +27,29 @@ export function GuestBenefitsSection() {
   ];
 
   return (
-    <section className="w-full py-16 md:py-20 lg:py-24 bg-gradient-to-br from-white via-lime-50/20 to-slate-50/30">
+    <section className="w-full py-12  xl:py-14 bg-gradient-to-br from-white via-lime-50/20 to-slate-50/30">
       <div className="container mx-auto px-4 md:px-6 max-w-6xl">
+        {/* Heading */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          transition={{ duration: 0.5 }}
+          className="text-center mb-10 md:mb-12"
         >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-lime-600 to-green-600 bg-clip-text text-transparent mb-4">
-            Εντυπωσιάστε τους καλεσμένους σας
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-3">
+            Εντυπωσιάστε τους{" "}
+            <span className="bg-gradient-to-r from-lime-500 via-lime-600 to-lime-600 bg-clip-text text-transparent">
+              καλεσμένους σας
+            </span>
           </h2>
+          <p className="text-slate-600 text-base md:text-lg max-w-2xl mx-auto">
+            Παρέχετε μια σύγχρονη και επαγγελματική εμπειρία σε κάθε εκδήλωση
+          </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
+        {/* Benefits Grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
           {benefits.map((benefit, index) => {
             const IconComponent = benefit.icon;
             return (
@@ -51,21 +59,20 @@ export function GuestBenefitsSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group relative bg-gradient-to-br from-white to-lime-50/50 rounded-2xl p-6 md:p-8 border-2 border-lime-200/60 hover:border-lime-400/80 transition-all duration-300 "
+                className="bg-white rounded-xl p-6 border border-slate-200 hover:border-lime-300 hover:shadow-md transition-all duration-300"
               >
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <IconComponent className="h-7 w-7 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2 group-hover:text-lime-700 transition-colors">
-                      {benefit.title}
-                    </h3>
-                    <p className="text-slate-600 text-base md:text-lg">
-                      {benefit.description}
-                    </p>
-                  </div>
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-lg bg-lime-500/10 flex items-center justify-center mb-4">
+                  <IconComponent className="h-6 w-6 text-lime-600" />
                 </div>
+
+                {/* Content */}
+                <h3 className="text-lg font-bold text-slate-900 mb-2">
+                  {benefit.title}
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {benefit.description}
+                </p>
               </motion.div>
             );
           })}

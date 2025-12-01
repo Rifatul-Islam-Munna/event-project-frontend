@@ -117,7 +117,7 @@ export function FeaturesSection() {
   ];
 
   return (
-    <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-br from-slate-50 via-lime-50/30 to-lime-50/50">
+    <section className="w-full py-8 md:py-14 2xl:py-20 bg-gradient-to-br from-slate-50 via-lime-50/30 to-lime-50/50">
       <div className="container mx-auto px-4 md:px-6 max-w-7xl">
         {/* Header Section */}
         <motion.div

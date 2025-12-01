@@ -81,7 +81,7 @@ export function HowItWorksSection() {
     <LazyMotion features={domAnimation}>
       <section
         id="how-it-works"
-        className="w-full py-16 sm:py-20 md:py-24 lg:py-32 bg-gradient-to-br from-white via-slate-50/50 to-lime-50/30"
+        className="w-full py-12 xl:py-14 bg-gradient-to-br from-white via-slate-50/50 to-lime-50/30"
       >
         <div className="container mx-auto px-4 sm:px-6 md:px-8 max-w-[1600px]">
           {/* Header Section */}
@@ -108,7 +108,6 @@ export function HowItWorksSection() {
             variants={containerVariants}
             className="flex flex-col lg:flex-row items-start justify-center gap-8 lg:gap-6 xl:gap-10"
           >
-            {/* Step Cards */}
             {steps.map((step, index) => {
               const IconComponent = step.icon;
               return (
@@ -116,12 +115,11 @@ export function HowItWorksSection() {
                   key={step.number}
                   className="flex flex-col items-center w-full lg:flex-1"
                 >
-                  {/* Step Card */}
                   <m.div
                     variants={stepVariants}
                     className="group relative flex flex-col items-center text-center w-full space-y-6 sm:space-y-8 p-6 sm:p-8 rounded-3xl hover:bg-white/60 transition-all duration-300"
                   >
-                    {/* Image Container - BIG 1:1 SQUARE */}
+                    {/* Image */}
                     <div className="relative w-full aspect-square rounded-2xl overflow-hidden mb-4">
                       <Image
                         src={step.image}
@@ -147,7 +145,7 @@ export function HowItWorksSection() {
                       )}
                     </div>
 
-                    {/* Content - BIGGER TEXT */}
+                    {/* Content */}
                     <m.div
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
@@ -167,15 +165,6 @@ export function HowItWorksSection() {
               );
             })}
           </m.div>
-
-          {/* Bottom Accent */}
-          <m.div
-            initial={{ opacity: 0, scaleX: 0 }}
-            whileInView={{ opacity: 1, scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 1 }}
-            className="mt-16 sm:mt-20 mx-auto w-32 sm:w-40 h-1 bg-gradient-to-r from-lime-500 via-green-500 to-lime-600 rounded-full"
-          />
         </div>
       </section>
     </LazyMotion>
