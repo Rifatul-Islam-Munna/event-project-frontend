@@ -11,14 +11,14 @@ import {
   Clock,
   Heart,
 } from "lucide-react";
-import banner from "./banner.avif";
+import banner from "./banner.jpeg";
 
 export function HeroSection() {
   const benefits = [
-    "✨  Δημιουργία σε λιγότερο από 2 λεπτά",
-    "🎯 Δεν απαιτούνται τεχνικές δεξιότητες",
-    "📱 Φιλικό προς κινητές συσκευές για τους καλεσμένους",
-    "⚡  Άμεση δημιουργία QR code",
+    "✨ Δημιουργία QR Code σε λιγότερο από 2 λεπτά",
+    "🎯 Δεν απαιτούνται τεχνικές γνώσεις",
+    "📱 Συμβατό με όλες τις συσκευές",
+    "⚡ Το απόλυτο εργαλείο για εύκολη διοργάνωση",
   ];
 
   return (
@@ -39,32 +39,33 @@ export function HeroSection() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-lime-100 to-lime-100 border border-lime-200/60 self-center lg:self-start backdrop-blur-sm">
               <Sparkles className="h-4 w-4 text-lime-600" />
               <span className="text-lime-700 font-semibold text-sm">
-                H oργάνωση Εκδηλώσεων Έγινε Απλή
+                Η οργάνωση εκδηλώσεων έγινε απλή υπόθεση!
               </span>
             </div>
 
             {/* Main Heading */}
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-                <span className="text-slate-900">H διαχείριση</span>{" "}
+                <span className="text-slate-900">Το πλάνο θέσεων</span>{" "}
                 <span className="bg-gradient-to-r from-lime-500 via-lime-600 to-lime-600 bg-clip-text text-transparent">
-                  του πλάνου θέσεων των καλεσμένων
+                  των καλεσμένων σας
                 </span>
                 <br />
-                <span className="text-slate-900"> σας εγινε</span>{" "}
+                <span className="text-slate-900">
+                  που κάποτε έμοιαζε με γρίφο, τώρα
+                </span>{" "}
                 <span className="relative">
-                  <span className="text-slate-900">εύκολη</span>
+                  <span className="text-slate-900">δημιουργείται εύκολα</span>
                   <div className="absolute -bottom-2 left-0 right-0 h-3 bg-gradient-to-r from-lime-300/60 to-lime-300/60 -rotate-1 rounded-sm"></div>
                 </span>
               </h1>
 
               <p className="text-lg md:text-xl text-slate-600 leading-relaxed">
-                Ετοιμάστε μοναδικές λίστες σε λίγα λεπτά. Δημιουργήστε QR code
-                για τους καλεσμένους ώστε να βρίσκουν άμεσα τις θέσεις τους
+                Δημιουργείται μέσα σε λίγα λεπτά. Οι καλεσμένοι βρίσκουν μόνοι
+                τους τη θέση τους με ένα QR Code
                 <span className="font-semibold text-slate-700">
                   {" "}
-                  Χωρίς άγχος, χωρίς στρες—το κατάλληλο εργαλείο για μοναδικές
-                  εκδηλώσεις.
+                  — και το άγχος της προετοιμασίας εξαφανίζεται!
                 </span>
               </p>
             </div>
@@ -81,6 +82,18 @@ export function HeroSection() {
               ))}
             </div>
 
+            {/* New Section - What the Platform Offers */}
+            <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-5 border border-lime-200/40">
+              <h3 className="text-lg font-bold text-slate-900 mb-2">
+                Τι προσφέρει η πλατφόρμα
+              </h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Ένα ολοκληρωμένο εργαλείο για διοργανωτές εκδηλώσεων που θέλουν
+                να διαχειρίζονται θέσεις, καλεσμένους και προμηθευτές εύκολα και
+                γρήγορα.
+              </p>
+            </div>
+
             {/* CTA Section */}
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start">
               <Link href="/dashboard">
@@ -91,7 +104,7 @@ export function HeroSection() {
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
                   <span className="relative z-10 flex items-center justify-center gap-3">
                     <Sparkles className="h-5 w-5" />
-                    Start Creating Now
+                    Ξεκινήστε Τώρα
                     <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
                   </span>
                 </Button>
@@ -99,7 +112,7 @@ export function HeroSection() {
 
               <div className="flex items-center gap-2 text-sm text-slate-600">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Free trial • No credit card required</span>
+                <span>Δωρεάν δοκιμή • Χωρίς πιστωτική κάρτα</span>
               </div>
             </div>
 
@@ -115,13 +128,13 @@ export function HeroSection() {
                   ))}
                 </div>
                 <span className="ml-2 font-medium">
-                  4.9/5 from 500+ reviews
+                  4.9/5 από 500+ αξιολογήσεις
                 </span>
               </div>
               <div className="hidden sm:block w-1 h-1 bg-slate-400 rounded-full"></div>
               <div className="flex items-center gap-2">
                 <Heart className="h-4 w-4 text-rose-500" />
-                <span>Loved by event planners worldwide</span>
+                <span>Αγαπημένο από διοργανωτές παγκοσμίως</span>
               </div>
             </div>
           </div>
@@ -138,7 +151,8 @@ export function HeroSection() {
                 <Image
                   src={banner.src}
                   alt="Interactive Seating Chart - Create beautiful seating arrangements with drag and drop"
-                  fill
+                  width={3000}
+                  height={3000}
                   className="object-cover"
                   priority
                 />
@@ -151,7 +165,7 @@ export function HeroSection() {
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     <span className="text-sm font-semibold text-slate-800">
-                      Live Demo
+                      Ζωντανή Επίδειξη
                     </span>
                   </div>
                 </div>
@@ -160,14 +174,14 @@ export function HeroSection() {
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-lime-500" />
                     <span className="text-sm font-semibold text-slate-800">
-                      Setup in 5 min
+                      Ρύθμιση σε 2 λεπτά
                     </span>
                   </div>
                 </div>
 
                 <div className="absolute top-6 right-6 bg-gradient-to-r from-lime-500 to-lime-600 text-white rounded-2xl px-4 py-3 shadow-lg">
-                  <div className="text-xs font-semibold">✨ NEW FEATURE</div>
-                  <div className="text-sm">QR Code Magic</div>
+                  <div className="text-xs font-semibold">✨ ΝΕΟ</div>
+                  <div className="text-sm">QR Code</div>
                 </div>
               </div>
             </div>

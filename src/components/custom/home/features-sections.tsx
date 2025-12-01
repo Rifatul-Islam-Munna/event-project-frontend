@@ -14,6 +14,8 @@ import {
   Clock,
   Shield,
   Star,
+  Search,
+  Bell,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -56,61 +58,61 @@ export function FeaturesSection() {
   const seatingFeatures = [
     {
       icon: Users,
-      title: "Εγγραφή & Σύνδεση Χρηστών",
+      title: "Εγγραφή / Σύνδεση χρήστη",
       description: "Ασφαλές σύστημα πιστοποίησης",
     },
     {
       icon: Calendar,
-      title: "Δημιουργία Εκδήλωσης",
-      description: "Όνομα, Ημερομηνία, Τοποθεσία, Ρύθμιση Λογοτύπου",
-    },
-    {
-      icon: UserPlus,
-      title: "Διαχείριση Λίστας Προσκεκλημένων",
-      description: "Προσθήκη/Εισαγωγή μέσω CSV",
+      title: "Δημιουργία εκδήλωσης",
+      description: "Όνομα, Τοποθεσία, Ημερομηνία, Λογότυπο",
     },
     {
       icon: Layout,
-      title: "Διαδραστικός Δημιουργός Διαγράμματος Καθισμάτων",
-      description: "Σύρε & Άφησε τραπέζια και θέσεις",
+      title: "Διαδραστικός χάρτης καθισμάτων",
+      description: "drag & drop",
     },
     {
-      icon: MapPin,
-      title: "Έξυπνη Ανάθεση Καλεσμένων",
-      description: "Ανάθεση καλεσμένων σε θέσεις με αναζήτηση",
+      icon: UserPlus,
+      title: "Διαχείριση λίστας καλεσμένων",
+      description: "εισαγωγή μέσω CSV / XLS",
     },
     {
       icon: Share2,
-      title: "Σελίδα Εκδήλωσης για Κοινή Χρήση",
-      description: "Δημιουργία Συνδέσμου & QR Code",
+      title: "Δημιουργία συνδέσμου και QR Code",
+      description: "Κοινή χρήση εκδήλωσης",
+    },
+    {
+      icon: Search,
+      title: "Έξυπνη αναζήτηση θέσεων",
+      description: "Γρήγορη εύρεση καλεσμένων",
     },
   ];
 
   const vendorFeatures = [
     {
-      icon: FileText,
-      title: "Δημιουργία Φόρμας Προμηθευτή",
-      description: "Όνομα, Email, WhatsApp, Προσαρμοσμένα πεδία",
+      icon: Bell,
+      title: "Υπενθυμίσεις & ειδοποιήσεις προμηθευτών",
+      description: "Αυτόματες ειδοποιήσεις",
+    },
+    {
+      icon: Shield,
+      title: "Ασφαλές σύστημα πιστοποίησης",
+      description: "Προστασία δεδομένων",
+    },
+    {
+      icon: MessageCircle,
+      title: "Επικοινωνία μέσω WhatsApp / Viber",
+      description: "Άμεση επικοινωνία",
     },
     {
       icon: Mail,
       title: "Αυτόματες Υπενθυμίσεις Email",
-      description: "Προγραμματισμένες ειδοποιήσεις email",
-    },
-    {
-      icon: MessageCircle,
-      title: "Ενσωμάτωση WhatsApp",
-      description: "Μηνύματα μέσω API",
+      description: "Προγραμματισμένες ειδοποιήσεις",
     },
     {
       icon: Settings,
-      title: "Πίνακας Ελέγχου Πελάτη",
-      description: "Προβολή/Επεξεργασία/Διαγραφή υπενθυμίσεων",
-    },
-    {
-      icon: Clock,
-      title: "Αυτοματοποιημένος Προγραμματισμός",
-      description: "Cron job για αποστολή",
+      title: "Πίνακας Ελέγχου",
+      description: "Διαχείριση όλων των λειτουργιών",
     },
   ];
 
@@ -126,7 +128,7 @@ export function FeaturesSection() {
           className="text-center mb-20"
         >
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl bg-gradient-to-r from-lime-500 to-lime-600 bg-clip-text text-transparent mb-4">
-            Βασικά Χαρακτηριστικά
+            Βασικά χαρακτηριστικά
           </h2>
           <p className="max-w-3xl mx-auto text-lg text-slate-600 leading-relaxed">
             Η πλατφόρμα μας προσφέρει ολοκληρωμένα εργαλεία για διοργανωτές

@@ -2,7 +2,7 @@
 import { LazyMotion, domAnimation, m } from "motion/react";
 import { ArrowRight, Calendar, Users, Share2 } from "lucide-react";
 import Image from "next/image";
-import image1 from "@/assets/hero/image1.jpeg";
+import image1 from "@/assets/hero/imageone.jpeg";
 import image2 from "@/assets/hero/image2.jpeg";
 import image3 from "@/assets/hero/image3.jpeg";
 
@@ -44,25 +44,13 @@ export function HowItWorksSection() {
     },
   };
 
-  const iconVariants = {
-    hidden: { rotate: -180, scale: 0 },
-    visible: {
-      rotate: 0,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-      },
-    },
-  };
-
   const steps = [
     {
       number: "1",
       icon: Calendar,
-      title: "Δημιουργήστε την Εκδήλωσή σας",
+      title: "Δημιουργήστε την εκδήλωσή σας",
       description:
-        "Δημιουργήστε την Εκδήλωσή σας.\nΟργανώστε την εκδήλωσή σας με βασικές λεπτομέρειες όπως όνομα, ημερομηνία, τοποθεσία και λογότυπο.",
+        "Δημιουργήστε την εκδήλωσή σας (όνομα, ημερομηνία, τοποθεσία, λογότυπο).",
       gradient: "from-lime-500 to-lime-600",
       accentColor: "lime",
       image: image1,
@@ -70,9 +58,9 @@ export function HowItWorksSection() {
     {
       number: "2",
       icon: Users,
-      title: "Διαχειριστείτε Καλεσμένους & Καθίσματα",
+      title: "Εισάγετε τη λίστα καλεσμένων",
       description:
-        "Διαχειριστείτε τους Καλεσμένους & τα Καθίσματα. Εισάγετε τις λίστες καλεσμένων, σχεδιάστε διαδραστικούς χάρτες καθισμάτων με drag & drop και αναθέστε θέσεις.",
+        "Εισάγετε τη λίστα καλεσμένων και τοποθετήστε τους εύκολα με drag & drop.",
       gradient: "from-green-500 to-green-600",
       accentColor: "green",
       image: image2,
@@ -80,9 +68,9 @@ export function HowItWorksSection() {
     {
       number: "3",
       icon: Share2,
-      title: "Μοιραστείτε τη με τους Καλεσμένους",
+      title: "Μοιραστείτε links ή QR Codes",
       description:
-        "Μοιραστείτε με τους Καλεσμένους.\nΔημιουργήστε συνδέσμους και QR codes για εύκολη εύρεση των θέσεων των καλεσμένων.",
+        "Μοιραστείτε links ή QR Codes, ώστε να βρίσκουν άμεσα τις θέσεις τους.",
       gradient: "from-lime-600 to-lime-600",
       accentColor: "lime",
       image: image3,
@@ -93,23 +81,22 @@ export function HowItWorksSection() {
     <LazyMotion features={domAnimation}>
       <section
         id="how-it-works"
-        className="w-full py-12 sm:py-16 md:py-20 lg:py-24 xl:py-32 bg-gradient-to-br from-white via-slate-50/50 to-lime-50/30"
+        className="w-full py-16 sm:py-20 md:py-24 lg:py-32 bg-gradient-to-br from-white via-slate-50/50 to-lime-50/30"
       >
-        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-6 max-w-7xl">
+        <div className="container mx-auto px-4 sm:px-6 md:px-8 max-w-[1600px]">
           {/* Header Section */}
           <m.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="text-center mb-12 sm:mb-16 md:mb-20"
+            className="text-center mb-16 sm:mb-20 md:mb-24"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight bg-gradient-to-r from-lime-500 to-lime-600 bg-clip-text text-transparent mb-3 sm:mb-4 px-4">
-              Τρόπος Λειτουργίας
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight bg-gradient-to-r from-lime-500 to-lime-600 bg-clip-text text-transparent mb-4 sm:mb-6 px-4">
+              Πώς λειτουργεί
             </h2>
-            <p className="max-w-2xl sm:max-w-3xl lg:max-w-4xl mx-auto text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed px-4">
-              Η εύχρηστη πλατφόρμα μας απλοποιεί τη διαχείριση καθισμάτων της
-              εκδήλωσής σας και την επικοινωνία με τους προμηθευτές
+            <p className="max-w-3xl mx-auto text-base sm:text-lg md:text-xl lg:text-2xl text-slate-600 leading-relaxed px-4">
+              Απολαύστε μια οργανωμένη, γρήγορη και χωρίς άγχος προετοιμασία
             </p>
           </m.div>
 
@@ -119,7 +106,7 @@ export function HowItWorksSection() {
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
             variants={containerVariants}
-            className="max-w-7xl mx-auto flex flex-col sm:flex-col lg:flex-row items-center justify-center gap-6 sm:gap-8 lg:gap-4 xl:gap-6"
+            className="flex flex-col lg:flex-row items-start justify-center gap-8 lg:gap-6 xl:gap-10"
           >
             {/* Step Cards */}
             {steps.map((step, index) => {
@@ -127,15 +114,15 @@ export function HowItWorksSection() {
               return (
                 <div
                   key={step.number}
-                  className="flex flex-col lg:flex-row items-center w-full lg:w-auto"
+                  className="flex flex-col items-center w-full lg:flex-1"
                 >
                   {/* Step Card */}
                   <m.div
                     variants={stepVariants}
-                    className="group relative flex flex-col items-center text-center flex-1 min-w-0 space-y-5 sm:space-y-7 p-5 sm:p-7 rounded-2xl hover:bg-white/60 transition-all duration-300 w-full max-w-lg lg:max-w-md"
+                    className="group relative flex flex-col items-center text-center w-full space-y-6 sm:space-y-8 p-6 sm:p-8 rounded-3xl hover:bg-white/60 transition-all duration-300"
                   >
-                    {/* Image Container with Icon Overlay - BIGGER */}
-                    <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden shadow-lg mb-2">
+                    {/* Image Container - BIG 1:1 SQUARE */}
+                    <div className="relative w-full aspect-square rounded-2xl overflow-hidden mb-4">
                       <Image
                         src={step.image}
                         alt={step.title}
@@ -143,37 +130,18 @@ export function HowItWorksSection() {
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
 
-                      {/* Dark Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-
-                      {/* Icon directly on image */}
-
-                      {/* Step Number Badge */}
-                      <m.div
-                        variants={iconVariants}
-                        className="absolute top-3 left-3 sm:top-4 sm:left-4 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-lg"
-                      >
-                        <span
-                          className={`text-base sm:text-lg font-bold text-${step.accentColor}-600`}
-                        >
-                          {step.number}
-                        </span>
-                      </m.div>
-
-                      {/* Arrow positioned at bottom right of image */}
-
                       {/* Mobile Arrow below image */}
                       {index < steps.length - 1 && (
                         <m.div
                           variants={arrowVariants}
-                          className="absolute -bottom-6 left-1/2 -translate-x-1/2 lg:hidden z-20"
+                          className="absolute -bottom-8 left-1/2 -translate-x-1/2 lg:hidden z-20"
                         >
                           <m.div
                             whileHover={{ scale: 1.1, y: 3 }}
                             transition={{ duration: 0.2 }}
-                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white shadow-xl flex items-center justify-center border-2 border-lime-200"
+                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white shadow-xl flex items-center justify-center border-2 border-lime-200"
                           >
-                            <ArrowRight className="h-5 w-5 text-lime-500 rotate-90" />
+                            <ArrowRight className="h-6 w-6 text-lime-500 rotate-90" />
                           </m.div>
                         </m.div>
                       )}
@@ -185,12 +153,12 @@ export function HowItWorksSection() {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: 0.4 }}
-                      className="space-y-3 sm:space-y-4 max-w-md sm:max-w-lg lg:max-w-md px-2 sm:px-0"
+                      className="space-y-3 sm:space-y-4 w-full"
                     >
-                      <h3 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl font-bold text-slate-900 group-hover:text-lime-700 transition-colors duration-200">
+                      <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-bold text-slate-900 group-hover:text-lime-700 transition-colors duration-200 leading-tight">
                         {step.title}
                       </h3>
-                      <p className="text-slate-600 leading-relaxed text-sm sm:text-base md:text-base lg:text-lg">
+                      <p className="text-slate-600 leading-relaxed text-base sm:text-lg md:text-xl lg:text-xl">
                         {step.description}
                       </p>
                     </m.div>
@@ -206,7 +174,7 @@ export function HowItWorksSection() {
             whileInView={{ opacity: 1, scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 1 }}
-            className="mt-12 sm:mt-16 mx-auto w-24 sm:w-32 h-1 bg-gradient-to-r from-lime-500 via-green-500 to-lime-600 rounded-full"
+            className="mt-16 sm:mt-20 mx-auto w-32 sm:w-40 h-1 bg-gradient-to-r from-lime-500 via-green-500 to-lime-600 rounded-full"
           />
         </div>
       </section>
