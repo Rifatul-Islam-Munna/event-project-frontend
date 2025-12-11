@@ -80,9 +80,9 @@ export function SiteHeader() {
             <Image
               src={data?.data?.imageUrl}
               alt="Logo"
-              width={300}
-              height={200}
-              className="aspect-video w-2xs  object-cover"
+              width={200}
+              height={100}
+              className="aspect-video  max-w-28 object-contain"
             />
           )}
           {/*      <span className="font-bold text-sm sm:text-lg truncate">
