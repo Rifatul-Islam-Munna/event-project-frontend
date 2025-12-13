@@ -273,7 +273,7 @@ export function PricingSection() {
                           {formatPrice(plan.priceCents, plan.currency)}
                         </span>
                         <span className="text-slate-500 text-sm font-medium">
-                          {formatBillingUnit(plan.billingUnit)}
+                          /year
                         </span>
                       </div>
 

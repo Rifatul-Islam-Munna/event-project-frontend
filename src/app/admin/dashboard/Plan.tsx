@@ -154,8 +154,6 @@ export default function AdminPage() {
     const newPlan = {
       ...planData,
 
-      /*       version: 1,
-      active: true, */
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       __v: 0,
