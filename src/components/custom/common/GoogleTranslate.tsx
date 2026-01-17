@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 
 export default function MutationBasedGoogleTranslate() {
-  const [currentInterfaceLang, setCurrentInterfaceLang] = useState("en");
+  const [currentInterfaceLang, setCurrentInterfaceLang] = useState("el");
   const scriptRef = useRef(null);
   const observerRef = useRef(null);
-  const lastDetectedLang = useRef("en");
+  const lastDetectedLang = useRef("el");
 
-  const loadGoogleTranslate = (interfaceLang = "en") => {
+  const loadGoogleTranslate = (interfaceLang = "el") => {
     // Clean up existing implementation
     if (scriptRef.current) {
       document.body.removeChild(scriptRef.current);
@@ -24,14 +24,14 @@ export default function MutationBasedGoogleTranslate() {
     window.googleTranslateElementInit = function () {
       new window.google.translate.TranslateElement(
         {
-          pageLanguage: "en",
+          pageLanguage: "el",
           includedLanguages:
-            "el,ar,hi,bn,pt,ru,zh-CN,ja,ko,en,es,fr,de,it,nl,pl,sv,no,da,fi,cs,sk,hu,ro,bg,hr,sr,sl,et,lv,lt",
+            "el,ar,hi,bn,pt,ru,zh-CN,ja,ko,en,es,fr,de,it,nl,pl,sv,no,da,fi,cs,sk,hu,ro,bg,hr,sr,sl,et,lv,lt,en",
           autoDisplay: true,
           layout:
             window.google.translate.TranslateElement.InlineLayout.HORIZONTAL,
         },
-        "google_translate_element"
+        "google_translate_element",
       );
     };
 

@@ -24,6 +24,7 @@ import {
   Settings,
   Shield,
   Download,
+  Navigation,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -291,33 +292,24 @@ export function PricingSection() {
                           What's Included
                         </h4>
                         <ul className="space-y-3">
-                          {plan.permissions
-                            .slice(0, 4)
-                            .map((feature, featureIndex) => {
-                              const FeatureIcon = getFeatureIcon(
-                                getFeatureDescription(feature)
-                              );
-                              return (
-                                <li
-                                  key={featureIndex}
-                                  className="flex items-start gap-3 text-sm group/item"
-                                >
-                                  <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-green-200 transition-colors duration-200">
-                                    <FeatureIcon className="h-4 w-4 text-green-600" />
-                                  </div>
-                                  <span className="text-slate-700 leading-relaxed group-hover/item:text-slate-900 transition-colors duration-200">
-                                    {getFeatureDescription(feature)}
-                                  </span>
-                                </li>
-                              );
-                            })}
-                          {plan.permissions.length > 4 && (
-                            <li className="flex items-center gap-2 text-sm text-slate-500 pl-11">
-                              <Sparkles className="h-4 w-4" />+
-                              {plan.permissions.length - 4} more premium
-                              features
-                            </li>
-                          )}
+                          {plan.permissions.map((feature, featureIndex) => {
+                            const FeatureIcon = getFeatureIcon(
+                              getFeatureDescription(feature),
+                            );
+                            return (
+                              <li
+                                key={featureIndex}
+                                className="flex items-start gap-3 text-sm group/item"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-green-200 transition-colors duration-200">
+                                  <FeatureIcon className="h-4 w-4 text-green-600" />
+                                </div>
+                                <span className="text-slate-700 leading-relaxed group-hover/item:text-slate-900 transition-colors duration-200">
+                                  {getFeatureDescription(feature)}
+                                </span>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
 
@@ -331,15 +323,27 @@ export function PricingSection() {
                             Usage Limits
                           </h4>
                           <div className="flex flex-wrap gap-2">
-                            {plan.limits.map((limit, limitIndex) => (
-                              <div
+                            {plan?.limits?.map((limit, limitIndex) => (
+                              /*  <div
                                 key={limitIndex}
                                 className="flex items-center gap-1 bg-white/80 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200/50"
                               >
                                 <Star className="h-3 w-3 text-yellow-500" />
                                 {limit.limit.toLocaleString()}{" "}
                                 {getLimitDescription(limit.key)}
-                              </div>
+                              </div> */
+                              <li
+                                key={limitIndex}
+                                className="flex items-start gap-3 text-sm group/item"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-green-200 transition-colors duration-200">
+                                  <Check className="h-4 w-4 text-green-600" />
+                                </div>
+                                <span className="text-slate-700 leading-relaxed group-hover/item:text-slate-900 transition-colors duration-200">
+                                  {limit.limit.toLocaleString()}{" "}
+                                  {getLimitDescription(limit.key)}
+                                </span>
+                              </li>
                             ))}
                           </div>
                         </div>
@@ -395,10 +399,10 @@ export function PricingSection() {
                       </Link>
 
                       {/* Trust Signal */}
-                      <div className="flex items-center justify-center gap-2 pt-2 text-xs text-slate-500">
+                      {/* <div className="flex items-center justify-center gap-2 pt-2 text-xs text-slate-500">
                         <Shield className="h-4 w-4" />
                         <span>30-day money-back guarantee</span>
-                      </div>
+                      </div> */}
                     </CardContent>
                   </Card>
                 </m.div>
