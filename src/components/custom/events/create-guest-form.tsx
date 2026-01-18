@@ -144,7 +144,7 @@ export function CreateGuestForm({ onAddGuest, onClose }: CreateGuestFormProps) {
       <DialogFooter className="mt-4">
         <Button
           type="submit"
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          className="w-full bg-lime-600 text-primary-foreground hover:bg-lime-700"
           disabled={isPending}
         >
           {isPending && <Loader2 className=" w-4 h-4 animate-spin" />} Add Guest

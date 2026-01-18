@@ -36,11 +36,11 @@ export function EditVendorForm({
   const [email, setEmail] = useState(vendor.email);
   const [whatsapp, setWhatsapp] = useState(vendor.whatsapp);
   const [reminderMessage, setReminderMessage] = useState(
-    vendor.reminder_message || ""
+    vendor.reminder_message || "",
   );
 
   const [startingDate, setStartingDate] = useState<Date | undefined>(
-    parseISO(vendor.starting_date)
+    parseISO(vendor.starting_date),
   );
 
   const query = useQueryClient();
@@ -75,7 +75,7 @@ export function EditVendorForm({
 
     if (!name || !email || !whatsapp || !startingDate) {
       return toast.error(
-        "Name, Email, WhatsApp, Starting Date, and End Date are required."
+        "Name, Email, WhatsApp, Starting Date, and End Date are required.",
       );
     }
 
@@ -158,7 +158,7 @@ export function EditVendorForm({
               variant={"outline"}
               className={cn(
                 "w-full justify-start text-left font-normal border-border",
-                !startingDate && "text-muted-foreground"
+                !startingDate && "text-muted-foreground",
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -185,7 +185,7 @@ export function EditVendorForm({
       <div className="mt-4 flex justify-end">
         <Button
           type="submit"
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          className="bg-lime-600 text-primary-foreground hover:bg-lime-700"
           disabled={isPending}
         >
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{" "}

@@ -32,7 +32,7 @@ const AddUser = () => {
       onOpenChange={setIsCreateGuestModalOpen}
     >
       <DialogTrigger asChild>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+        <Button className="bg-lime-600 text-primary-foreground hover:bg-lime-700 transition-colors">
           <Plus className="mr-2 h-4 w-4" /> Add Guest
         </Button>
       </DialogTrigger>

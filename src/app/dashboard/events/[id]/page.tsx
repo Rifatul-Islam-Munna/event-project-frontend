@@ -19,9 +19,9 @@ import { getUserInfo } from "@/actions/auth";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 const WeddingPlannerWrapper = dynamic(
-  () => import("@/component/table-charts/wedding-planner")
+  () => import("@/component/table-charts/wedding-planner"),
 );
-
+import Image from "next/image";
 export default function EventDetailsPage() {
   const params = useParams();
   const eventSlug = params.slug as string;
@@ -189,7 +189,7 @@ export default function EventDetailsPage() {
 
   const handleUpdateGuest = (updatedGuest: Guest) => {
     setGuests((prev) =>
-      prev.map((g) => (g.id === updatedGuest.id ? updatedGuest : g))
+      prev.map((g) => (g.id === updatedGuest.id ? updatedGuest : g)),
     );
   };
 
@@ -203,7 +203,7 @@ export default function EventDetailsPage() {
 
   const handleUpdateVendor = (updatedVendor: Vendor) => {
     setVendors((prev) =>
-      prev.map((v) => (v.id === updatedVendor.id ? updatedVendor : v))
+      prev.map((v) => (v.id === updatedVendor.id ? updatedVendor : v)),
     );
   };
 
@@ -220,14 +220,9 @@ export default function EventDetailsPage() {
     setTab(nextTab);
   };
   return (
-    <section className=" bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-dvh">
-      <div className="container mx-auto py-8 px-4 md:px-6 space-y-8">
-        <Card className="border border-gray-200/80 shadow-none  bg-transparent">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-foreground">
-              Manage Event:
-            </CardTitle>
-          </CardHeader>
+    <section className="   min-h-dvh">
+      <div className=" mx-auto py-8 px-4 md:px-6 space-y-8">
+        <Card className="border border-none shadow-none  bg-transparent">
           <CardContent className="p-0">
             {" "}
             {/* Remove padding from CardContent to allow TabsList to be flush */}
@@ -237,25 +232,49 @@ export default function EventDetailsPage() {
               defaultValue="guests"
               className="w-full"
             >
-              <TabsList className="sticky top-0 z-10 grid w-full grid-cols-3 border-b border-border bg-transparent rounded-none p-0 h-auto">
+              <TabsList className="sticky shadow-none top-0 z-10 grid w-full grid-cols-3 border-b border-border bg-transparent rounded-none p-0 h-auto">
                 <TabsTrigger
                   value="guests"
-                  className="flex items-center gap-2  text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0 data-[state=active]:border-b-2  data-[state=active]:border-[hsl(185_70%_40%)] rounded-none py-3 px-4"
+                  className="flex items-center gap-2 shadow-none  text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0 data-[state=active]:border-b-2  data-[state=active]:border-lime-600 rounded-none py-3 px-4"
                 >
-                  <Users className="h-4 w-4" /> Guest List
+                  <div className=" flex flex-col justify-center items-center">
+                    <Image
+                      src={"/images/guestIcon.png"}
+                      width={30}
+                      height={30}
+                      alt="guest"
+                    />
+                    <p className=" font-semibold text-sm"> Guest List</p>
+                  </div>
                 </TabsTrigger>
                 <TabsTrigger
                   value="seating-chart"
-                  className="flex items-center gap-2 text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0  data-[state=active]:border-b-2 data-[state=active]:border-[hsl(185_70%_40%)] rounded-none py-3 px-4"
+                  className="flex items-center gap-2 text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0  data-[state=active]:border-b-2 data-[state=active]:border-lime-600 rounded-none py-3 px-4"
                 >
-                  <LayoutGrid className="h-4 w-4" /> Seating Chart
+                  <div className=" flex flex-col justify-center items-center">
+                    <Image
+                      src={"/images/chairIcon.png"}
+                      width={30}
+                      height={30}
+                      alt="guest"
+                    />
+                    <p className=" font-semibold text-sm"> Seating Chart</p>
+                  </div>
                 </TabsTrigger>
                 {user?.plan?.permissions?.includes("vendor.manage") ? (
                   <TabsTrigger
                     value="vendors"
-                    className="flex items-center gap-2 text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0  data-[state=active]:border-b-2 data-[state=active]:border-[hsl(185_70%_40%)] rounded-none py-3 px-4"
+                    className="flex items-center gap-2 text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0  data-[state=active]:border-b-2 data-[state=active]:border-lime-600 rounded-none py-3 px-4"
                   >
-                    <Truck className="h-4 w-4" /> Vendors
+                    <div className=" flex flex-col justify-center items-center">
+                      <Image
+                        src={"/images/vendorIcon.png"}
+                        width={30}
+                        height={30}
+                        alt="guest"
+                      />
+                      <p className=" font-semibold text-sm"> Vendors</p>
+                    </div>
                   </TabsTrigger>
                 ) : null}
               </TabsList>

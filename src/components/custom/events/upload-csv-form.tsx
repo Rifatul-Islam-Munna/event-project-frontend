@@ -84,7 +84,7 @@ export function UploadCsvForm({ onClose }: UploadCsvFormProps) {
       <DialogFooter className="mt-4">
         <Button
           type="submit"
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          className="w-full bg-lime-600 text-primary-foreground hover:bg-lime-700"
           disabled={isPending}
         >
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{" "}

@@ -8,33 +8,33 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 import {
   User,
-  Square,
-  Circle,
   X,
   Trash2,
-  GripHorizontal,
-  GripVertical,
-} from "lucide-react"; // Removed Save, FolderOpen
+  Minus,
+  SeparatorVertical,
+  ArrowRight,
+  ArrowDown,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import AddUser from "@/app/dashboard/AddUser";
 import type { Guest } from "@/@types/events-details";
 import type { TableType } from "./wedding-planner";
 import { ExtrasComponent } from "./SideBarImage";
-import { DecorativeDrawer } from "./decorative-node/decorative-sidebar";
+
 import RT from "@/images/sideicons/RectangularTable.png";
 import SQ from "@/images/sideicons/squre.png";
 import CQ from "@/images/sideicons/circletable.png";
 import OC from "@/images/sideicons/Rectangular-one-sided.png";
-import ON from "@/images/sideicons/oneC.png";
 import Image from "next/image";
 import { useZoomResponive } from "@/zustan-fn/zoomResponive";
+import { DecorativeDrawer } from "./decorative-node/decorative-sidebar";
+
 interface SidebarProps {
   onAddTableClick: (type: TableType) => void;
   guests: Guest[];
   onAddGuest: (name: string) => void;
   onRemoveGuest: (guestId: string) => void;
-
   showSidebar: boolean;
   setShowSidebar: (show: boolean) => void;
 }
@@ -44,22 +44,23 @@ export function Sidebar({
   guests = [],
   onAddGuest,
   onRemoveGuest,
-
   showSidebar,
   setShowSidebar,
 }: SidebarProps) {
   const [newGuestName, setNewGuestName] = useState("");
   const { imageUrl, setImageUrl, isEditMode } = useZoomResponive(
-    (state) => state
+    (state) => state,
   );
+
   useEffect(() => {
     setImageUrl("");
   }, []);
+
   const handleDragStart = (
     event: React.DragEvent,
     guestId: string,
     guestName: string,
-    guest: Guest
+    guest: Guest,
   ) => {
     event.dataTransfer.setData("guestId", guestId);
     event.dataTransfer.setData("guestName", guestName);
@@ -70,240 +71,236 @@ export function Sidebar({
   const getSeachUser = guests.filter(
     (guest) =>
       guest.name.toLowerCase().includes(seachUser.toLowerCase()) ||
-      guest.email.toLowerCase().includes(seachUser.toLowerCase())
+      guest.email.toLowerCase().includes(seachUser.toLowerCase()),
   );
 
+  // Don't render at all when hidden
+  if (!showSidebar) {
+    return null;
+  }
+
   return (
-    <div
-      className={`fixed inset-y-0 left-0 z-30 w-80 bg-white  md:bg-white/60 mt-11 md:mt-0 border-r p-4 flex flex-col h-full transition-transform duration-300 ease-in-out
-               md:relative md:translate-x-0 ${
-                 showSidebar ? "translate-x-0" : "-translate-x-full"
-               } sidebar-container`} // Added sidebar-container for print styles
-    >
-      <div className="flex justify-end items-center mb-4 md:hidden">
-        {/*         <h2 className="text-lg font-semibold">Menu</h2> */}
+    <div className="fixed inset-y-0 left-0 z-30 w-fit px-4 md:pr-3 bg-white md:bg-white/60 mt-11 md:mt-0 border-r flex flex-col h-full transition-transform duration-300 ease-in-out md:relative translate-x-0 sidebar-container">
+      {/* Close Button - Fixed at Top */}
+      <div className="flex justify-end items-center p-4 pb-0 md:hidden flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setShowSidebar(false)}
+          className="hover:bg-lime-50 hover:text-lime-600"
         >
           <X className="h-5 w-5" />
           <span className="sr-only">Close Sidebar</span>
         </Button>
       </div>
 
-      <h2 className="text-lg font-semibold mb-4">Add Table</h2>
-
-      <div className="flex gap-1 mb-6 justify-between">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 p-0 shadow-none border border-gray-100 bg-transparent"
-          onClick={() => onAddTableClick("rectangular")}
-        >
-          {/*    <div className="w-4 h-2 border border-cyan-500 rounded-sm" /> */}
-          <div className="relative w-10 h-10">
-            <Image
-              width={100}
-              height={100}
-              alt="icons"
-              src={RT.src}
-              className="absolute inset-0 w-full h-full "
-            />
-            {/* <div className="absolute inset-0 bg-blue-500" /> */}
-          </div>
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 p-0 shadow-none border border-gray-100 bg-transparent"
-          onClick={() => onAddTableClick("square")}
-        >
-          <div className="relative w-10 h-10">
-            <Image
-              width={100}
-              height={100}
-              alt="icons"
-              src={SQ.src}
-              className="absolute inset-0 w-full h-full "
-            />
-            {/* <div className="absolute inset-0 bg-blue-500" /> */}
-          </div>
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 p-0 shadow-none border border-gray-100 bg-transparent"
-          onClick={() => onAddTableClick("circular")}
-        >
-          <div className="relative w-10 h-10">
-            <Image
-              width={100}
-              height={100}
-              alt="icons"
-              src={CQ.src}
-              className="absolute inset-0 w-full h-full "
-            />
-            {/* <div className="absolute inset-0 bg-blue-500" /> */}
-          </div>
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 p-0 shadow-none border border-gray-100 bg-transparent"
-          onClick={() => onAddTableClick("rectangular-one-sided")}
-        >
-          <div className="relative w-10 h-10">
-            <Image
-              width={100}
-              height={100}
-              alt="icons"
-              src={OC.src}
-              className="absolute inset-0 w-full h-full "
-            />
-            {/* <div className="absolute inset-0 bg-blue-500" /> */}
-          </div>
-        </Button>
-        {/*    <Button
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 p-0 shadow-none border border-gray-100 bg-transparent"
-          onClick={() => onAddTableClick("circular-single-seat")}
-        >
-          <div className="relative w-10 h-10">
-            <Image
-              width={100}
-              height={100}
-              alt="icons"
-              src={ON.src}
-              className="absolute inset-0 w-full h-full "
-            />
-          
-          </div>
-        </Button> */}
-      </div>
-
-      <h2 className="text-lg font-semibold mb-4">Add Chairs</h2>
-      <div className="flex gap-2 mb-6">
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={() => onAddTableClick("chair-row")}
-        >
-          <GripHorizontal className="w-4 h-4 mr-2" />
-          Row
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={() => onAddTableClick("chair-column")}
-        >
-          <GripVertical className="w-4 h-4 mr-2" />
-          Column
-        </Button>
-      </div>
-      <h2 className="text-lg font-semibold mb-4">Add Chairs</h2>
-      <div className="flex gap-2 mb-6">
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={() => onAddTableClick("chair-row")}
-        >
-          <GripHorizontal className="w-4 h-4 mr-2" />
-          Row
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={() => onAddTableClick("chair-column")}
-        >
-          <GripVertical className="w-4 h-4 mr-2" />
-          Column
-        </Button>
-      </div>
-
-      {/* ✅ ADD THIS NEW SECTION */}
-      <h2 className="text-lg font-semibold mb-4">Add Lines/Walls</h2>
-      <div className="flex gap-2 mb-6">
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={() => onAddTableClick("line-horizontal")}
-        >
-          <GripHorizontal className="w-4 h-4 mr-2" />
-          Horizontal
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={() => onAddTableClick("line-vertical")}
-        >
-          <GripVertical className="w-4 h-4 mr-2" />
-          Vertical
-        </Button>
-      </div>
-
-      <DecorativeDrawer onAddDecorativeItem={() => setShowSidebar(false)} />
-      <ExtrasComponent />
-      <h2 className="text-lg font-semibold mb-4">Guests</h2>
-      <div className="flex gap-2 mb-4">
-        <Input
-          placeholder="Search Guests"
-          value={seachUser}
-          onChange={(e) => setSeachUser(e.target.value)}
-        />
-        <AddUser />
-      </div>
-      <ScrollArea className="flex-grow pr-2">
-        <div className="flex flex-col gap-2">
-          {" "}
-          {/* Changed to flex-col */}
-          {getSeachUser?.filter((guest) => !guest.isAssigned).length === 0 && (
-            <p className="text-sm text-gray-500">No unassigned guests.</p>
-          )}
-          {getSeachUser
-            ?.filter((guest) => !guest.isAssigned)
-            .map((guest) => (
-              <Card
-                key={guest._id}
-                className={` w-full grid grid-cols-3 justify-center items-center gap-2 shadow-none py-1 border border-gray-100 cursor-grab`}
-                draggable={true}
-                onDragStart={(e) =>
-                  handleDragStart(e, guest._id!, guest?.name, guest)
-                }
+      {/* ENTIRE CONTENT SCROLLABLE */}
+      <ScrollArea className="flex-1">
+        <div className="space-y-6 py-4">
+          {/* Add Tables */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4 text-gray-900">Tables</h2>
+            <div className="flex gap-1 justify-between">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 p-0 shadow-none border-none bg-transparent hover:border-lime-600 hover:bg-lime-50"
+                onClick={() => onAddTableClick("rectangular")}
+                title="Rectangular Table"
               >
-                <Avatar className="w-8 h-8">
-                  <AvatarFallback className="bg-gray-200 text-gray-600">
-                    <User className="w-4 h-4" />
-                  </AvatarFallback>
-                </Avatar>
-                <span className="flex-grow text-sm font-medium">
-                  {guest?.name}-{" "}
-                  <span className=" text-[8px]">
-                    {" "}
-                    {guest?.adults}A-{guest?.children}C
-                  </span>
-                </span>
-                <div className="flex justify-center items-center gap-1.5">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-6 h-6 text-gray-500 hover:text-red-500"
-                    onClick={() => onRemoveGuest(guest?._id ?? "")}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span className="sr-only">Remove guest</span>
-                  </Button>
-                  <GripHorizontal className=" w-4 h-4" />
+                <div className="relative w-10 h-10">
+                  <Image
+                    width={100}
+                    height={100}
+                    alt="Rectangular Table"
+                    src={RT.src}
+                    className="absolute inset-0 w-full h-full"
+                  />
                 </div>
-              </Card>
-            ))}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 p-0 shadow-none border-none bg-transparent hover:border-lime-600 hover:bg-lime-50"
+                onClick={() => onAddTableClick("square")}
+                title="Square Table"
+              >
+                <div className="relative w-10 h-10">
+                  <Image
+                    width={100}
+                    height={100}
+                    alt="Square Table"
+                    src={SQ.src}
+                    className="absolute inset-0 w-full h-full"
+                  />
+                </div>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 p-0 shadow-none border-none bg-transparent hover:border-lime-600 hover:bg-lime-50"
+                onClick={() => onAddTableClick("circular")}
+                title="Round Table"
+              >
+                <div className="relative w-10 h-10">
+                  <Image
+                    width={100}
+                    height={100}
+                    alt="Round Table"
+                    src={CQ.src}
+                    className="absolute inset-0 w-full h-full"
+                  />
+                </div>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 p-0 shadow-none border-none bg-transparent hover:border-lime-600 hover:bg-lime-50"
+                onClick={() => onAddTableClick("rectangular-one-sided")}
+                title="Head Table"
+              >
+                <div className="relative w-10 h-10">
+                  <Image
+                    width={100}
+                    height={100}
+                    alt="Head Table"
+                    src={OC.src}
+                    className="absolute inset-0 w-full h-full"
+                  />
+                </div>
+              </Button>
+            </div>
+          </div>
+
+          {/* Add Seating */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4 text-gray-900">
+              Seating
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 border-gray-200 hover:border-lime-600 hover:bg-lime-50 hover:text-lime-700"
+                onClick={() => onAddTableClick("chair-row")}
+              >
+                <ArrowRight className="w-4 h-4 mr-2" />
+                Row of Chairs
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 border-gray-200 hover:border-lime-600 hover:bg-lime-50 hover:text-lime-700"
+                onClick={() => onAddTableClick("chair-column")}
+              >
+                <ArrowDown className="w-4 h-4 mr-2" />
+                Column of Chairs
+              </Button>
+            </div>
+          </div>
+
+          {/* Add Room Dividers */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4 text-gray-900">
+              Room Dividers
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 border-gray-200 hover:border-lime-600 hover:bg-lime-50 hover:text-lime-700"
+                onClick={() => onAddTableClick("line-horizontal")}
+              >
+                <Minus className="w-4 h-4 mr-2" />
+                Horizontal Wall
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 border-gray-200 hover:border-lime-600 hover:bg-lime-50 hover:text-lime-700"
+                onClick={() => onAddTableClick("line-vertical")}
+              >
+                <SeparatorVertical className="w-4 h-4 mr-2" />
+                Vertical Wall
+              </Button>
+            </div>
+          </div>
+
+          {/* Decorations */}
+          <DecorativeDrawer onAddDecorativeItem={() => setShowSidebar(false)} />
+
+          {/* Extras */}
+          <ExtrasComponent />
+
+          {/* Guests Section */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4 text-gray-900">
+              Unassigned Guests (
+              {getSeachUser?.filter((guest) => !guest.isAssigned).length})
+            </h2>
+            <div className="flex gap-2 mb-4">
+              <Input
+                placeholder="Search guests..."
+                value={seachUser}
+                onChange={(e) => setSeachUser(e.target.value)}
+                className="border-gray-200 focus:border-lime-600 focus:ring-lime-600"
+              />
+              <AddUser />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {getSeachUser?.filter((guest) => !guest.isAssigned).length ===
+                0 && (
+                <p className="text-sm text-gray-500 py-4 text-center">
+                  {seachUser ? "No matching guests" : "All guests are seated!"}
+                </p>
+              )}
+              {getSeachUser
+                ?.filter((guest) => !guest.isAssigned)
+                .map((guest) => (
+                  <Card
+                    key={guest._id}
+                    className="w-full grid grid-cols-3 justify-center items-center gap-2 shadow-none py-1 border border-gray-200 hover:border-lime-600 hover:bg-lime-50 cursor-grab active:cursor-grabbing transition-colors"
+                    draggable={true}
+                    onDragStart={(e) =>
+                      handleDragStart(e, guest._id!, guest?.name, guest)
+                    }
+                  >
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="bg-lime-100 text-lime-700 text-xs font-medium">
+                        {guest?.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="flex-grow text-sm font-medium text-gray-900 truncate">
+                      {guest?.name}
+                      {(guest?.adults || guest?.children) && (
+                        <span className="text-[10px] text-gray-500 ml-1">
+                          {guest?.adults}A·{guest?.children}C
+                        </span>
+                      )}
+                    </span>
+                    <div className="flex justify-center items-center gap-1.5">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-6 h-6 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveGuest(guest?._id ?? "");
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span className="sr-only">Remove guest</span>
+                      </Button>
+                      <User className="w-4 h-4 text-gray-400" />
+                    </div>
+                  </Card>
+                ))}
+            </div>
+          </div>
         </div>
       </ScrollArea>
-      <div className="mt-auto pt-4 border-t border-gray-200 flex gap-2">
-        {/* Save button moved to main WeddingPlanner component */}
-        {/* Load button removed as per request */}
-      </div>
     </div>
   );
 }

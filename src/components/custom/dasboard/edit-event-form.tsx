@@ -12,32 +12,29 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format, parseISO } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, Upload, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Event } from "@/app/dashboard/page"; // Import the Event type
+import type { Event } from "@/app/dashboard/page";
 import { EventItem } from "@/@types/events-details";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateEvent } from "@/actions/fetch-action";
 import { toast } from "sonner";
+import Image from "next/image";
 
 type EditEventFormProps = {
   event: EventItem;
-
   onClose: () => void;
 };
 
-export function EditEventForm({
-  event,
-
-  onClose,
-}: EditEventFormProps) {
+export function EditEventForm({ event, onClose }: EditEventFormProps) {
   const [eventName, setEventName] = useState(event.name);
   const [eventDate, setEventDate] = useState<Date | undefined>(
-    parseISO(event.date)
+    parseISO(event.date),
   );
   const [eventLocation, setEventLocation] = useState(event.location);
-  const [logoFile, setLogoFile] = useState<File | null>(null); // For new file upload
-  const [currentLogoPath, setCurrentLogoPath] = useState(event.logo_path); // To display current logo
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [currentLogoPath, setCurrentLogoPath] = useState(event.logo_path);
   const [width, setWidth] = useState(event?.width ?? 0);
   const [height, setHeight] = useState(event?.height ?? 0);
 
@@ -46,8 +43,12 @@ export function EditEventForm({
     setEventDate(parseISO(event.date));
     setEventLocation(event.location);
     setCurrentLogoPath(event.logo_path);
-    setLogoFile(null); // Clear file input when event changes
+    setWidth(event?.width ?? 0);
+    setHeight(event?.height ?? 0);
+    setLogoFile(null);
+    setLogoPreview(null);
   }, [event]);
+
   const query = useQueryClient();
   const { mutate, isPending } = useMutation({
     mutationKey: ["updateEvent"],
@@ -58,6 +59,7 @@ export function EditEventForm({
         toast.error(data.error.message);
       } else {
         toast.success("Event updated successfully");
+        onClose();
       }
     },
     onError: (error) => {
@@ -65,157 +67,264 @@ export function EditEventForm({
     },
   });
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!eventName || !eventDate || !eventLocation) {
-      toast.success("Please fill in all required fields.");
-
+      toast.error("Please fill in all required fields.");
       return;
     }
 
-    const fromdata = new FormData();
-    fromdata.append("name", eventName);
-    fromdata.append("date", format(eventDate, "yyyy-MM-dd"));
-    fromdata.append("id", event._id);
-    fromdata.append("location", eventLocation);
-    fromdata.append("width", width.toString());
-    fromdata.append("height", height.toString());
-    if (logoFile) fromdata.append("file", logoFile);
-    mutate(fromdata);
+    if (width <= 0 || height <= 0) {
+      toast.error("Please enter valid venue dimensions.");
+      return;
+    }
 
-    onClose();
+    const formdata = new FormData();
+    formdata.append("name", eventName);
+    formdata.append("date", format(eventDate, "yyyy-MM-dd"));
+    formdata.append("id", event._id);
+    formdata.append("location", eventLocation);
+    formdata.append("width", width.toString());
+    formdata.append("height", height.toString());
+    if (logoFile) formdata.append("file", logoFile);
+
+    mutate(formdata);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-      <div className="grid gap-2">
-        <Label htmlFor="eventName" className="text-foreground">
-          Event Name
-        </Label>
-        <Input
-          id="eventName"
-          name="eventName"
-          type="text"
-          placeholder="My Wedding Reception"
-          required
-          value={eventName}
-          onChange={(e) => setEventName(e.target.value)}
-          className="border-border focus:ring-primary focus:border-primary"
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="eventDate" className="text-foreground">
-          Date
-        </Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-full justify-start text-left font-normal border-border",
-                !eventDate && "text-muted-foreground"
-              )}
+    <div className="w-full max-w-[90%] mx-auto">
+      {/* Scrollable Form Container */}
+      <div className="max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Event Name */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="eventName"
+              className="text-sm font-medium text-gray-900"
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {eventDate ? format(eventDate, "PPP") : <span>Pick a date</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 border-border bg-background">
-            <Calendar
-              mode="single"
-              selected={eventDate}
-              onSelect={setEventDate}
-              initialFocus
-              className="border-none"
+              Event Name <span className="text-red-600">*</span>
+            </Label>
+            <Input
+              id="eventName"
+              type="text"
+              placeholder="Annual Conference 2026"
+              required
+              value={eventName}
+              onChange={(e) => setEventName(e.target.value)}
+              className="h-10 border-gray-300 focus:border-lime-600 focus:ring-lime-600"
             />
-          </PopoverContent>
-        </Popover>
+          </div>
+
+          {/* Event Date */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="eventDate"
+              className="text-sm font-medium text-gray-900"
+            >
+              Event Date <span className="text-red-600">*</span>
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full h-10 justify-start text-left font-normal border-gray-300 hover:bg-gray-50 hover:border-lime-600",
+                    !eventDate && "text-gray-500",
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4 text-gray-600" />
+                  {eventDate ? (
+                    format(eventDate, "PPP")
+                  ) : (
+                    <span>Select date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto p-0 border-gray-200"
+                align="start"
+              >
+                <Calendar
+                  mode="single"
+                  selected={eventDate}
+                  onSelect={setEventDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Event Location */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="eventLocation"
+              className="text-sm font-medium text-gray-900"
+            >
+              Location <span className="text-red-600">*</span>
+            </Label>
+            <Input
+              id="eventLocation"
+              type="text"
+              placeholder="Grand Ballroom, Downtown Center"
+              required
+              value={eventLocation}
+              onChange={(e) => setEventLocation(e.target.value)}
+              className="h-10 border-gray-300 focus:border-lime-600 focus:ring-lime-600"
+            />
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-200 pt-5" />
+
+          {/* Event Logo */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-900">
+              Event Logo
+            </Label>
+
+            {/* Current Logo or Preview */}
+            {logoPreview ? (
+              <div className="flex items-center gap-3 p-3 bg-lime-50 border border-lime-300 rounded-lg">
+                <img
+                  src={logoPreview}
+                  alt="Preview"
+                  className="w-12 h-12 object-cover rounded border border-lime-400"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-lime-900 truncate">
+                    {logoFile?.name}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={removeLogo}
+                  className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : currentLogoPath ? (
+              <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <Image
+                  src={currentLogoPath as string}
+                  alt="Current"
+                  width={48}
+                  height={48}
+                  className="w-12 h-12 object-cover rounded border border-gray-300"
+                />
+                <p className="text-sm text-gray-600 flex-1 truncate">
+                  {currentLogoPath.split("/").pop()}
+                </p>
+              </div>
+            ) : null}
+
+            {/* Upload Button */}
+            <input
+              id="logoFile"
+              type="file"
+              accept="image/*"
+              onChange={handleLogoChange}
+              className="hidden"
+            />
+            <Label
+              htmlFor="logoFile"
+              className="flex items-center justify-center gap-2 h-10 px-4 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-lime-600 hover:bg-lime-50 transition-colors"
+            >
+              <Upload className="h-4 w-4 text-gray-600" />
+              <span className="text-sm text-gray-700">
+                {logoPreview ? "Change Logo" : "Upload Logo"}
+              </span>
+            </Label>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-200 pt-5" />
+
+          {/* Venue Dimensions */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-900">
+              Venue Size (meters) <span className="text-red-600">*</span>
+            </Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Input
+                  type="number"
+                  placeholder="Width"
+                  required
+                  min="1"
+                  value={width > 0 ? width : ""}
+                  onChange={(e) => setWidth(Number(e.target.value))}
+                  className="h-10 border-gray-300 focus:border-lime-600 focus:ring-lime-600"
+                />
+                <p className="text-xs text-gray-500 mt-1">Width</p>
+              </div>
+              <div>
+                <Input
+                  type="number"
+                  placeholder="Height"
+                  required
+                  min="1"
+                  value={height > 0 ? height : ""}
+                  onChange={(e) => setHeight(Number(e.target.value))}
+                  className="h-10 border-gray-300 focus:border-lime-600 focus:ring-lime-600"
+                />
+                <p className="text-xs text-gray-500 mt-1">Height</p>
+              </div>
+            </div>
+          </div>
+        </form>
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="eventLocation" className="text-foreground">
-          Location
-        </Label>
-        <Input
-          id="eventLocation"
-          name="eventLocation"
-          type="text"
-          placeholder="Grand Ballroom"
-          required
-          value={eventLocation}
-          onChange={(e) => setEventLocation(e.target.value)}
-          className="border-border focus:ring-primary focus:border-primary"
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="logoFile" className="text-foreground">
-          Event Logo (Upload New Image)
-        </Label>
-        <Input
-          id="logoFile"
-          name="logoFile"
-          type="file"
-          accept="image/*"
-          onChange={(e) =>
-            setLogoFile(e.target.files ? e.target.files[0] : null)
-          }
-          className="border-border focus:ring-primary focus:border-primary file:text-primary file:bg-muted file:border-border file:hover:bg-muted/80"
-        />
-        {currentLogoPath && !logoFile && (
-          <p className="text-sm text-muted-foreground">
-            Current: {currentLogoPath.split("/").pop()}
-          </p>
-        )}
-        {logoFile && (
-          <p className="text-sm text-muted-foreground">
-            New file selected: {logoFile.name}
-          </p>
-        )}
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="eventLocation" className="text-foreground">
-          Venue Width (meter)
-        </Label>
-        <div className="flex gap-2">
-          <Input
-            id="eventLocation"
-            name="eventLocation"
-            type="text"
-            placeholder="venue width in meter"
-            required
-            value={width > 0 ? width : ""}
-            onChange={(e) => setWidth(Number(e.target.value))}
-            className="border-border focus:ring-primary focus:border-primary flex-1"
-          />
-        </div>
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="eventLocation" className="text-foreground">
-          Venue Height (meter)
-        </Label>
-        <div className="flex gap-2">
-          <Input
-            id="eventLocation"
-            name="eventLocation"
-            type="text"
-            placeholder="venue height in meter"
-            required
-            value={height > 0 ? height : ""}
-            onChange={(e) => setHeight(Number(e.target.value))}
-            className="border-border focus:ring-primary focus:border-primary flex-1"
-          />
-        </div>
-      </div>
-      <div className="mt-4 flex justify-end">
+
+      {/* Fixed Action Buttons */}
+      <div className="flex items-center gap-3 pt-5 mt-5 border-t border-gray-200">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          disabled={isPending}
+          className="flex-1 h-11 border-gray-300 hover:bg-gray-50 font-medium"
+        >
+          Cancel
+        </Button>
         <Button
           type="submit"
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          onClick={handleSubmit}
           disabled={isPending}
+          className="flex-1 bg-lime-600 hover:bg-lime-700 text-white h-11 font-medium"
         >
-          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{" "}
-          Update Event
+          {isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              Save Changes
+            </>
+          )}
         </Button>
       </div>
-    </form>
+    </div>
   );
 }

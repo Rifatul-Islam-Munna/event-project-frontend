@@ -13,6 +13,7 @@ import ReactFlow, {
   ReactFlowProvider,
   useReactFlow,
   useViewport,
+  BackgroundVariant,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { v4 as uuidv4 } from "uuid";
@@ -139,7 +140,7 @@ export interface TableNodeData {
   onRemoveGuestFromSeat: (
     nodeId: string,
     seatId: string,
-    guestId: string
+    guestId: string,
   ) => void;
   onDeleteTable: (nodeId: string) => void;
   onEditTable: (nodeId: string, newLabel: string, newNumSeats: number) => void;
@@ -186,7 +187,7 @@ const snapGrid: [number, number] = [15, 15];
 // Helper function to determine seat distribution for rectangular/square tables
 export const getRectangularSeatDistribution = (
   totalSeats: number,
-  isSquare: boolean
+  isSquare: boolean,
 ) => {
   let topSeats = 0;
   let bottomSeats = 0;
@@ -225,7 +226,7 @@ export const getRectangularSeatDistribution = (
 
 const calculateTableDimensions = (
   type: TableType,
-  numSeats: number
+  numSeats: number,
 ): { width: number; height: number } => {
   const seatDiameter = 30;
   const seatSpacing = 15;
@@ -378,10 +379,10 @@ function WeddingPlanner() {
           y: targetY,
           zoom: targetZoom,
         },
-        { duration: 800 } // Smooth 800ms animation
+        { duration: 800 }, // Smooth 800ms animation
       );
     },
-    [setViewport]
+    [setViewport],
   );
 
   const { data: seatPlandata, isLoading } = useQuery({
@@ -476,7 +477,7 @@ function WeddingPlanner() {
       id: string,
       type: "node" | "guest",
       action: "created" | "updated" | "deleted",
-      data: any
+      data: any,
     ) => {
       setChangedObjects((prev) => {
         const newChangedObjects = { ...prev };
@@ -516,14 +517,14 @@ function WeddingPlanner() {
         return newChangedObjects;
       });
     },
-    [setDataLength] // ✅ Add setDataLength as dependency
+    [setDataLength], // ✅ Add setDataLength as dependency
   );
 
   const trackDecorativeChange = useCallback(
     (id: string, action: "created" | "updated" | "deleted", data: any) => {
       setChangedObjects((prev) => {
         const filteredItems = prev.decorativeItems.filter(
-          (item) => item.id !== id
+          (item) => item.id !== id,
         );
 
         const newDecoItems =
@@ -544,12 +545,12 @@ function WeddingPlanner() {
         return newChangedObjects;
       });
     },
-    [setDataLength] // ✅ Add dependency
+    [setDataLength], // ✅ Add dependency
   );
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+    [setEdges],
   );
 
   const { data, isPending } = useQuery({
@@ -600,7 +601,7 @@ function WeddingPlanner() {
 
         const totalSeatsNeeded = Math.max(
           1,
-          (guest.adults ?? 0) + (guest.children ?? 0)
+          (guest.adults ?? 0) + (guest.children ?? 0),
         );
 
         // Check if this guest is already seated at the target
@@ -613,7 +614,7 @@ function WeddingPlanner() {
                 ? targetNode.data.chairs
                 : targetNode.data.seats;
             const existingSeats = seatsArray.filter(
-              (seat) => seat.occupiedBy === guestId
+              (seat) => seat.occupiedBy === guestId,
             );
             if (existingSeats.length > 0) {
               alreadySeated = true;
@@ -645,7 +646,7 @@ function WeddingPlanner() {
                 const updatedSeats = seatsArray.map((seat) =>
                   seat.occupiedBy === guestId
                     ? { ...seat, occupiedBy: null, occupiedByName: null }
-                    : seat
+                    : seat,
                 );
 
                 const updatedNode = {
@@ -662,7 +663,7 @@ function WeddingPlanner() {
                 return updatedNode;
               }
               return node;
-            })
+            }),
           );
         }
 
@@ -673,7 +674,7 @@ function WeddingPlanner() {
               const seatsArray =
                 node.type === "chairNode" ? node.data.chairs : node.data.seats;
               const targetSeatIndex = seatsArray.findIndex(
-                (seat) => seat.id === seatId
+                (seat) => seat.id === seatId,
               );
 
               if (targetSeatIndex === -1) {
@@ -694,7 +695,7 @@ function WeddingPlanner() {
                 toast.error(
                   `Not enough seats! Need ${totalSeatsNeeded} seat${
                     totalSeatsNeeded > 1 ? "s" : ""
-                  }`
+                  }`,
                 );
                 // ✅ Don't set wasSuccessfullySeated = true
                 return node;
@@ -733,7 +734,7 @@ function WeddingPlanner() {
 
               if (consecutiveSeats.length < totalSeatsNeeded) {
                 toast.error(
-                  `Cannot find ${totalSeatsNeeded} consecutive seats!`
+                  `Cannot find ${totalSeatsNeeded} consecutive seats!`,
                 );
                 // ✅ Don't set wasSuccessfullySeated = true
                 return node;
@@ -790,7 +791,7 @@ function WeddingPlanner() {
               return updatedNode;
             }
             return node;
-          })
+          }),
         );
 
         // ✅ Only update guest status if they were successfully seated
@@ -818,7 +819,7 @@ function WeddingPlanner() {
         return updatedGuests;
       });
     },
-    [setNodes, setGuests, trackChange]
+    [setNodes, setGuests, trackChange],
   );
 
   const handleRemoveGuestFromSeat = useCallback(
@@ -851,7 +852,7 @@ function WeddingPlanner() {
             return updatedNode;
           }
           return node;
-        })
+        }),
       );
 
       setGuests((prevGuests) =>
@@ -862,12 +863,12 @@ function WeddingPlanner() {
             return updatedGuest;
           }
           return guest;
-        })
+        }),
       );
 
       toast.info(`Guest and family removed from seat.`);
     },
-    [setNodes, setGuests, trackChange]
+    [setNodes, setGuests, trackChange],
   );
 
   const handleDeleteTable = useCallback(
@@ -898,7 +899,7 @@ function WeddingPlanner() {
                   return updatedGuest;
                 }
                 return guest;
-              })
+              }),
             );
           });
         }
@@ -909,7 +910,7 @@ function WeddingPlanner() {
       const itemType = nodeToDelete?.type === "chairNode" ? "Chairs" : "Table";
       toast.info(`${itemType} removed.`);
     },
-    [setNodes, setGuests, DeteTable, trackChange]
+    [setNodes, setGuests, DeteTable, trackChange],
   );
 
   const handleEditTable = useCallback(
@@ -950,12 +951,12 @@ function WeddingPlanner() {
                           guest._id,
                           "guest",
                           "updated",
-                          updatedGuest
+                          updatedGuest,
                         );
                         return updatedGuest;
                       }
                       return guest;
-                    })
+                    }),
                   );
                 }
               });
@@ -963,7 +964,7 @@ function WeddingPlanner() {
 
             const { width, height } = calculateTableDimensions(
               node.data.type,
-              finalNumSeats
+              finalNumSeats,
             );
 
             const updatedNode = {
@@ -983,11 +984,11 @@ function WeddingPlanner() {
             return updatedNode;
           }
           return node;
-        })
+        }),
       );
       toast.success(`Table "${newLabel}" has been updated.`);
     },
-    [setNodes, setGuests, trackChange]
+    [setNodes, setGuests, trackChange],
   );
 
   // Update callback refs
@@ -1016,7 +1017,7 @@ function WeddingPlanner() {
       // Allow unlimited movement - no constraints
       return { x, y };
     },
-    []
+    [],
   );
   // ✅ NEW: Dedicated handler for drag stop - tracks position changes reliably
   const handleNodeDragStop = useCallback(
@@ -1033,7 +1034,7 @@ function WeddingPlanner() {
         node.position.x,
         node.position.y,
         currentNode.data.width,
-        currentNode.data.height
+        currentNode.data.height,
       );
 
       // Create updated node with new position
@@ -1068,8 +1069,8 @@ function WeddingPlanner() {
       // ✅ Update the node in React Flow state with constrained position
       setNodes((nds) =>
         nds.map((n) =>
-          n.id === node.id ? { ...n, position: constrainedPosition } : n
-        )
+          n.id === node.id ? { ...n, position: constrainedPosition } : n,
+        ),
       );
     },
     [
@@ -1078,7 +1079,7 @@ function WeddingPlanner() {
       trackDecorativeChange,
       constrainTablePosition,
       setNodes,
-    ]
+    ],
   );
 
   const handleConfirmAddTable = () => {
@@ -1226,7 +1227,7 @@ function WeddingPlanner() {
 
     const { width, height } = calculateTableDimensions(
       newTableType,
-      newTableNumSeats
+      newTableNumSeats,
     );
 
     const newNodeId = uuidv4();
@@ -1243,7 +1244,7 @@ function WeddingPlanner() {
       randomX,
       randomY,
       width,
-      height
+      height,
     );
 
     const newNodeData = {
@@ -1315,7 +1316,7 @@ function WeddingPlanner() {
           });
 
           const hasChanges = node.data.seats.some(
-            (seat) => seat.occupiedBy === guestId
+            (seat) => seat.occupiedBy === guestId,
           );
           if (hasChanges) {
             const updatedNode = {
@@ -1326,14 +1327,14 @@ function WeddingPlanner() {
           }
 
           return { ...node, data: { ...node.data, seats: updatedSeats } };
-        })
+        }),
       );
       mutate(guestId);
       setGuests((prevGuests) =>
-        prevGuests.filter((guest) => guest._id !== guestId)
+        prevGuests.filter((guest) => guest._id !== guestId),
       );
     },
-    [setNodes, setGuests, trackChange, guests, mutate]
+    [setNodes, setGuests, trackChange, guests, mutate],
   );
 
   const handleDeleteDecorative = useCallback(
@@ -1348,7 +1349,7 @@ function WeddingPlanner() {
       toast.info("Decorative item removed.");
       DeleteDeco(nodeId);
     },
-    [nodes, trackDecorativeChange]
+    [nodes, trackDecorativeChange],
   );
 
   // ✅ ADD THIS NEW FUNCTION - Handle line/decorative item resize
@@ -1377,10 +1378,10 @@ function WeddingPlanner() {
             return updatedNode;
           }
           return node;
-        })
+        }),
       );
     },
-    [setNodes, trackDecorativeChange]
+    [setNodes, trackDecorativeChange],
   );
   const handleEditDecorative = useCallback(
     (nodeId: string, newLabel: string) => {
@@ -1401,27 +1402,27 @@ function WeddingPlanner() {
             return updatedNode;
           }
           return node;
-        })
+        }),
       );
       toast.success("Decorative item updated.");
     },
-    [trackDecorativeChange]
+    [trackDecorativeChange],
   );
 
   const handleDecorativeDrop = useCallback(
     (event: React.DragEvent) => {
       const decorativeItemId = event.dataTransfer.getData("decorativeItemId");
       const decorativeItemLabel = event.dataTransfer.getData(
-        "decorativeItemLabel"
+        "decorativeItemLabel",
       );
       const decorativeItemImage = event.dataTransfer.getData(
-        "decorativeItemImage"
+        "decorativeItemImage",
       );
       const decorativeItemWidth = parseInt(
-        event.dataTransfer.getData("decorativeItemWidth")
+        event.dataTransfer.getData("decorativeItemWidth"),
       );
       const decorativeItemHeight = parseInt(
-        event.dataTransfer.getData("decorativeItemHeight")
+        event.dataTransfer.getData("decorativeItemHeight"),
       );
 
       if (!decorativeItemId) return;
@@ -1439,7 +1440,7 @@ function WeddingPlanner() {
           position.x,
           position.y,
           decorativeItemWidth,
-          decorativeItemHeight
+          decorativeItemHeight,
         ),
         data: {
           event_id: pathName.split("/").pop() as string,
@@ -1476,7 +1477,7 @@ function WeddingPlanner() {
       PostNewDecorator,
       trackDecorativeChange,
       handleDecorativeResize,
-    ]
+    ],
   );
 
   const handleNodesChange = useCallback(
@@ -1494,7 +1495,7 @@ function WeddingPlanner() {
               change.position.x,
               change.position.y,
               node.data.width,
-              node.data.height
+              node.data.height,
             );
 
             const updatedNode = {
@@ -1537,7 +1538,7 @@ function WeddingPlanner() {
       trackChange,
       constrainTablePosition,
       trackDecorativeChange,
-    ]
+    ],
   );
 
   const handleSaveChanges = useCallback(() => {
@@ -1549,14 +1550,14 @@ function WeddingPlanner() {
       toast.info("No changes to save.");
       return;
     }
-    if (changedObjects.node.length > 0) {
+    if (changedObjects?.node?.length > 0) {
       updateSeatAll(changedObjects.node);
     }
-    if (changedObjects.guest.length > 0) {
+    if (changedObjects?.guest?.length > 0) {
       updateAllguest(changedObjects.guest);
     }
 
-    if (changedObjects.decorativeItems.length > 0) {
+    if (changedObjects?.decorativeItems?.length > 0) {
       // Add API call to save decorative items
       // updateDecorativeItems(changedObjects.decorativeItems);
       console.log("Decorative items to save:", changedObjects.decorativeItems);
@@ -1596,7 +1597,7 @@ function WeddingPlanner() {
           nodeData.position.x,
           nodeData.position.y,
           nodeData.data.width || 100,
-          nodeData.data.height || 100
+          nodeData.data.height || 100,
         );
 
         const constrainedNode = {
@@ -1633,7 +1634,7 @@ function WeddingPlanner() {
             nodeData.position.x,
             nodeData.position.y,
             nodeData.data.width || 80,
-            nodeData.data.height || 80
+            nodeData.data.height || 80,
           );
 
           const constrainedNode = {
@@ -1642,7 +1643,7 @@ function WeddingPlanner() {
             type: "decorativeNode", // Ensure correct type
           };
           return createDecorativeNodeWithCallbacks(constrainedNode);
-        }
+        },
       );
 
       allNodes.push(...decorativeNodesWithCallbacks);
@@ -1697,10 +1698,10 @@ function WeddingPlanner() {
     const reactFlowPane =
       reactFlowWrapper.current.querySelector(".react-flow__pane");
     const reactFlowControls = reactFlowWrapper.current.querySelector(
-      ".react-flow__controls"
+      ".react-flow__controls",
     ) as HTMLElement;
     const reactFlowMiniMap = reactFlowWrapper.current.querySelector(
-      ".react-flow__minimap"
+      ".react-flow__minimap",
     ) as HTMLElement;
 
     if (!reactFlowPane) {
@@ -1809,7 +1810,7 @@ function WeddingPlanner() {
           imgWidthMM,
           imgHeightMM,
           undefined,
-          "NONE"
+          "NONE",
         ); // No compression
 
         // Footer
@@ -1825,7 +1826,7 @@ function WeddingPlanner() {
         pdf.save(
           `${eventName
             .replace(/[^a-z0-9]/gi, "_")
-            .toLowerCase()}-high-quality-layout.pdf`
+            .toLowerCase()}-high-quality-layout.pdf`,
         );
         toast.success("High-quality layout downloaded!");
         setIsPdfDownloading(false);
@@ -1871,7 +1872,7 @@ function WeddingPlanner() {
         setShowSidebar={setShowSidebar}
       />
       {/* <DecorativeSidebar onAddDecorativeItem={() => {}} /> */}
-      <div className="flex-grow h-full relative" ref={reactFlowWrapper}>
+      <div className=" flex-1 h-full relative" ref={reactFlowWrapper}>
         {/* Zoom-Responsive Venue Boundary */}
         {/*  <ZoomResponsiveBoundary
           venueWidth={venueWidth}
@@ -1888,7 +1889,7 @@ function WeddingPlanner() {
         <Button
           variant="outline"
           size="icon"
-          className="md:hidden absolute top-4 left-4 z-20 bg-transparent"
+          className=" absolute top-4 left-4 z-20 bg-transparent"
           onClick={() => setShowSidebar(!showSidebar)}
         >
           <Menu className="h-5 w-5" />
@@ -1968,7 +1969,7 @@ function WeddingPlanner() {
         >
           <Controls />
           <MiniMap />
-          <Background variant="dots" gap={15} size={1} />
+          <Background variant={BackgroundVariant.Lines} gap={40} />
         </ReactFlow>
       </div>
 
@@ -1983,8 +1984,8 @@ function WeddingPlanner() {
               {newTableType?.includes("line")
                 ? "Line"
                 : newTableType
-                ? newTableType.charAt(0).toUpperCase() + newTableType.slice(1)
-                : ""}{" "}
+                  ? newTableType.charAt(0).toUpperCase() + newTableType.slice(1)
+                  : ""}{" "}
               {!newTableType?.includes("line") && "Table"}
             </DialogTitle>
             <DialogDescription>
@@ -2131,4 +2132,7 @@ export default function WeddingPlannerWrapper() {
       <WeddingPlanner />
     </ReactFlowProvider>
   );
+}
+function transformSelector(state: StoreState): unknown {
+  throw new Error("Function not implemented.");
 }

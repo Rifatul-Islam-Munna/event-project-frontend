@@ -117,7 +117,7 @@ export function EditGuestForm({
       <div className="mt-4 flex justify-end">
         <Button
           type="submit"
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          className="bg-lime-600 text-primary-foreground hover:bg-lime-700 "
           disabled={isPending}
         >
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{" "}
