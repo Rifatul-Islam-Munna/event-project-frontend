@@ -112,7 +112,10 @@ export function SiteHeader() {
                     className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full p-0"
                   >
                     <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                      <AvatarImage src={avatr.src} alt="User avatar" />
+                      <AvatarImage
+                        src={user?.profile || ""}
+                        alt="User avatar"
+                      />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white text-sm">
                         {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                       </AvatarFallback>
@@ -128,7 +131,10 @@ export function SiteHeader() {
                   {/* User Info Section */}
                   <div className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
                     <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
-                      <AvatarImage src={avatr.src} alt="User avatar" />
+                      <AvatarImage
+                        src={user?.profile || ""}
+                        alt="User avatar"
+                      />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white">
                         {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                       </AvatarFallback>

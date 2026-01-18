@@ -22,6 +22,8 @@ export type User = {
   type:string
   plan?:PricingPlan
   subscription?:{endDate:string,startedDate:string}
+  profile?:string
+  thumbnail?:string
 };
 
 
