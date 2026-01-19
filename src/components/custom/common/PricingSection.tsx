@@ -138,7 +138,7 @@ export function PricingSection() {
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent
           side="top"
-          className="h-screen overflow-hidden bg-gradient-to-b from-white to-lime-50 border-none flex items-center justify-center py-16"
+          className="h-screen overflow-y-auto bg-gradient-to-b from-white to-lime-50 border-none flex items-center justify-center py-16"
         >
           {/* Pricing Cards - Compact & Centered */}
           <div className="grid max-w-6xl w-full mx-auto gap-4 lg:grid-cols-3 px-8">
