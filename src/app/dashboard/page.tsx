@@ -2,6 +2,7 @@
 
 import { getUserInfo } from "@/actions/auth";
 import { deleteEvent } from "@/actions/fetch-action";
+import { PricingSection } from "@/components/custom/common/PricingSection";
 import { EventTable } from "@/components/custom/dasboard/event-table";
 import { UserInfoCard } from "@/components/custom/dasboard/user-info-card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -67,7 +68,7 @@ export default function DashboardPage() {
   ]);
 
   const handleAddEvent = async (
-    newEvent: Omit<Event, "id" | "slug"> & { logoFile?: File | null }
+    newEvent: Omit<Event, "id" | "slug"> & { logoFile?: File | null },
   ) => {
     const id = uuidv4();
     const name = newEvent.name
@@ -100,7 +101,7 @@ export default function DashboardPage() {
   };
   const query = useQueryClient();
   const handleUpdateEvent = (
-    updatedEvent: Event & { logoFile?: File | null }
+    updatedEvent: Event & { logoFile?: File | null },
   ) => {
     setEvents((prevEvents) =>
       prevEvents.map((event) => {
@@ -111,7 +112,7 @@ export default function DashboardPage() {
           return { ...updatedEvent, logo_path: newLogoPath };
         }
         return event;
-      })
+      }),
     );
   };
   const { mutate, isPending } = useMutation({
@@ -131,16 +132,17 @@ export default function DashboardPage() {
   const router = useRouter();
   const handleManageEvent = (eventSlug: string, name: number, logo: number) => {
     console.log(
-      `Navigating to manage event: /dashboard/events/${eventSlug}?name=${name}&logo=${logo}`
+      `Navigating to manage event: /dashboard/events/${eventSlug}?name=${name}&logo=${logo}`,
     );
     router.push(
-      `/dashboard/events/${eventSlug}?venueWidth=${name}&venueHeight=${logo}`
+      `/dashboard/events/${eventSlug}?venueWidth=${name}&venueHeight=${logo}`,
     );
   };
 
   return (
     <section className="bg-gradient-to-br min-h-dvh from-slate-50/10 via-blue-50/15 to-indigo-100 h-auto">
       <div className="container mx-auto py-8 px-4 md:px-6 space-y-8 ">
+        <PricingSection />
         <UserInfoCard />
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-3">
