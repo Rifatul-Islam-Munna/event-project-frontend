@@ -38,6 +38,8 @@ export function SubscriptionTable({
       day: "numeric",
     });
   };
+
+  console.log("subscriptions", subscriptions);
   const query = useQueryClient();
   const { mutate, isPending } = useMutation({
     mutationKey: ["date-subscription"],
@@ -134,7 +136,9 @@ export function SubscriptionTable({
                   </div>
                 </TableCell>
                 <TableCell>
-                  {getSubscriptionTypeBadge(subscription.subscriptionType)}
+                  {getSubscriptionTypeBadge(
+                    subscription?.subscriptionType?.title,
+                  )}
                 </TableCell>
                 <TableCell>{getStatusBadge(subscription.endDate)}</TableCell>
                 <TableCell>

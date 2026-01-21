@@ -10,7 +10,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { updateMultipleGuest } from "@/actions/fetch-action";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 type UploadCsvFormProps = {
@@ -38,6 +38,29 @@ export function UploadCsvForm({ onClose }: UploadCsvFormProps) {
       return toast.error(error?.message);
     },
   });
+  const downloadTemplate = () => {
+    // Create CSV content with headers and sample data
+    const csvContent = [
+      ["name", "email", "phone", "adults", "children"],
+      ["John Doe", "john@example.com", "+1234567890", "2", "1"],
+      ["Jane Smith", "jane@example.com", "+0987654321", "1", "0"],
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "guest_list_template.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success("Template downloaded successfully");
+  };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -57,6 +80,16 @@ export function UploadCsvForm({ onClose }: UploadCsvFormProps) {
             (support: .csv,.xlsx, .xls)
           </span>
         </Label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={downloadTemplate}
+          className="mb-2 w-fit"
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Download Template
+        </Button>
         <Input
           id="csvFile"
           type="file"

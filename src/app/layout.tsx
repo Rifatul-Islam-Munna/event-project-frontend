@@ -38,15 +38,15 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: postData?.data?.title,
-    description: postData?.data?.title,
+    description: postData?.data?.description,
     icons: {
-      icon: postData?.data?.imageUrl,
-      shortcut: postData.data?.imageUrl,
-      apple: postData.data?.imageUrl,
+      icon: postData?.data?.favicon,
+      shortcut: postData.data?.favicon,
+      apple: postData.data?.favicon,
     },
     openGraph: {
       title: postData?.data?.title,
-      description: postData?.data?.title,
+      description: postData?.data?.description,
     },
   };
 }

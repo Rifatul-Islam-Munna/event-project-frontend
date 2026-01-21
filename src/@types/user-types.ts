@@ -32,4 +32,6 @@ export type Header ={
   imageUrl:string;
   title:string
   createdAt:string
+  description?:string
+  favicon?:string
 }

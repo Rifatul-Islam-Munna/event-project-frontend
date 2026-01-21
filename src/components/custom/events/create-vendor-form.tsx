@@ -54,7 +54,9 @@ export function CreateVendorForm({
       setReminderMessage("");
       setStartingDate(undefined);
       query.refetchQueries({ queryKey: ["get-all-vendor"], exact: false });
-      return toast.success("Vendor added successfully");
+      return toast.success("Vendor added and Message send successfully", {
+        duration: 10000,
+      });
     },
   });
   const pathName = usePathname();
@@ -63,7 +65,7 @@ export function CreateVendorForm({
 
     if (!name || !email || !whatsapp || !startingDate) {
       return toast.success(
-        "Name, Email, WhatsApp, Starting Date, and End Date are required."
+        "Name, Email, WhatsApp, Starting Date, and End Date are required.",
       );
     }
 
@@ -110,7 +112,7 @@ export function CreateVendorForm({
       </div>
       <div className="grid gap-2">
         <Label htmlFor="vendorWhatsapp" className="text-foreground">
-          WhatsApp Number
+          WhatsApp Number (includes country code)
         </Label>
         <Input
           id="vendorWhatsapp"
@@ -145,7 +147,7 @@ export function CreateVendorForm({
               variant={"outline"}
               className={cn(
                 "w-full justify-start text-left font-normal border-border",
-                !startingDate && "text-muted-foreground"
+                !startingDate && "text-muted-foreground",
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
