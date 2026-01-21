@@ -63,7 +63,7 @@ const data = {
       icon: ShieldCheck, // or Shield, Lock
     },
     {
-      title: "SEO",
+      title: "Vendor category",
       url: "/admin/dashboard/seo",
       icon: StepBack, // or Shield, Lock
     },

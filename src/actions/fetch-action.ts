@@ -1,7 +1,7 @@
 "use server"
 
 import { EventItem, EventList, Vendor } from "@/@types/events-details";
-import { DeleteAxios, GetRequestAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
+import { DeleteAxios, ForDownloadReq, GetRequestAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
 import * as XLSX from 'xlsx';
 import { Guest as Gu } from "@/@types/events-details";
 import { SubscriptionFilters, SubscriptionResponse, User } from "@/@types/admin";
@@ -564,3 +564,9 @@ export const deleteTermsAndCondition = async (id: string) => {
   console.log("terms-delete-data->", data, "terms-delete-error->", error);
   return { data, error };
 };
+
+
+export const DownloadGuestPdf=  async (id)=>{
+  const [data,error] =  await ForDownloadReq(`/seat-plan/export-seating/${id}`);
+  return {data,error}
+}

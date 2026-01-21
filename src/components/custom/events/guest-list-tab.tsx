@@ -42,7 +42,11 @@ import { UploadCsvForm } from "./upload-csv-form";
 import { EditGuestForm } from "./edit-guest-form";
 import { Guest } from "@/@types/events-details";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteGuest, getAllGuest } from "@/actions/fetch-action";
+import {
+  deleteGuest,
+  DownloadGuestPdf,
+  getAllGuest,
+} from "@/actions/fetch-action";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { User } from "@/@types/user-types";
@@ -95,6 +99,31 @@ export function GuestListTab({
     setGuestToDelete(guest);
     setIsDeleteConfirmModalOpen(true);
   };
+  const pathName = usePathname();
+
+  const { mutate: DownloadImage, isPending: isDownloadPending } = useMutation({
+    mutationKey: ["downloadImage"],
+    mutationFn: () => DownloadGuestPdf(pathName.split("/").pop() as string),
+    onSuccess: (result) => {
+      if (result.error || !result.data) {
+        toast.error("Failed to download CSV");
+        return;
+      }
+
+      // Client-side download
+      const blob = new Blob([result.data], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "seating.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("CSV downloaded successfully");
+    },
+  });
 
   const { mutate, isPending: IsDeletePending } = useMutation({
     mutationKey: ["deleteGuest"],
@@ -117,8 +146,6 @@ export function GuestListTab({
     if (!guestToDelete?._id) return toast.error("Guest not found");
     mutate(guestToDelete._id);
   };
-
-  const pathName = usePathname();
 
   const { data, isPending } = useQuery({
     queryKey: ["get-all-guest"],
@@ -218,6 +245,9 @@ export function GuestListTab({
               </Tabs>
             </DialogContent>
           </Dialog>
+          <Button className=" bg-lime-600 h-11" onClick={() => DownloadImage()}>
+            Download Seat Plan
+          </Button>
         </div>
       </div>
 

@@ -198,3 +198,57 @@ export const DeleteAxios = async <T>(url: string) : Promise<[T | null, { message
         return [null, null];
     }
 }
+
+export const ForDownloadReq = async <T>(url: string,revalidate=1 ,revalidateTags="t") : Promise<[T | null, fetchError | null]> => {
+    const {access_token} = await getToken()
+       const {sub_token}  = await getSubToken()
+    
+    try{
+        const response = await fetch(`${baseUrl}${url}`,{cache:"no-store",headers:{
+               
+                access_token:access_token ? access_token : '',
+                 sub_token:sub_token,
+                
+               
+
+        }})
+       if (response.ok) {
+      const data =  await response.text()
+       console.log("data",data)
+      return [data, null]
+    } else {
+        console.log("response",response.status)
+      if (response.status === 401) {
+       throw redirect('/login')
+      }
+   
+      const errorPayload = await response.json()
+      console.log("error",errorPayload)
+      return [null, {
+          message: errorPayload.message, 
+          
+          statusCode: response.status
+      }]
+    }
+
+    }catch(error ){
+          if (isRedirectError(error)) throw error;
+       if (error instanceof Error) {
+      return [null, {
+          message: error.message, 
+         statusCode: 500
+      }]
+    }
+    return [null, {
+        message: 'Unknown error occurred',
+         statusCode: 500
+    }]
+           
+            
+         
+         
+        
+       
+      
+    }
+}

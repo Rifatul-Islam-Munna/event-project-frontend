@@ -58,3 +58,5 @@ export const updateProfileInformation = async (payload:User)=>{
     console.log("user-updated-data->",data,"vendor-error-update-also-user-updated-data->",error);
     return {data,error}
 }
+
+

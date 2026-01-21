@@ -162,6 +162,9 @@ export function VendorManagementTab({
                   Service Period
                 </TableHead>
                 <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
+                  Category
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
                   Reminder
                 </TableHead>
                 <TableHead className="font-semibold text-gray-900 text-base py-4 px-6 text-right">
@@ -244,6 +247,11 @@ export function VendorManagementTab({
                             )}
                         </span>
                       </div>
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <span className="text-sm text-gray-700">
+                        {vendor?.category || "—"}
+                      </span>
                     </TableCell>
 
                     {/* Reminder */}
@@ -355,6 +363,13 @@ export function VendorManagementTab({
                       <p className="text-sm text-gray-900">
                         {vendor.reminder_message}
                       </p>
+                    </div>
+                  )}
+
+                  {vendor?.category && (
+                    <div className="pt-2 border-t border-gray-200">
+                      <p className="text-xs text-gray-500 mb-1">Category:</p>
+                      <p className="text-sm text-gray-900">{vendor.category}</p>
                     </div>
                   )}
                 </div>
