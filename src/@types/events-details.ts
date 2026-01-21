@@ -5,6 +5,7 @@ export type Guest = {
   phone: string
   seat_number?: number // Still allow for data, but not in form
   isAssigned?: boolean 
+  isMessageSend?: boolean
   event_id?:string// Still allow for data, but not in form
   _id?:string
 adults?:number
@@ -38,6 +39,7 @@ export type EventItem = {
   __v: number;
   width?: number;
   height?: number;
+  message?: string;
 };
 
 export type EventList = {

@@ -20,6 +20,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateEvent } from "@/actions/fetch-action";
 import { toast } from "sonner";
 import Image from "next/image";
+import { Textarea } from "@/components/ui/textarea";
 
 type EditEventFormProps = {
   event: EventItem;
@@ -37,6 +38,7 @@ export function EditEventForm({ event, onClose }: EditEventFormProps) {
   const [currentLogoPath, setCurrentLogoPath] = useState(event.logo_path);
   const [width, setWidth] = useState(event?.width ?? 0);
   const [height, setHeight] = useState(event?.height ?? 0);
+  const [message, setMessage] = useState(event?.message ?? "");
 
   useEffect(() => {
     setEventName(event.name);
@@ -45,6 +47,7 @@ export function EditEventForm({ event, onClose }: EditEventFormProps) {
     setCurrentLogoPath(event.logo_path);
     setWidth(event?.width ?? 0);
     setHeight(event?.height ?? 0);
+    setMessage(event?.message ?? "");
     setLogoFile(null);
     setLogoPreview(null);
   }, [event]);
@@ -105,6 +108,7 @@ export function EditEventForm({ event, onClose }: EditEventFormProps) {
     formdata.append("width", width.toString());
     formdata.append("height", height.toString());
     if (logoFile) formdata.append("file", logoFile);
+    if (message) formdata.append("message", message);
 
     mutate(formdata);
   };
@@ -291,6 +295,16 @@ export function EditEventForm({ event, onClose }: EditEventFormProps) {
                 <p className="text-xs text-gray-500 mt-1">Height</p>
               </div>
             </div>
+          </div>
+          <div className="border-t border-gray-200 pt-5" />
+          <div>
+            <Textarea
+              placeholder="Your Message for this Event (Optional)"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="h-10 border-gray-300 focus:border-lime-600 focus:ring-lime-600"
+            />
+            <p className="text-xs text-gray-500 mt-1">Message (Optional)</p>
           </div>
         </form>
       </div>

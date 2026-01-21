@@ -30,6 +30,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { postEvent } from "@/actions/fetch-action";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
+import { Textarea } from "@/components/ui/textarea";
 
 // Dynamically import the map component to avoid SSR issues
 const MapLocationPicker = dynamic(() => import("./MapLocationPicker"), {
@@ -61,6 +62,7 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
   const [mapDrawerOpen, setMapDrawerOpen] = useState(false);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
+  const [message, setMessage] = useState("");
 
   const query = useQueryClient();
   const { mutate, isPending } = useMutation({
@@ -146,6 +148,7 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
     formdata.append("slug", slug);
     formdata.append("width", width.toString());
     formdata.append("height", height.toString());
+    if (message) formdata.append("message", message);
 
     mutate(formdata);
   };
@@ -372,6 +375,16 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
                 <p className="text-xs text-gray-500 mt-1">Height</p>
               </div>
             </div>
+          </div>
+          <div className="border-t border-gray-200 pt-5" />
+          <div>
+            <Textarea
+              placeholder="Your Message for this Event (Optional)"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="h-10 border-gray-300 focus:border-lime-600 focus:ring-lime-600"
+            />
+            <p className="text-xs text-gray-500 mt-1">Message (Optional)</p>
           </div>
         </form>
       </div>

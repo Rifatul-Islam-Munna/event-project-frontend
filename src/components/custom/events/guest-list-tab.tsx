@@ -240,6 +240,9 @@ export function GuestListTab({
                 <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
                   Seat Status
                 </TableHead>
+                <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
+                  Message Send
+                </TableHead>
                 <TableHead className="font-semibold text-gray-900 text-base py-4 px-6 text-right">
                   Actions
                 </TableHead>
@@ -319,6 +322,17 @@ export function GuestListTab({
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200">
                           <XCircle className="h-4 w-4" />
                           Not Seated
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      {guest?.isMessageSend ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700 border border-green-200">
+                          <CheckCircle className="h-4 w-4" />
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                          <XCircle className="h-4 w-4" />
                         </span>
                       )}
                     </TableCell>
@@ -433,6 +447,17 @@ export function GuestListTab({
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 mt-1">
                         <XCircle className="h-3 w-3" />
                         Not Seated
+                      </span>
+                    )}
+                    {guest?.isMessageSend ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 mt-1">
+                        <CheckCircle className="h-3 w-3" />
+                        Message Send
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 mt-1">
+                        <XCircle className="h-3 w-3" />
+                        Message Not Send
                       </span>
                     )}
                   </div>
