@@ -191,7 +191,7 @@ export function UserInfoCard() {
 
               {/* Admin Dashboard */}
               {user?.type === "admin" && (
-                <Link href="/admin/dashboard" className="block">
+                <Link href="/admin/dashboard/subscription" className="block">
                   <Button
                     variant="ghost"
                     size="sm"
