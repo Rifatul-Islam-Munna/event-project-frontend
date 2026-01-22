@@ -159,6 +159,10 @@
   --color-4: oklch(80.2% 0.134 225);
   --color-5: oklch(90.7% 0.231 133);
 }
+@theme {
+  --color-lime-500: #d8db2d;
+  --color-lime-600: #dadd2d;
+}
 
 @layer base {
   * {
