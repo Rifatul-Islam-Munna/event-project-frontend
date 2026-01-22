@@ -36,19 +36,26 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   }
 
-  return {
+  // Only include favicon if it's a valid URL
+  const metadata: Metadata = {
     title: postData?.data?.title,
     description: postData?.data?.description,
-    icons: {
-      icon: postData?.data?.favicon,
-      shortcut: postData.data?.favicon,
-      apple: postData.data?.favicon,
-    },
     openGraph: {
       title: postData?.data?.title,
       description: postData?.data?.description,
     },
   };
+
+  // Add icons only if favicon exists and is valid
+  if (postData?.data?.favicon && postData.data.favicon.trim() !== "") {
+    metadata.icons = {
+      icon: postData.data.favicon,
+      shortcut: postData.data.favicon,
+      apple: postData.data.favicon,
+    };
+  }
+
+  return metadata;
 }
 
 export default function RootLayout({

@@ -203,7 +203,7 @@ export function PricingSection() {
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
             variants={containerVariants}
-            className="grid max-w-5xl mx-auto gap-6 lg:grid-cols-3"
+            className="grid  w-full mx-auto gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
           >
             {data?.data?.map((plan, index) => {
               const config = getPlanConfig(index);
