@@ -28,7 +28,7 @@ export function PlansTable({
   const formatPrice = (priceCents: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: currency,
+      currency: "EUR",
     }).format(priceCents / 100);
   };
 
@@ -53,6 +53,9 @@ export function PlansTable({
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-xl">{plan.title}</CardTitle>
+                <h2 className=" text-sm font-semibold text-lime-700">
+                  {plan?.type}
+                </h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   {plan.description}
                 </p>

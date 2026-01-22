@@ -38,6 +38,7 @@ export interface PricingPlan {
   active: boolean
   createdAt: string
   updatedAt: string
+  type?:string;
   __: number
 }
 
@@ -49,4 +50,5 @@ export interface CreatePlanRequest {
   billingUnit: string
   permissions: string[]
   limits: PricingLimit[]
+  type?:string
 }

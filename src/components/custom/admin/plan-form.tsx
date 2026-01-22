@@ -11,7 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -41,6 +43,7 @@ export function PlanForm({
     billingUnit: initialData?.billingUnit || "PER_MONTH",
     permissions: initialData?.permissions || [],
     limits: initialData?.limits || [],
+    type: initialData?.type || "",
   });
 
   const availablePermissions = Object.keys(featureMapping);
@@ -65,12 +68,12 @@ export function PlanForm({
   const updateLimit = (
     index: number,
     field: keyof PricingLimit,
-    value: string | number
+    value: string | number,
   ) => {
     setFormData((prev) => ({
       ...prev,
       limits: prev.limits.map((limit, i) =>
-        i === index ? { ...limit, [field]: value } : limit
+        i === index ? { ...limit, [field]: value } : limit,
       ),
     }));
   };
@@ -122,6 +125,26 @@ export function PlanForm({
                 required
               />
             </div>
+          </div>
+          <div className=" flex justify-start items-center gap-1">
+            <h3 className=" text-sm">Select a Plan</h3>
+            <Select
+              value={formData?.type || ""}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, type: value }))
+              }
+            >
+              <SelectTrigger className="w-full max-w-48">
+                <SelectValue placeholder="Select Plan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Select A plan</SelectLabel>
+                  <SelectItem value="Event package">Event package</SelectItem>
+                  <SelectItem value="Planer package">Planer package</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -245,7 +268,7 @@ export function PlanForm({
                       updateLimit(
                         index,
                         "limit",
-                        Number.parseInt(e.target.value) || 0
+                        Number.parseInt(e.target.value) || 0,
                       )
                     }
                     className="w-32"

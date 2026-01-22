@@ -41,7 +41,7 @@ export function PricingSection() {
   const formatPrice = (priceCents: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: currency,
+      currency: "EUR",
     }).format(priceCents / 100);
   };
 
@@ -265,7 +265,8 @@ export function PricingSection() {
                           {config.tier}
                         </div>
                         <CardTitle className="text-2xl font-bold text-slate-900">
-                          {plan.title}
+                          {plan.title} <br />
+                          <span className=" text-lime-800">{plan?.type}</span>
                         </CardTitle>
                       </div>
 
