@@ -162,6 +162,8 @@
 @theme {
   --color-lime-500: #d8db2d;
   --color-lime-600: #dadd2d;
+  --color-lime-700: #c4c729;
+  --color-lime-800: #999b20;
 }
 
 @layer base {
