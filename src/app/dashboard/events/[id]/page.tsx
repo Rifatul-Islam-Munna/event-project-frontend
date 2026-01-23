@@ -94,7 +94,7 @@ export default function EventDetailsPage() {
     },
     {
       id: uuidv4(),
-      name: "Henry Green",
+      name: "Henry lime",
       email: "henry@example.com",
       phone: "888-999-0000",
       seat_number: 201,

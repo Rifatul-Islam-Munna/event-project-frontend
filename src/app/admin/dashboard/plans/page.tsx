@@ -148,7 +148,7 @@ export default function AdminPage() {
                 <Badge
                   variant={viewingPlan.active ? "default" : "secondary"}
                   className={
-                    viewingPlan.active ? "bg-green-500 hover:bg-green-600" : ""
+                    viewingPlan.active ? "bg-lime-500 hover:bg-lime-600" : ""
                   }
                 >
                   {viewingPlan.active ? "Active" : "Inactive"}
@@ -396,8 +396,8 @@ export default function AdminPage() {
                     {data?.data?.filter((p) => p.active).length || 0}
                   </p>
                 </div>
-                <div className="h-14 w-14 rounded-full bg-green-100 flex items-center justify-center">
-                  <CheckCircle2 className="h-7 w-7 text-green-600" />
+                <div className="h-14 w-14 rounded-full bg-lime-100 flex items-center justify-center">
+                  <CheckCircle2 className="h-7 w-7 text-lime-600" />
                 </div>
               </div>
             </CardContent>

@@ -97,7 +97,7 @@ export default function HeaderManagementDashboard() {
       } else {
         showMessage(
           "error",
-          "Please select a valid image file (JPEG, PNG, WebP, SVG)"
+          "Please select a valid image file (JPEG, PNG, WebP, SVG)",
         );
         setSelectedFile(null);
       }
@@ -294,7 +294,7 @@ export default function HeaderManagementDashboard() {
             <Card className="bg-white/80 backdrop-blur-sm border-2 border-slate-200/60 shadow-xl">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-3 text-xl">
-                  <Eye className="h-6 w-6 text-green-600" />
+                  <Eye className="h-6 w-6 text-lime-600" />
                   Header Preview
                 </CardTitle>
               </CardHeader>
@@ -333,7 +333,7 @@ export default function HeaderManagementDashboard() {
                         <p>
                           <span className="font-medium">Last updated:</span>{" "}
                           {new Date(
-                            data?.data?.createdAt || Date.now()
+                            data?.data?.createdAt || Date.now(),
                           ).toLocaleDateString()}
                         </p>
                       </div>

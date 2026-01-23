@@ -176,10 +176,10 @@ export function SiteHeader() {
                     <DropdownMenuItem asChild className="cursor-pointer">
                       <Link
                         href="/billing"
-                        className="flex items-center w-full px-3 py-3 text-sm rounded-lg hover:bg-green-50 transition-colors duration-200"
+                        className="flex items-center w-full px-3 py-3 text-sm rounded-lg hover:bg-lime-50 transition-colors duration-200"
                       >
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-green-100 flex items-center justify-center mr-3 flex-shrink-0">
-                          <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-lime-100 flex items-center justify-center mr-3 flex-shrink-0">
+                          <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-lime-600" />
                         </div>
                         <div className="flex flex-col min-w-0 flex-1">
                           <span className="font-medium text-slate-900">

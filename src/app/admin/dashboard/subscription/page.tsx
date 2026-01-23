@@ -152,8 +152,8 @@ export default function AdminSubscriptionsPage() {
                     ).length ?? 0}
                   </p>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                  <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse" />
+                <div className="h-12 w-12 rounded-full bg-lime-100 flex items-center justify-center">
+                  <div className="h-3 w-3 rounded-full bg-lime-500 animate-pulse" />
                 </div>
               </div>
             </CardContent>

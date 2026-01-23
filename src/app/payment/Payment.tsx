@@ -25,7 +25,7 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
   {
     developerTools: { assistant: { enabled: true } },
-  }
+  },
 );
 
 function Checkout({
@@ -104,7 +104,7 @@ function Checkout({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-green-500" />
+            <Shield className="h-5 w-5 text-lime-500" />
             Payment Details
           </CardTitle>
           <CardDescription>

@@ -344,7 +344,7 @@ export function GuestListTab({
                     {/* Seat Status */}
                     <TableCell className="py-4 px-6">
                       {guest.isAssigned ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700 border border-green-200">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-lime-50 text-lime-700 border border-lime-200">
                           <CheckCircle className="h-4 w-4" />
                           Seated #{guest.seat_number}
                         </span>
@@ -357,7 +357,7 @@ export function GuestListTab({
                     </TableCell>
                     <TableCell className="py-4 px-6">
                       {guest?.isMessageSend ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700 border border-green-200">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-lime-50 text-lime-700 border border-lime-200">
                           <CheckCircle className="h-4 w-4" />
                         </span>
                       ) : (
@@ -469,7 +469,7 @@ export function GuestListTab({
                       {guest.name}
                     </h3>
                     {guest.isAssigned ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 mt-1">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-lime-50 text-lime-700 border border-lime-200 mt-1">
                         <CheckCircle className="h-3 w-3" />
                         Seat #{guest.seat_number}
                       </span>
@@ -480,7 +480,7 @@ export function GuestListTab({
                       </span>
                     )}
                     {guest?.isMessageSend ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 mt-1">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-lime-50 text-lime-700 border border-lime-200 mt-1">
                         <CheckCircle className="h-3 w-3" />
                         Message Send
                       </span>
@@ -624,7 +624,7 @@ export function GuestListTab({
                     Status:
                   </Label>
                   {selectedGuest.isAssigned ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700 border border-green-200">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-lime-50 text-lime-700 border border-lime-200">
                       <CheckCircle className="h-4 w-4" />
                       Seat #{selectedGuest.seat_number}
                     </span>

@@ -81,7 +81,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
   });
 
   const { isEditMode, setIsEditMode, imageUrl, setImageUrl } = useZoomResponive(
-    (state) => state
+    (state) => state,
   );
 
   // Image state for position and scale
@@ -177,7 +177,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
 
     console.log(
       "🎯 OPTIMIZED VENUE CONFIG:",
-      JSON.stringify(venueConfig, null, 2)
+      JSON.stringify(venueConfig, null, 2),
     );
     return venueConfig;
   }, [
@@ -220,7 +220,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
 
       console.log("✅ OPTIMIZED CONFIG LOADED");
     },
-    [onShapeChange, setIsEditMode]
+    [onShapeChange, setIsEditMode],
   );
   useEffect(() => {
     if (data?.data && data?.data !== null) {
@@ -241,13 +241,13 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
     vertices?.forEach((v) => {
       points.push(
         v.x * SCALE_FACTOR * zoom * 7 + padding,
-        v.y * SCALE_FACTOR * zoom * 7 + padding
+        v.y * SCALE_FACTOR * zoom * 7 + padding,
       );
     });
     // Close the shape
     points?.push(
       vertices[0].x * SCALE_FACTOR * zoom * 7 + padding,
-      vertices[0].y * SCALE_FACTOR * zoom * 7 + padding
+      vertices[0].y * SCALE_FACTOR * zoom * 7 + padding,
     );
     return points;
   };
@@ -264,11 +264,11 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
       case "top-left":
         newWidth = Math.max(
           minSize,
-          imageState.x + imageState.width - (newX - padding) / (zoom * 7)
+          imageState.x + imageState.width - (newX - padding) / (zoom * 7),
         );
         newHeight = Math.max(
           minSize,
-          imageState.y + imageState.height - (newY - padding) / (zoom * 7)
+          imageState.y + imageState.height - (newY - padding) / (zoom * 7),
         );
         newImageX = (newX - padding) / (zoom * 7);
         newImageY = (newY - padding) / (zoom * 7);
@@ -278,14 +278,14 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
           Math.max(minSize, newX - padding - imageState.x) / (zoom * 7);
         newHeight = Math.max(
           minSize,
-          imageState.y + imageState.height - (newY - padding) / (zoom * 7)
+          imageState.y + imageState.height - (newY - padding) / (zoom * 7),
         );
         newImageY = (newY - padding) / (zoom * 7);
         break;
       case "bottom-left":
         newWidth = Math.max(
           minSize,
-          imageState.x + imageState.width - (newX - padding) / (zoom * 7)
+          imageState.x + imageState.width - (newX - padding) / (zoom * 7),
         );
         newHeight =
           Math.max(minSize, newY - padding - imageState.y) / (zoom * 7);
@@ -385,15 +385,15 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
                       0,
                       Math.min(
                         venueWidth,
-                        (e.target.x() - padding) / (SCALE_FACTOR * zoom * 7)
-                      )
+                        (e.target.x() - padding) / (SCALE_FACTOR * zoom * 7),
+                      ),
                     );
                     const newY = Math.max(
                       0,
                       Math.min(
                         venueHeight,
-                        (e.target.y() - padding) / (SCALE_FACTOR * zoom * 7)
-                      )
+                        (e.target.y() - padding) / (SCALE_FACTOR * zoom * 7),
+                      ),
                     );
 
                     const newV = [...vertices];
@@ -472,7 +472,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
                     handleImageResize(
                       "bottom-left",
                       e.target.x(),
-                      e.target.y()
+                      e.target.y(),
                     );
                   }}
                   onMouseEnter={(e) => {
@@ -496,7 +496,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
                     handleImageResize(
                       "bottom-right",
                       e.target.x(),
-                      e.target.y()
+                      e.target.y(),
                     );
                   }}
                   onMouseEnter={(e) => {
@@ -545,7 +545,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
         {/* Manual Save Button for Testing */}
         <button
           onClick={() => saveVenueConfiguration()}
-          className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-green-500 hover:bg-green-600 text-white"
+          className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-lime-500 hover:bg-lime-600 text-white"
         >
           Save
         </button>

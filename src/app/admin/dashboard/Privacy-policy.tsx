@@ -75,7 +75,7 @@ export default function PrivacyPolicyDashboard() {
         queryClient.invalidateQueries({ queryKey: ["privacy-policy"] });
       } else {
         toast.error(
-          response?.error?.message || "Failed to create privacy section"
+          response?.error?.message || "Failed to create privacy section",
         );
       }
     },
@@ -93,7 +93,7 @@ export default function PrivacyPolicyDashboard() {
         queryClient.invalidateQueries({ queryKey: ["privacy-policy"] });
       } else {
         toast.error(
-          response?.error?.message || "Failed to delete privacy section"
+          response?.error?.message || "Failed to delete privacy section",
         );
       }
     },
@@ -129,7 +129,7 @@ export default function PrivacyPolicyDashboard() {
   const handleDelete = async (id: string, title: string) => {
     if (
       !confirm(
-        `Are you sure you want to delete "${title}"? This action cannot be undone.`
+        `Are you sure you want to delete "${title}"? This action cannot be undone.`,
       )
     ) {
       return;
@@ -197,7 +197,7 @@ export default function PrivacyPolicyDashboard() {
           <Alert
             className={`max-w-4xl mx-auto ${
               message.type === "success"
-                ? "bg-green-50 border-green-200 text-green-800"
+                ? "bg-lime-50 border-lime-200 text-lime-800"
                 : "bg-red-50 border-red-200 text-red-800"
             }`}
           >

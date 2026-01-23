@@ -130,7 +130,7 @@ export function HeroSection() {
                 {/* Floating Badges */}
                 <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <div className="w-3 h-3 bg-lime-500 rounded-full animate-pulse"></div>
                     <span className="text-sm font-semibold text-slate-800">
                       Ζωντανή Επίδειξη
                     </span>

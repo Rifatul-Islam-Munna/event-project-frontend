@@ -44,9 +44,9 @@ export function PricingSection() {
   const getPlanConfig = (index: number) => {
     const configs = [
       {
-        gradient: "from-lime-50 to-green-50",
+        gradient: "from-lime-50 to-lime-50",
         border: "border-lime-200/60",
-        button: "from-lime-500 via-lime-600 to-green-600",
+        button: "from-lime-500 via-lime-600 to-lime-600",
         icon: Rocket,
         iconColor: "text-lime-600",
         buttonText: "Start Building",
@@ -54,11 +54,11 @@ export function PricingSection() {
         tier: "STARTER",
       },
       {
-        gradient: "from-green-50 to-emerald-50",
-        border: "border-green-200/60",
-        button: "from-green-500 via-green-600 to-emerald-600",
+        gradient: "from-lime-50 to-lime-50",
+        border: "border-lime-200/60",
+        button: "from-lime-500 via-lime-600 to-lime-600",
         icon: Crown,
-        iconColor: "text-green-600",
+        iconColor: "text-lime-600",
         buttonText: "Claim Your Plan",
         buttonIcon: Crown,
         tier: "PROFESSIONAL",
@@ -66,7 +66,7 @@ export function PricingSection() {
       {
         gradient: "from-lime-50 to-lime-50",
         border: "border-lime-200/60",
-        button: "from-lime-600 via-lime-600 to-green-500",
+        button: "from-lime-600 via-lime-600 to-lime-500",
         icon: Diamond,
         iconColor: "text-lime-600",
         buttonText: "Go Premium",
@@ -109,7 +109,7 @@ export function PricingSection() {
   return (
     <>
       {/* Sticky Upgrade Banner */}
-      <div className="flex justify-between items-center w-full p-4 bg-gradient-to-r from-lime-500 via-green-600 to-emerald-600 border-b border-green-700 shadow-lg">
+      <div className="flex justify-between items-center w-full p-4 bg-gradient-to-r from-lime-500 via-lime-600 to-lime-600 border-b border-lime-700 shadow-lg">
         <div className="flex items-center mx-auto gap-3">
           <Sparkles className="h-5 w-5 text-white" />
           <p className="flex items-center text-sm font-semibold text-white">
@@ -152,13 +152,13 @@ export function PricingSection() {
                         } border ${
                           config.border
                         } rounded-xl hover:shadow-lg transition-shadow duration-300 ${
-                          isPopular ? "ring-2 ring-green-400" : ""
+                          isPopular ? "ring-2 ring-lime-400" : ""
                         }`}
                       >
                         {/* Popular Badge */}
                         {isPopular && (
                           <div className="absolute -top-2 right-4 z-10">
-                            <div className="flex items-center gap-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-md">
+                            <div className="flex items-center gap-1 bg-gradient-to-r from-lime-600 to-lime-600 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-md">
                               <Crown className="h-3 w-3" />
                               Most Popular
                             </div>
@@ -203,7 +203,7 @@ export function PricingSection() {
                           {/* Shortened Features - Show only first 3 */}
                           <div>
                             <h4 className="flex items-center gap-1.5 font-semibold text-slate-800 text-[11px] mb-2 uppercase tracking-wide">
-                              <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                              <div className="w-1.5 h-1.5 bg-lime-500 rounded-full"></div>
                               What's Included
                             </h4>
                             <ul className="space-y-1.5">
@@ -218,8 +218,8 @@ export function PricingSection() {
                                       key={featureIndex}
                                       className="flex items-start gap-2 text-xs"
                                     >
-                                      <div className="w-5 h-5 rounded-md bg-green-100 flex items-center justify-center flex-shrink-0">
-                                        <FeatureIcon className="h-3 w-3 text-green-600" />
+                                      <div className="w-5 h-5 rounded-md bg-lime-100 flex items-center justify-center flex-shrink-0">
+                                        <FeatureIcon className="h-3 w-3 text-lime-600" />
                                       </div>
                                       <span className="text-slate-700 leading-snug">
                                         {getFeatureDescription(feature)}
@@ -250,8 +250,8 @@ export function PricingSection() {
                                       key={limitIndex}
                                       className="flex items-start gap-2 text-xs"
                                     >
-                                      <div className="w-5 h-5 rounded-md bg-green-100 flex items-center justify-center flex-shrink-0">
-                                        <Check className="h-3 w-3 text-green-600" />
+                                      <div className="w-5 h-5 rounded-md bg-lime-100 flex items-center justify-center flex-shrink-0">
+                                        <Check className="h-3 w-3 text-lime-600" />
                                       </div>
                                       <span className="text-slate-700 leading-snug">
                                         {limit.limit.toLocaleString()}{" "}

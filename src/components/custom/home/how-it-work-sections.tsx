@@ -61,8 +61,8 @@ export function HowItWorksSection() {
       title: "Εισάγετε τη λίστα καλεσμένων",
       description:
         "Εισάγετε τη λίστα καλεσμένων και τοποθετήστε τους εύκολα με drag & drop.",
-      gradient: "from-green-500 to-green-600",
-      accentColor: "green",
+      gradient: "from-lime-500 to-lime-600",
+      accentColor: "lime",
       image: image2,
     },
     {

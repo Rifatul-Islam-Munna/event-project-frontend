@@ -242,9 +242,9 @@ export default function VendorCategoryPage() {
                     {vendorCategory ? "Active" : "Not Set"}
                   </p>
                 </div>
-                <div className="h-14 w-14 rounded-full bg-green-100 flex items-center justify-center">
+                <div className="h-14 w-14 rounded-full bg-lime-100 flex items-center justify-center">
                   <div
-                    className={`h-3 w-3 rounded-full ${vendorCategory ? "bg-green-500 animate-pulse" : "bg-slate-400"}`}
+                    className={`h-3 w-3 rounded-full ${vendorCategory ? "bg-lime-500 animate-pulse" : "bg-slate-400"}`}
                   />
                 </div>
               </div>

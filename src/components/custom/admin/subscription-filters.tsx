@@ -140,7 +140,7 @@ export function SubscriptionFiltersComponent({
             </SelectItem>
             <SelectItem value="active">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <div className="h-2 w-2 rounded-full bg-lime-500 animate-pulse" />
                 Active
               </div>
             </SelectItem>

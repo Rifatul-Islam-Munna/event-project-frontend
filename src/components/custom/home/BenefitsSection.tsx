@@ -79,7 +79,7 @@ export function BenefitsSection() {
       subtitle: "Εκδηλώσεις Χωρίς Ανησυχίες",
       description:
         "Πείτε αντίο στις αϋπνίες και τον πανικό της τελευταίας στιγμής. Οι αυτοματοποιημένες υπενθυμίσεις και οι ενημερώσεις σε πραγματικό χρόνο διατηρούν τα πάντα ομαλά.",
-      color: "emerald",
+      color: "lime",
       stat: "100% Ηρεμία",
       beforeText: "Πριν: Συνεχής ανησυχία και άγχος",
       afterText: "Μετά: Χαλαρή, σίγουρη οργάνωση",
@@ -90,7 +90,7 @@ export function BenefitsSection() {
       subtitle: "Αξέχαστες Εμπειρίες",
       description:
         "Ενθουσιάστε τους καλεσμένους σας με απρόσκοπτο check-in, εύκολη εύρεση θέσεων και ομαλή ροή εκδήλωσης. Τα QR codes κάνουν τα πάντα άμεσα και αβίαστα.",
-      color: "green",
+      color: "lime",
       stat: "98% Ικανοποίηση Καλεσμένων",
       beforeText: "Πριν: Μπερδεμένοι, απογοητευμένοι καλεσμένοι",
       afterText: "Μετά: Ενθουσιασμένοι, εντυπωσιασμένοι καλεσμένοι",
@@ -112,7 +112,7 @@ export function BenefitsSection() {
       subtitle: "Οποιοδήποτε Μέγεθος Εκδήλωσης",
       description:
         "Από οικεία δείπνα μέχρι μεγάλες εορτές. Η πλατφόρμα μας αναπτύσσεται μαζί με τις φιλοδοξίες σας, διαχειριζόμενη οποιοδήποτε μέγεθος εκδήλωσης με την ίδια ευκολία.",
-      color: "green",
+      color: "lime",
       stat: "Απεριόριστη Ανάπτυξη",
       beforeText: "Πριν: Περιορισμένοι από την πολυπλοκότητα",
       afterText: "Μετά: Διαχειριστείτε οποιοδήποτε μέγεθος",
@@ -138,26 +138,26 @@ export function BenefitsSection() {
         icon: "from-lime-500 to-lime-600",
         iconText: "text-white",
         accent: "text-lime-600",
-        stat: "from-lime-500 to-green-500",
+        stat: "from-lime-500 to-lime-500",
         hover: "hover:from-lime-100/90 hover:to-lime-150/60",
       },
-      emerald: {
-        bg: "from-emerald-50/80 to-emerald-100/50",
-        border: "border-emerald-200/60",
-        icon: "from-emerald-500 to-emerald-600",
+      lime: {
+        bg: "from-lime-50/80 to-lime-100/50",
+        border: "border-lime-200/60",
+        icon: "from-lime-500 to-lime-600",
         iconText: "text-white",
-        accent: "text-emerald-600",
-        stat: "from-emerald-500 to-teal-500",
-        hover: "hover:from-emerald-100/90 hover:to-emerald-150/60",
+        accent: "text-lime-600",
+        stat: "from-lime-500 to-teal-500",
+        hover: "hover:from-lime-100/90 hover:to-lime-150/60",
       },
-      green: {
-        bg: "from-green-50/80 to-green-100/50",
-        border: "border-green-200/60",
-        icon: "from-green-500 to-green-600",
+      lime: {
+        bg: "from-lime-50/80 to-lime-100/50",
+        border: "border-lime-200/60",
+        icon: "from-lime-500 to-lime-600",
         iconText: "text-white",
-        accent: "text-green-600",
-        stat: "from-green-500 to-emerald-500",
-        hover: "hover:from-green-100/90 hover:to-green-150/60",
+        accent: "text-lime-600",
+        stat: "from-lime-500 to-lime-500",
+        hover: "hover:from-lime-100/90 hover:to-lime-150/60",
       },
     };
     return configs[color];
@@ -169,7 +169,7 @@ export function BenefitsSection() {
         {/* Subtle Background Elements */}
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-lime-200/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-200/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-lime-200/20 rounded-full blur-3xl"></div>
         </div>
 
         <div className="container mx-auto px-4 md:px-6 max-w-7xl relative z-10">
@@ -206,11 +206,11 @@ export function BenefitsSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="grid lg:grid-cols-2 gap-12 items-center mb-20 p-8 rounded-3xl bg-gradient-to-br from-lime-50/60 to-green-50/60 backdrop-blur-sm border border-lime-200/40"
+            className="grid lg:grid-cols-2 gap-12 items-center mb-20 p-8 rounded-3xl bg-gradient-to-br from-lime-50/60 to-lime-50/60 backdrop-blur-sm border border-lime-200/40"
           >
             {/* Left Side - Content */}
             <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-100 text-lime-700 text-sm font-medium">
                 <CheckCircle className="h-4 w-4" />
                 Δείτε το Σε Δράση
               </div>
@@ -273,8 +273,8 @@ export function BenefitsSection() {
               </div>
 
               {/* Decorative Elements */}
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-lime-400 to-green-500 rounded-full opacity-20 blur-xl"></div>
-              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-gradient-to-br from-lime-400 to-green-500 rounded-full opacity-15 blur-2xl"></div>
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-lime-400 to-lime-500 rounded-full opacity-20 blur-xl"></div>
+              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-gradient-to-br from-lime-400 to-lime-500 rounded-full opacity-15 blur-2xl"></div>
             </m.div>
           </m.div>
 
@@ -360,12 +360,12 @@ export function BenefitsSection() {
                         </div>
                       </div>
 
-                      <div className="flex items-start gap-3 p-3 rounded-xl bg-green-50/60 border border-green-200/40">
-                        <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <CheckCircle className="w-3 h-3 text-green-600" />
+                      <div className="flex items-start gap-3 p-3 rounded-xl bg-lime-50/60 border border-lime-200/40">
+                        <div className="w-6 h-6 rounded-full bg-lime-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <CheckCircle className="w-3 h-3 text-lime-600" />
                         </div>
                         <div>
-                          <p className="text-xs font-semibold text-green-700 mb-1">
+                          <p className="text-xs font-semibold text-lime-700 mb-1">
                             ΜΕΤΑ
                           </p>
                           <p className="text-sm text-slate-700">
@@ -391,7 +391,7 @@ export function BenefitsSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-center mt-20 p-8 md:p-12 rounded-3xl bg-gradient-to-br from-lime-50/80 via-green-50/80 to-lime-50/80 backdrop-blur-sm border border-lime-200/40"
+            className="text-center mt-20 p-8 md:p-12 rounded-3xl bg-gradient-to-br from-lime-50/80 via-lime-50/80 to-lime-50/80 backdrop-blur-sm border border-lime-200/40"
           >
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center justify-center gap-2 mb-6">
@@ -414,7 +414,7 @@ export function BenefitsSection() {
               {/* Trust Signals */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <CheckCircle className="h-4 w-4 text-lime-500" />
                   <span>Δωρεάν δοκιμή 14 ημερών</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-600">

@@ -197,7 +197,7 @@ export default function PrivacyPolicyDashboard() {
           <Alert
             className={`max-w-4xl mx-auto ${
               message.type === "success"
-                ? "bg-green-50 border-green-200 text-green-800"
+                ? "bg-lime-50 border-lime-200 text-lime-800"
                 : "bg-red-50 border-red-200 text-red-800"
             }`}
           >

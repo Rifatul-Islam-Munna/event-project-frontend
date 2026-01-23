@@ -32,8 +32,10 @@ function BillingForm() {
     console.log("error->", error);
 
     setSaving(false);
-    setMsg(error ? error.message ?? "Something went wrong" : "Saved 🎉");
-    toast.success(error ? error.message ?? "Something went wrong" : "Saved 🎉");
+    setMsg(error ? (error.message ?? "Something went wrong") : "Saved 🎉");
+    toast.success(
+      error ? (error.message ?? "Something went wrong") : "Saved 🎉",
+    );
     if (!error) {
       router.push("/");
     }
@@ -66,9 +68,7 @@ function BillingForm() {
         {saving ? "Saving…" : "Save billing info"}
       </button>
 
-      {msg && (
-        <p className="mt-4 text-center text-sm text-emerald-600">{msg}</p>
-      )}
+      {msg && <p className="mt-4 text-center text-sm text-lime-600">{msg}</p>}
     </div>
   );
 }

@@ -231,7 +231,7 @@ export default function UserManagementDashboard() {
   const handleDeleteUser = async (userId, userName) => {
     if (
       !confirm(
-        `Are you sure you want to delete user "${userName}"? This action cannot be undone.`
+        `Are you sure you want to delete user "${userName}"? This action cannot be undone.`,
       )
     ) {
       return;
@@ -301,7 +301,7 @@ export default function UserManagementDashboard() {
           <Alert
             className={`max-w-4xl mx-auto ${
               message.type === "success"
-                ? "bg-green-50 border-green-200 text-green-800"
+                ? "bg-lime-50 border-lime-200 text-lime-800"
                 : "bg-red-50 border-red-200 text-red-800"
             }`}
           >
@@ -395,7 +395,7 @@ export default function UserManagementDashboard() {
                       </TableCell>
                       <TableCell>
                         {user.plan ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-lime-100 text-lime-800">
                             <Crown className="h-3 w-3 mr-1" />
                             {getSubscriptionTypeName(user.plan)}
                           </span>
@@ -520,7 +520,7 @@ export default function UserManagementDashboard() {
                       variant={"outline"}
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !endDate && "text-muted-foreground"
+                        !endDate && "text-muted-foreground",
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />

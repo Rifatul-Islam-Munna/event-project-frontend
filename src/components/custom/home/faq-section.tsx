@@ -37,7 +37,7 @@ export function FAQSection() {
     {
       title: "Εμπειρία Καλεσμένων",
       icon: Users,
-      color: "emerald",
+      color: "lime",
       faqs: [
         {
           question: "Πώς βρίσκουν οι καλεσμένοι τη θέση τους;",
@@ -49,7 +49,7 @@ export function FAQSection() {
     {
       title: "Υποστήριξη & Τεχνική Βοήθεια",
       icon: Phone,
-      color: "green",
+      color: "lime",
       faqs: [
         {
           question: "Προσφέρετε υποστήριξη;",
@@ -69,21 +69,21 @@ export function FAQSection() {
         accent: "text-lime-600",
         hover: "hover:bg-lime-50/80",
       },
-      emerald: {
-        bg: "bg-emerald-50/60",
-        border: "border-emerald-200/50",
-        icon: "text-emerald-600",
-        iconBg: "bg-emerald-100",
-        accent: "text-emerald-600",
-        hover: "hover:bg-emerald-50/80",
+      lime: {
+        bg: "bg-lime-50/60",
+        border: "border-lime-200/50",
+        icon: "text-lime-600",
+        iconBg: "bg-lime-100",
+        accent: "text-lime-600",
+        hover: "hover:bg-lime-50/80",
       },
-      green: {
-        bg: "bg-green-50/60",
-        border: "border-green-200/50",
-        icon: "text-green-600",
-        iconBg: "bg-green-100",
-        accent: "text-green-600",
-        hover: "hover:bg-green-50/80",
+      lime: {
+        bg: "bg-lime-50/60",
+        border: "border-lime-200/50",
+        icon: "text-lime-600",
+        iconBg: "bg-lime-100",
+        accent: "text-lime-600",
+        hover: "hover:bg-lime-50/80",
       },
     };
     return configs[color];
@@ -175,9 +175,9 @@ export function FAQSection() {
         </div>
 
         {/* Bottom Help Section */}
-        <div className="mt-16 text-center p-8 rounded-3xl bg-gradient-to-br from-lime-50/80 via-green-50/80 to-lime-50/80 backdrop-blur-sm border border-lime-200/40">
+        <div className="mt-16 text-center p-8 rounded-3xl bg-gradient-to-br from-lime-50/80 via-lime-50/80 to-lime-50/80 backdrop-blur-sm border border-lime-200/40">
           <div className="max-w-3xl mx-auto">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-lime-500 to-green-600 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center">
               <Phone className="h-8 w-8 text-white" />
             </div>
 

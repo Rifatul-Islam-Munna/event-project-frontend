@@ -6,7 +6,7 @@ import { getSubTokenFirst } from "@/actions/fetch-action";
 import { CheckCircle, XCircle, Clock, AlertCircle, Home } from "lucide-react";
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
 ); // from your auth/session
 
 export default function ReturnPage() {
@@ -22,9 +22,8 @@ export default function ReturnPage() {
     queryFn: async () => {
       const stripe = await stripePromise;
       if (!stripe) throw new Error("Stripe init failed");
-      const { paymentIntent, error } = await stripe.retrievePaymentIntent(
-        clientSecret
-      );
+      const { paymentIntent, error } =
+        await stripe.retrievePaymentIntent(clientSecret);
       if (error) throw new Error(error.message || "Payment retrieval error");
       if (!paymentIntent) throw new Error("No PaymentIntent found");
 
@@ -40,13 +39,13 @@ export default function ReturnPage() {
     switch (status) {
       case "succeeded":
         return {
-          icon: <CheckCircle className="w-16 h-16 text-green-500" />,
+          icon: <CheckCircle className="w-16 h-16 text-lime-500" />,
           title: "Payment Successful!",
           message: "Your subscription has been activated successfully.",
-          bgColor: "bg-green-50",
-          borderColor: "border-green-200",
-          textColor: "text-green-800",
-          buttonColor: "bg-green-600 hover:bg-green-700",
+          bgColor: "bg-lime-50",
+          borderColor: "border-lime-200",
+          textColor: "text-lime-800",
+          buttonColor: "bg-lime-600 hover:bg-lime-700",
         };
       case "processing":
         return {

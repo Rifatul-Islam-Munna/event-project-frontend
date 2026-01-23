@@ -341,8 +341,8 @@ export default function HeaderManagementDashboard() {
             <Card className="border-slate-200 bg-white shadow-md">
               <CardHeader className="border-b border-slate-100 bg-slate-50/50 px-8 py-6">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center">
-                    <Eye className="h-5 w-5 text-green-600" />
+                  <div className="h-10 w-10 rounded-lg bg-lime-100 flex items-center justify-center">
+                    <Eye className="h-5 w-5 text-lime-600" />
                   </div>
                   <div>
                     <CardTitle className="text-xl font-semibold text-slate-900">

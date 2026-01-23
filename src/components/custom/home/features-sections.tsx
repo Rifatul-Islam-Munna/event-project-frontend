@@ -154,7 +154,7 @@ export function FeaturesSection() {
                   <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center">
                     <CheckCircle className="h-8 w-8 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-lime-400 rounded-full border-2 border-white"></div>
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-slate-900 mb-1">
@@ -209,11 +209,11 @@ export function FeaturesSection() {
 
           {/* Vendor Reminder System */}
           <motion.div variants={cardVariants} className="group relative">
-            <div className="h-full p-8 rounded-2xl bg-gradient-to-br from-white to-green-50/50 border-2 border-green-100/60 hover:border-green-200/80 transition-all duration-300">
+            <div className="h-full p-8 rounded-2xl bg-gradient-to-br from-white to-lime-50/50 border-2 border-lime-100/60 hover:border-lime-200/80 transition-all duration-300">
               {/* Card Header */}
               <div className="flex items-center gap-4 mb-8">
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center">
                     <CheckCircle className="h-8 w-8 text-white" />
                   </div>
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-lime-400 rounded-full border-2 border-white"></div>
@@ -222,7 +222,7 @@ export function FeaturesSection() {
                   <h3 className="text-2xl font-bold text-slate-900 mb-1">
                     Πλατφόρμα Υπενθυμίσεων Προμηθευτών
                   </h3>
-                  <p className="text-sm text-green-600 font-medium">
+                  <p className="text-sm text-lime-600 font-medium">
                     Έξυπνη Πλατφόρμα Επικοινωνίας
                   </p>
                 </div>
@@ -249,13 +249,13 @@ export function FeaturesSection() {
                     <motion.div
                       key={index}
                       variants={featureVariants}
-                      className="flex items-start gap-4 p-3 rounded-xl hover:bg-green-50/50 transition-colors duration-200 group/item"
+                      className="flex items-start gap-4 p-3 rounded-xl hover:bg-lime-50/50 transition-colors duration-200 group/item"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-green-200 transition-colors">
-                        <IconComponent className="h-5 w-5 text-green-600" />
+                      <div className="w-10 h-10 rounded-lg bg-lime-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-lime-200 transition-colors">
+                        <IconComponent className="h-5 w-5 text-lime-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-slate-800 mb-1 group-hover/item:text-green-700 transition-colors">
+                        <h4 className="font-semibold text-slate-800 mb-1 group-hover/item:text-lime-700 transition-colors">
                           {feature.title}
                         </h4>
                         <p className="text-sm text-slate-600 leading-relaxed">

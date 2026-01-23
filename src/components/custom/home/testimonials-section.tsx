@@ -24,7 +24,7 @@ export function TestimonialsSection() {
       text: "The vendor reminder system is a game-changer. Automated emails and WhatsApp messages ensure everyone is on the same page, reducing last-minute stress.",
       avatar: "/placeholder.svg?height=50&width=50",
       highlight: "Zero missed vendors",
-      color: "emerald",
+      color: "lime",
     },
     {
       name: "Emily R.",
@@ -76,11 +76,11 @@ export function TestimonialsSection() {
         accent: "text-blue-600",
         highlight: "bg-blue-100 text-blue-700",
       },
-      emerald: {
-        bg: "from-emerald-50/60 to-emerald-100/30",
-        border: "border-emerald-200/50",
-        accent: "text-emerald-600",
-        highlight: "bg-emerald-100 text-emerald-700",
+      lime: {
+        bg: "from-lime-50/60 to-lime-100/30",
+        border: "border-lime-200/50",
+        accent: "text-lime-600",
+        highlight: "bg-lime-100 text-lime-700",
       },
       rose: {
         bg: "from-rose-50/60 to-rose-100/30",
@@ -297,7 +297,7 @@ export function TestimonialsSection() {
 
                       {/* Verified Badge */}
                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <CheckCircle className="h-4 w-4 text-lime-500" />
                         <span>Verified Customer</span>
                       </div>
                     </CardContent>

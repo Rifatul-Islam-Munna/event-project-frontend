@@ -61,9 +61,9 @@ export function PricingSection() {
   const getPlanConfig = (index: number) => {
     const configs = [
       {
-        gradient: "from-lime-50 to-green-50",
+        gradient: "from-lime-50 to-lime-50",
         border: "border-lime-200/60",
-        button: "from-lime-500 via-lime-600 to-green-600",
+        button: "from-lime-500 via-lime-600 to-lime-600",
         buttonShadow: "shadow-[0_8px_32px_rgba(132,204,22,0.4)]",
         buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(132,204,22,0.6)]",
         icon: Rocket,
@@ -74,14 +74,14 @@ export function PricingSection() {
         tier: "Starter",
       },
       {
-        gradient: "from-green-50 to-emerald-50",
-        border: "border-green-200/60",
-        button: "from-green-500 via-green-600 to-emerald-600",
+        gradient: "from-lime-50 to-lime-50",
+        border: "border-lime-200/60",
+        button: "from-lime-500 via-lime-600 to-lime-600",
         buttonShadow: "shadow-[0_8px_32px_rgba(34,197,94,0.4)]",
         buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(34,197,94,0.6)]",
         icon: Crown,
-        iconColor: "text-green-600",
-        accent: "green",
+        iconColor: "text-lime-600",
+        accent: "lime",
         buttonText: "Claim Your Plan",
         buttonIcon: Crown,
         tier: "Professional",
@@ -89,7 +89,7 @@ export function PricingSection() {
       {
         gradient: "from-lime-50 to-lime-50",
         border: "border-lime-200/60",
-        button: "from-lime-600 via-lime-600 to-green-500",
+        button: "from-lime-600 via-lime-600 to-lime-500",
         buttonShadow: "shadow-[0_8px_32px_rgba(163,230,53,0.4)]",
         buttonHoverShadow: "hover:shadow-[0_12px_40px_rgba(163,230,53,0.6)]",
         icon: Diamond,
@@ -188,7 +188,7 @@ export function PricingSection() {
               </span>
               <Sparkles className="h-6 w-6 text-lime-500" />
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-lime-800 to-green-800 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-lime-800 to-lime-800 bg-clip-text text-transparent mb-4">
               Επιλέξτε το Τέλειο Σχέδιο
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
@@ -227,7 +227,7 @@ export function PricingSection() {
                     } border ${
                       config.border
                     } rounded-2xl transition-all duration-300 hover:shadow-lg ${
-                      isPopular ? "ring-2 ring-green-300 scale-105" : ""
+                      isPopular ? "ring-2 ring-lime-300 scale-105" : ""
                     }`}
                   >
                     {/* Enhanced Popular Badge */}
@@ -237,10 +237,9 @@ export function PricingSection() {
                         animate="animate"
                         className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10"
                       >
-                        <div className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg">
+                        <div className="flex items-center gap-2 text-xs bg-gradient-to-r from-lime-600 to-lime-600 text-white px-4 py-2 rounded-full  font-bold shadow-lg">
                           <Crown className="h-4 w-4" />
                           Most Popular
-                          <Sparkles className="h-3 w-3" />
                         </div>
                       </m.div>
                     )}
@@ -289,7 +288,7 @@ export function PricingSection() {
                       {/* Enhanced Features with Icons */}
                       <div>
                         <h4 className="flex items-center gap-2 font-semibold text-slate-800 text-sm mb-4 uppercase tracking-wide">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <div className="w-2 h-2 bg-lime-500 rounded-full"></div>
                           What's Included
                         </h4>
                         <ul className="space-y-3">
@@ -302,8 +301,8 @@ export function PricingSection() {
                                 key={featureIndex}
                                 className="flex items-start gap-3 text-sm group/item"
                               >
-                                <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-green-200 transition-colors duration-200">
-                                  <FeatureIcon className="h-4 w-4 text-green-600" />
+                                <div className="w-8 h-8 rounded-lg bg-lime-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-lime-200 transition-colors duration-200">
+                                  <FeatureIcon className="h-4 w-4 text-lime-600" />
                                 </div>
                                 <span className="text-slate-700 leading-relaxed group-hover/item:text-slate-900 transition-colors duration-200">
                                   {getFeatureDescription(feature)}
@@ -337,8 +336,8 @@ export function PricingSection() {
                                 key={limitIndex}
                                 className="flex items-start gap-3 text-sm group/item"
                               >
-                                <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-green-200 transition-colors duration-200">
-                                  <Check className="h-4 w-4 text-green-600" />
+                                <div className="w-8 h-8 rounded-lg bg-lime-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-lime-200 transition-colors duration-200">
+                                  <Check className="h-4 w-4 text-lime-600" />
                                 </div>
                                 <span className="text-slate-700 leading-relaxed group-hover/item:text-slate-900 transition-colors duration-200">
                                   {limit.limit.toLocaleString()}{" "}
@@ -417,7 +416,7 @@ export function PricingSection() {
             whileInView={{ opacity: 1, scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="mt-16 mx-auto w-32 h-1 bg-gradient-to-r from-lime-500 via-green-500 to-lime-600 rounded-full shadow-lg"
+            className="mt-16 mx-auto w-32 h-1 bg-gradient-to-r from-lime-500 via-lime-500 to-lime-600 rounded-full shadow-lg"
           />
         </div>
       </section>

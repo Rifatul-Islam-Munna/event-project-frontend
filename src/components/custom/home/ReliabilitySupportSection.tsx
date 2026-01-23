@@ -4,7 +4,7 @@ import { Shield, Bell, HeadphonesIcon } from "lucide-react";
 
 export function ReliabilitySupportSection() {
   return (
-    <section className="w-full py-12  lg:py-14 bg-gradient-to-br from-slate-50/50 via-green-50/30 to-lime-50/40">
+    <section className="w-full py-12  lg:py-14 bg-gradient-to-br from-slate-50/50 via-lime-50/30 to-lime-50/40">
       <div className="container mx-auto px-4 md:px-6 max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -14,7 +14,7 @@ export function ReliabilitySupportSection() {
           className="text-center space-y-8"
         >
           {/* Icon */}
-          <div className="inline-flex w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-green-600 items-center justify-center shadow-lg">
+          <div className="inline-flex w-16 h-16 rounded-xl bg-gradient-to-br from-lime-500 to-lime-600 items-center justify-center shadow-lg">
             <Shield className="h-8 w-8 text-white" />
           </div>
 
@@ -22,7 +22,7 @@ export function ReliabilitySupportSection() {
           <div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-3">
               Πλήρης{" "}
-              <span className="bg-gradient-to-r from-green-500 via-green-600 to-green-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-lime-500 via-lime-600 to-lime-600 bg-clip-text text-transparent">
                 αξιοπιστία
               </span>{" "}
               και υποστήριξη
@@ -35,10 +35,10 @@ export function ReliabilitySupportSection() {
           {/* Feature Cards */}
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto pt-4">
             {/* Automated Notifications */}
-            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:border-green-300 hover:shadow-md transition-all duration-300 text-left">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:border-lime-300 hover:shadow-md transition-all duration-300 text-left">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                  <Bell className="h-6 w-6 text-green-600" />
+                <div className="w-12 h-12 rounded-lg bg-lime-500/10 flex items-center justify-center flex-shrink-0">
+                  <Bell className="h-6 w-6 text-lime-600" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 mb-2">
@@ -53,10 +53,10 @@ export function ReliabilitySupportSection() {
             </div>
 
             {/* 24/7 Support */}
-            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:border-green-300 hover:shadow-md transition-all duration-300 text-left">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:border-lime-300 hover:shadow-md transition-all duration-300 text-left">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                  <HeadphonesIcon className="h-6 w-6 text-green-600" />
+                <div className="w-12 h-12 rounded-lg bg-lime-500/10 flex items-center justify-center flex-shrink-0">
+                  <HeadphonesIcon className="h-6 w-6 text-lime-600" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 mb-2">

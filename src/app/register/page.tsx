@@ -60,18 +60,18 @@ export default function RegisterPage() {
   return (
     <div className="relative flex min-h-[calc(100vh-64px)] items-center justify-center overflow-hidden">
       {/* Soft Gradient Background - Lime Theme */}
-      <div className="absolute inset-0 bg-gradient-to-br from-lime-50 via-emerald-50 to-teal-100">
-        <div className="absolute inset-0 bg-gradient-to-tl from-lime-50/80 via-emerald-50/60 to-teal-50/70"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-lime-50/40 via-transparent to-emerald-50/40"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-lime-50 via-lime-50 to-teal-100">
+        <div className="absolute inset-0 bg-gradient-to-tl from-lime-50/80 via-lime-50/60 to-teal-50/70"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-lime-50/40 via-transparent to-lime-50/40"></div>
       </div>
 
       {/* Floating Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Large soft shapes */}
-        <div className="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-gradient-to-br from-lime-200/30 to-emerald-200/20 blur-3xl animate-gentle-float"></div>
-        <div className="absolute -bottom-28 -right-28 h-72 w-72 rounded-full bg-gradient-to-br from-emerald-200/25 to-teal-200/20 blur-3xl animate-gentle-float delay-1000"></div>
+        <div className="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-gradient-to-br from-lime-200/30 to-lime-200/20 blur-3xl animate-gentle-float"></div>
+        <div className="absolute -bottom-28 -right-28 h-72 w-72 rounded-full bg-gradient-to-br from-lime-200/25 to-teal-200/20 blur-3xl animate-gentle-float delay-1000"></div>
         <div className="absolute top-1/2 left-1/4 h-56 w-56 rounded-full bg-gradient-to-br from-teal-200/20 to-lime-200/15 blur-3xl animate-gentle-float delay-500"></div>
-        <div className="absolute top-1/4 right-1/3 h-64 w-64 rounded-full bg-gradient-to-br from-lime-200/25 to-emerald-200/20 blur-3xl animate-gentle-float delay-1500"></div>
+        <div className="absolute top-1/4 right-1/3 h-64 w-64 rounded-full bg-gradient-to-br from-lime-200/25 to-lime-200/20 blur-3xl animate-gentle-float delay-1500"></div>
       </div>
 
       {/* Floating Icons */}
@@ -123,17 +123,17 @@ export default function RegisterPage() {
           <div className="flex justify-center mb-4">
             <div className="relative">
               <UserPlus className="h-12 w-12 text-lime-600" />
-              <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-emerald-500 animate-pulse" />
+              <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-lime-500 animate-pulse" />
             </div>
           </div>
 
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-lime-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-lime-600 via-lime-600 to-teal-600 bg-clip-text text-transparent mb-2">
             Create Account
           </CardTitle>
 
           {/* Decorative underline */}
           <div className="flex justify-center mb-4">
-            <div className="h-1 w-20 bg-gradient-to-r from-lime-500 to-emerald-500 rounded-full"></div>
+            <div className="h-1 w-20 bg-gradient-to-r from-lime-500 to-lime-500 rounded-full"></div>
           </div>
 
           <CardDescription className="text-gray-600 text-sm leading-relaxed">
@@ -212,7 +212,7 @@ export default function RegisterPage() {
             {/* Eye-catching Register Button */}
             <Button
               type="submit"
-              className="w-full h-14 mt-8 bg-gradient-to-r from-lime-600 via-emerald-600 to-teal-600 hover:from-lime-700 hover:via-emerald-700 hover:to-teal-700 text-white font-semibold rounded-2xl shadow-lg shadow-lime-500/30 hover:shadow-lime-500/50 transform transition-all duration-500 hover:scale-[1.02] focus:ring-4 focus:ring-lime-500/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none group relative overflow-hidden"
+              className="w-full h-14 mt-8 bg-gradient-to-r from-lime-600 via-lime-600 to-teal-600 hover:from-lime-700 hover:via-lime-700 hover:to-teal-700 text-white font-semibold rounded-2xl shadow-lg shadow-lime-500/30 hover:shadow-lime-500/50 transform transition-all duration-500 hover:scale-[1.02] focus:ring-4 focus:ring-lime-500/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none group relative overflow-hidden"
               disabled={isPending}
             >
               {/* Subtle shimmer effect */}
@@ -248,10 +248,10 @@ export default function RegisterPage() {
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="font-semibold bg-gradient-to-r from-lime-600 to-emerald-600 bg-clip-text text-transparent hover:from-lime-700 hover:to-emerald-700 transition-all duration-200 relative group"
+                className="font-semibold bg-gradient-to-r from-lime-600 to-lime-600 bg-clip-text text-transparent hover:from-lime-700 hover:to-lime-700 transition-all duration-200 relative group"
               >
                 Sign In Here
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-lime-600 to-emerald-600 group-hover:w-full transition-all duration-300"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-lime-600 to-lime-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
             </p>
           </div>

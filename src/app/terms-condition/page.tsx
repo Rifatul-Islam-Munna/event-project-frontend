@@ -33,7 +33,7 @@ export default function TermsAndConditions() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-slate-50/30 to-lime-50/20">
       {/* Header Section */}
-      <div className="w-full py-16 md:py-20 bg-gradient-to-r from-lime-500 to-green-600">
+      <div className="w-full py-16 md:py-20 bg-gradient-to-r from-lime-500 to-lime-600">
         <div className="container mx-auto px-4 md:px-6 max-w-5xl text-center">
           <div className="flex items-center justify-center mb-6">
             <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -121,7 +121,7 @@ export default function TermsAndConditions() {
                 className="bg-white border-2 border-slate-200/60 rounded-2xl p-6 md:p-8 hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="flex items-start gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-lime-500 to-green-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center flex-shrink-0">
                     <FileText className="h-6 w-6 text-white" />
                   </div>
                   <div className="flex-1">
@@ -151,9 +151,9 @@ export default function TermsAndConditions() {
         {/* Acceptance Footer */}
         {!isLoading && !isError && termsData?.length > 0 && (
           <>
-            <div className="mt-12 bg-gradient-to-br from-lime-50/80 via-green-50/80 to-lime-50/80 border-2 border-lime-200/40 rounded-2xl p-8">
+            <div className="mt-12 bg-gradient-to-br from-lime-50/80 via-lime-50/80 to-lime-50/80 border-2 border-lime-200/40 rounded-2xl p-8">
               <div className="text-center max-w-3xl mx-auto">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-lime-500 to-green-600 flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center">
                   <Scale className="h-8 w-8 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-4">
@@ -168,7 +168,7 @@ export default function TermsAndConditions() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                   <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-lime-500" />
                     <span className="text-sm font-medium text-slate-700">
                       Legally Binding Agreement
                     </span>

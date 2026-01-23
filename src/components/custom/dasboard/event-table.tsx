@@ -696,7 +696,7 @@ export function EventTable({
                     onClick={handleCopyLink}
                     className={`px-6 h-12 font-medium whitespace-nowrap transition-all ${
                       linkCopied
-                        ? "bg-green-600 hover:bg-green-700"
+                        ? "bg-lime-600 hover:bg-lime-700"
                         : "bg-lime-600 hover:bg-lime-700"
                     } text-white`}
                   >
