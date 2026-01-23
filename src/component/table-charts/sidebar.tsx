@@ -80,7 +80,7 @@ export function Sidebar({
   }
 
   return (
-    <div className="fixed  max-w-sm inset-y-0 left-0  px-4 md:pr-3 bg-white md:bg-white/60 mt-11 md:mt-0 border-r flex flex-col h-full transition-transform duration-300 ease-in-out md:relative translate-x-0 sidebar-container overflow-y-auto pb-8">
+    <div className="fixed  max-w-sm inset-y-0 left-0 z-10  px-4 md:pr-3 bg-white/60 md:bg-white/60 mt-11 md:mt-0 border-r flex flex-col h-full transition-transform duration-300 ease-in-out md:relative translate-x-0 sidebar-container overflow-y-auto pb-8">
       {/* Close Button - Fixed at Top */}
       <div className="flex justify-end items-center p-4 pb-0 md:hidden flex-shrink-0">
         <Button

@@ -318,7 +318,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
           left: `${boundaryX}px`,
           top: `${boundaryY}px`,
           pointerEvents: isEditMode ? "auto" : "none",
-          zIndex: 10,
+          zIndex: 6,
         }}
         ref={stageRef}
       >
@@ -520,7 +520,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
           top: `${y - 70 * zoom}px`,
           transform: `scale(${Math.max(0.8, zoom)})`,
           transformOrigin: "left top",
-          zIndex: 50,
+          zIndex: 9,
         }}
       >
         <span className="text-sm font-semibold text-slate-700">
