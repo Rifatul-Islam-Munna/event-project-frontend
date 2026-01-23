@@ -180,7 +180,8 @@ export function PricingSection() {
                               {config.tier}
                             </div>
                             <CardTitle className="text-lg font-bold text-slate-900">
-                              {plan.title}
+                              {plan.title} <br />
+                              <span>{plan?.type}</span>
                             </CardTitle>
                           </div>
 
