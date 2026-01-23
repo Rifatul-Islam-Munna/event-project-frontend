@@ -46,15 +46,23 @@ export function DecorativeDrawer({
     event.dataTransfer.setData("decorativeItemHeight", item.height.toString());
     event.dataTransfer.effectAllowed = "copy";
 
-    // Close drawer when drag starts
-    onAddDecorativeItem();
+    /*  // Close drawer when drag starts
+    onAddDecorativeItem(); */
     setIsOpen(false);
+  };
+  const handleDragEnd = (event: React.DragEvent) => {
+    // Close drawer after drag completes
+    if (event.dataTransfer.dropEffect !== "none") {
+      // Item was successfully dropped
+      onAddDecorativeItem();
+      setIsOpen(false);
+    }
   };
 
   const currentCategory =
     decorativeCategories[selectedCategory as keyof typeof decorativeCategories];
   const filteredItems = currentCategory.items.filter((item) =>
-    item.label.toLowerCase().includes(searchTerm.toLowerCase())
+    item.label.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -122,13 +130,14 @@ export function DecorativeDrawer({
                   className="p-3 cursor-grab shadow-none hover:shadow-sm transition-all border-gray-100  active:scale-95"
                   draggable={true}
                   onDragStart={(e) => handleDragStart(e, item)}
+                  onDragEnd={handleDragEnd}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-12 h-12  rounded-lg flex items-center justify-center overflow-hidden ">
                       <Image
                         src={
                           decorativeItems.find(
-                            (i) => i.label.trim() === item.label.trim()
+                            (i) => i.label.trim() === item.label.trim(),
                           )?.imageUrl.src || ""
                         }
                         alt={item.label}
