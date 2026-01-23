@@ -8,6 +8,7 @@ import { PricingPlan } from "@/@types/pricing";
 import { getAllThePlans } from "@/actions/fetch-action";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import {
   Check,
@@ -27,12 +28,14 @@ import {
   Navigation,
 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 interface PricingSectionProps {
   plans: PricingPlan[];
 }
 
 export function PricingSection() {
+  const [planType, setPlanType] = useState<string>("Planer package");
   const { data } = useQuery({
     queryKey: ["plans"],
     queryFn: () => getAllThePlans(),
@@ -166,6 +169,212 @@ export function PricingSection() {
     },
   };
 
+  // Filter plans by type
+  const plannerPackages = data?.data?.filter(
+    (plan) => plan.type === "Planer package",
+  );
+  const eventPackages = data?.data?.filter(
+    (plan) => plan.type === "Event package",
+  );
+
+  const renderPricingCards = (plans: PricingPlan[]) => (
+    <m.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.2 }}
+      variants={containerVariants}
+      className="grid w-full mx-auto gap-10 sm:gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+    >
+      {plans?.map((plan, index) => {
+        const config = getPlanConfig(index);
+        const isPopular = index === 1;
+        const IconComponent = config.icon;
+        const ButtonIcon = config.buttonIcon;
+
+        return (
+          <m.div
+            key={plan._id}
+            variants={cardVariants}
+            whileHover={{
+              y: -4,
+              transition: { duration: 0.3, ease: "easeOut" },
+            }}
+            className="group relative h-full"
+          >
+            <Card
+              className={`relative h-full bg-gradient-to-br ${
+                config.gradient
+              } border ${
+                config.border
+              } rounded-2xl transition-all duration-300 hover:shadow-lg ${
+                isPopular ? "ring-2 ring-lime-300 scale-105" : ""
+              }`}
+            >
+              {/* Enhanced Popular Badge */}
+              {isPopular && (
+                <m.div
+                  variants={pulseVariants}
+                  animate="animate"
+                  className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10"
+                >
+                  <div className="flex items-center gap-2 text-xs bg-gradient-to-r from-lime-600 to-lime-600 text-white px-4 py-2 rounded-full font-bold shadow-lg">
+                    <Crown className="h-4 w-4" />
+                    Most Popular
+                  </div>
+                </m.div>
+              )}
+
+              {/* Enhanced Header with Beautiful Icons */}
+              <CardHeader className="text-center pb-4 pt-8 px-6 space-y-4">
+                <div className="flex items-center justify-center mb-3">
+                  <m.div
+                    whileHover={{ rotate: 10, scale: 1.1 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center group-hover:shadow-xl transition-shadow duration-300"
+                  >
+                    <IconComponent className={`h-8 w-8 ${config.iconColor}`} />
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-transparent rounded-2xl"></div>
+                  </m.div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    {config.tier}
+                  </div>
+                  <CardTitle className="text-2xl font-bold text-slate-900">
+                    {plan.title} <br />
+                    <span className="text-lime-800">{plan?.type}</span>
+                  </CardTitle>
+                </div>
+
+                <div className="flex items-baseline justify-center gap-1 mb-2">
+                  <span className="text-4xl font-bold text-slate-900">
+                    {formatPrice(plan.priceCents, plan.currency)}
+                  </span>
+                  <span className="text-slate-500 text-sm font-medium">
+                    /year
+                  </span>
+                </div>
+
+                <p className="text-sm text-slate-600 px-2">
+                  {plan.description}
+                </p>
+              </CardHeader>
+
+              {/* Enhanced Content with Feature Icons */}
+              <CardContent className="px-6 pb-6 space-y-6">
+                {/* Enhanced Features with Icons */}
+                <div>
+                  <h4 className="flex items-center gap-2 font-semibold text-slate-800 text-sm mb-4 uppercase tracking-wide">
+                    <div className="w-2 h-2 bg-lime-500 rounded-full"></div>
+                    What's Included
+                  </h4>
+                  <ul className="space-y-3">
+                    {plan.permissions.map((feature, featureIndex) => {
+                      const FeatureIcon = getFeatureIcon(
+                        getFeatureDescription(feature),
+                      );
+                      return (
+                        <li
+                          key={featureIndex}
+                          className="flex items-start gap-3 text-sm group/item"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-lime-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-lime-200 transition-colors duration-200">
+                            <FeatureIcon className="h-4 w-4 text-lime-600" />
+                          </div>
+                          <span className="text-slate-700 leading-relaxed group-hover/item:text-slate-900 transition-colors duration-200">
+                            {getFeatureDescription(feature)}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+
+                {/* Enhanced Limits */}
+                {plan.limits.length > 0 && (
+                  <div>
+                    <h4 className="flex items-center gap-2 font-semibold text-slate-800 text-sm mb-3 uppercase tracking-wide">
+                      <div
+                        className={`w-2 h-2 bg-${config.accent}-500 rounded-full`}
+                      ></div>
+                      Usage Limits
+                    </h4>
+                    <div className="flex flex-col gap-2">
+                      {plan?.limits?.map((limit, limitIndex) => (
+                        <li
+                          key={limitIndex}
+                          className="flex items-start gap-3 text-sm group/item"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-lime-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-lime-200 transition-colors duration-200">
+                            <Check className="h-4 w-4 text-lime-600" />
+                          </div>
+                          <span className="text-slate-700 leading-relaxed group-hover/item:text-slate-900 transition-colors duration-200">
+                            {limit.limit.toLocaleString()}{" "}
+                            {getLimitDescription(limit.key)}
+                          </span>
+                        </li>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Super Attractive CTA Button */}
+                <Link
+                  href={`/payment?plan=${plan._id}&price=${plan.priceCents}`}
+                >
+                  <m.div
+                    whileHover={{
+                      scale: 1.03,
+                      y: -2,
+                      transition: { duration: 0.2 },
+                    }}
+                    whileTap={{
+                      scale: 0.98,
+                      transition: { duration: 0.1 },
+                    }}
+                    className="pt-4"
+                  >
+                    <Button
+                      className={`group relative w-full bg-gradient-to-r ${config.button} text-white font-bold text-lg py-6 px-6 rounded-2xl ${config.buttonShadow} ${config.buttonHoverShadow} hover:scale-105 transition-all duration-400 border-0 overflow-hidden`}
+                      size="lg"
+                    >
+                      {/* Animated Background Glow */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
+
+                      {/* Pulsing Background */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                      {/* Button Content */}
+                      <span className="relative z-10 flex items-center justify-center gap-3">
+                        <ButtonIcon className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+                        {config.buttonText}
+                        <m.div
+                          whileHover={{ x: 4 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <ArrowRight className="h-5 w-5" />
+                        </m.div>
+                      </span>
+
+                      {/* Corner Sparkles */}
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Sparkles className="h-4 w-4 text-white/60" />
+                      </div>
+                      <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <Sparkles className="h-3 w-3 text-white/40" />
+                      </div>
+                    </Button>
+                  </m.div>
+                </Link>
+              </CardContent>
+            </Card>
+          </m.div>
+        );
+      })}
+    </m.div>
+  );
+
   return (
     <LazyMotion features={domAnimation}>
       <section
@@ -197,218 +406,45 @@ export function PricingSection() {
             </p>
           </m.div>
 
-          {/* Enhanced Pricing Cards */}
-          <m.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={containerVariants}
-            className="grid  w-full mx-auto gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+          {/* Tabs for Plan Types */}
+          <Tabs
+            defaultValue="planner"
+            className="w-full"
+            onValueChange={(value) =>
+              setPlanType(
+                value === "planner" ? "Planer package" : "Event package",
+              )
+            }
           >
-            {data?.data?.map((plan, index) => {
-              const config = getPlanConfig(index);
-              const isPopular = index === 1;
-              const IconComponent = config.icon;
-              const ButtonIcon = config.buttonIcon;
-
-              return (
-                <m.div
-                  key={plan._id}
-                  variants={cardVariants}
-                  whileHover={{
-                    y: -4,
-                    transition: { duration: 0.3, ease: "easeOut" },
-                  }}
-                  className="group relative h-full"
+            <div className="flex justify-center mb-12">
+              <TabsList className="inline-flex h-12 items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm p-1.5 text-slate-700 shadow-lg border border-lime-200/60">
+                <TabsTrigger
+                  value="planner"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-6 py-2.5 text-sm font-semibold ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-lime-500 data-[state=active]:to-lime-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-lime-50/50"
                 >
-                  <Card
-                    className={`relative h-full bg-gradient-to-br ${
-                      config.gradient
-                    } border ${
-                      config.border
-                    } rounded-2xl transition-all duration-300 hover:shadow-lg ${
-                      isPopular ? "ring-2 ring-lime-300 scale-105" : ""
-                    }`}
-                  >
-                    {/* Enhanced Popular Badge */}
-                    {isPopular && (
-                      <m.div
-                        variants={pulseVariants}
-                        animate="animate"
-                        className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10"
-                      >
-                        <div className="flex items-center gap-2 text-xs bg-gradient-to-r from-lime-600 to-lime-600 text-white px-4 py-2 rounded-full  font-bold shadow-lg">
-                          <Crown className="h-4 w-4" />
-                          Most Popular
-                        </div>
-                      </m.div>
-                    )}
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Planner Package</span>
+                  <span className="sm:hidden">Planner</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="event"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-6 py-2.5 text-sm font-semibold ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-lime-500 data-[state=active]:to-lime-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-lime-50/50"
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Event Package</span>
+                  <span className="sm:hidden">Event</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-                    {/* Enhanced Header with Beautiful Icons */}
-                    <CardHeader className="text-center pb-4 pt-8 px-6 space-y-4">
-                      <div className="flex items-center justify-center mb-3">
-                        <m.div
-                          whileHover={{ rotate: 10, scale: 1.1 }}
-                          transition={{ duration: 0.3 }}
-                          className="relative w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center group-hover:shadow-xl transition-shadow duration-300"
-                        >
-                          <IconComponent
-                            className={`h-8 w-8 ${config.iconColor}`}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-transparent rounded-2xl"></div>
-                        </m.div>
-                      </div>
+            <TabsContent value="planner" className="mt-0">
+              {renderPricingCards(plannerPackages || [])}
+            </TabsContent>
 
-                      <div className="space-y-2">
-                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          {config.tier}
-                        </div>
-                        <CardTitle className="text-2xl font-bold text-slate-900">
-                          {plan.title} <br />
-                          <span className=" text-lime-800">{plan?.type}</span>
-                        </CardTitle>
-                      </div>
-
-                      <div className="flex items-baseline justify-center gap-1 mb-2">
-                        <span className="text-4xl font-bold text-slate-900">
-                          {formatPrice(plan.priceCents, plan.currency)}
-                        </span>
-                        <span className="text-slate-500 text-sm font-medium">
-                          /year
-                        </span>
-                      </div>
-
-                      <p className="text-sm text-slate-600 px-2">
-                        {plan.description}
-                      </p>
-                    </CardHeader>
-
-                    {/* Enhanced Content with Feature Icons */}
-                    <CardContent className="px-6 pb-6 space-y-6">
-                      {/* Enhanced Features with Icons */}
-                      <div>
-                        <h4 className="flex items-center gap-2 font-semibold text-slate-800 text-sm mb-4 uppercase tracking-wide">
-                          <div className="w-2 h-2 bg-lime-500 rounded-full"></div>
-                          What's Included
-                        </h4>
-                        <ul className="space-y-3">
-                          {plan.permissions.map((feature, featureIndex) => {
-                            const FeatureIcon = getFeatureIcon(
-                              getFeatureDescription(feature),
-                            );
-                            return (
-                              <li
-                                key={featureIndex}
-                                className="flex items-start gap-3 text-sm group/item"
-                              >
-                                <div className="w-8 h-8 rounded-lg bg-lime-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-lime-200 transition-colors duration-200">
-                                  <FeatureIcon className="h-4 w-4 text-lime-600" />
-                                </div>
-                                <span className="text-slate-700 leading-relaxed group-hover/item:text-slate-900 transition-colors duration-200">
-                                  {getFeatureDescription(feature)}
-                                </span>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-
-                      {/* Enhanced Limits */}
-                      {plan.limits.length > 0 && (
-                        <div>
-                          <h4 className="flex items-center gap-2 font-semibold text-slate-800 text-sm mb-3 uppercase tracking-wide">
-                            <div
-                              className={`w-2 h-2 bg-${config.accent}-500 rounded-full`}
-                            ></div>
-                            Usage Limits
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {plan?.limits?.map((limit, limitIndex) => (
-                              /*  <div
-                                key={limitIndex}
-                                className="flex items-center gap-1 bg-white/80 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200/50"
-                              >
-                                <Star className="h-3 w-3 text-yellow-500" />
-                                {limit.limit.toLocaleString()}{" "}
-                                {getLimitDescription(limit.key)}
-                              </div> */
-                              <li
-                                key={limitIndex}
-                                className="flex items-start gap-3 text-sm group/item"
-                              >
-                                <div className="w-8 h-8 rounded-lg bg-lime-100 flex items-center justify-center flex-shrink-0 group-hover/item:bg-lime-200 transition-colors duration-200">
-                                  <Check className="h-4 w-4 text-lime-600" />
-                                </div>
-                                <span className="text-slate-700 leading-relaxed group-hover/item:text-slate-900 transition-colors duration-200">
-                                  {limit.limit.toLocaleString()}{" "}
-                                  {getLimitDescription(limit.key)}
-                                </span>
-                              </li>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Super Attractive CTA Button */}
-                      <Link
-                        href={`/payment?plan=${plan._id}&price=${plan.priceCents}`}
-                      >
-                        <m.div
-                          whileHover={{
-                            scale: 1.03,
-                            y: -2,
-                            transition: { duration: 0.2 },
-                          }}
-                          whileTap={{
-                            scale: 0.98,
-                            transition: { duration: 0.1 },
-                          }}
-                          className="pt-4"
-                        >
-                          <Button
-                            className={`group relative w-full bg-gradient-to-r ${config.button} text-white font-bold text-lg py-6 px-6 rounded-2xl ${config.buttonShadow} ${config.buttonHoverShadow} hover:scale-105 transition-all duration-400 border-0 overflow-hidden`}
-                            size="lg"
-                          >
-                            {/* Animated Background Glow */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
-
-                            {/* Pulsing Background */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                            {/* Button Content */}
-                            <span className="relative z-10 flex items-center justify-center gap-3">
-                              <ButtonIcon className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
-                              {config.buttonText}
-                              <m.div
-                                whileHover={{ x: 4 }}
-                                transition={{ duration: 0.2 }}
-                              >
-                                <ArrowRight className="h-5 w-5" />
-                              </m.div>
-                            </span>
-
-                            {/* Corner Sparkles */}
-                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <Sparkles className="h-4 w-4 text-white/60" />
-                            </div>
-                            <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                              <Sparkles className="h-3 w-3 text-white/40" />
-                            </div>
-                          </Button>
-                        </m.div>
-                      </Link>
-
-                      {/* Trust Signal */}
-                      {/* <div className="flex items-center justify-center gap-2 pt-2 text-xs text-slate-500">
-                        <Shield className="h-4 w-4" />
-                        <span>30-day money-back guarantee</span>
-                      </div> */}
-                    </CardContent>
-                  </Card>
-                </m.div>
-              );
-            })}
-          </m.div>
+            <TabsContent value="event" className="mt-0">
+              {renderPricingCards(eventPackages || [])}
+            </TabsContent>
+          </Tabs>
 
           {/* Enhanced Bottom Accent */}
           <m.div

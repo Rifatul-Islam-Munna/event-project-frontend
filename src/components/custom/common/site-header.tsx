@@ -1,6 +1,6 @@
 // components/site-header.tsx
 "use client";
-
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Menu,
@@ -39,8 +39,10 @@ import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { isAfter } from "date-fns";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
 import ResponsiveTranslate from "./DropdownTranslator";
-import GoogleTranslate from "./GoogleTranslate";
 
+const GoogleTranslate = dynamic(() => import("./GoogleTranslate"), {
+  ssr: false,
+});
 export function SiteHeader() {
   const pathName = usePathname();
   const [user, setUser] = useState<null | UserType>();

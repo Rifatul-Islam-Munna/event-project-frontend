@@ -10,6 +10,7 @@ export type Guest = {
   _id?:string
 adults?:number
 children?:number
+type?:string
 }
 
 export type Vendor = {

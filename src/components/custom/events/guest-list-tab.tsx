@@ -51,6 +51,8 @@ import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { User } from "@/@types/user-types";
 import { getUserInfo } from "@/actions/auth";
+import { AddUserTypeDialog } from "./AddUserTypeDialog";
+import { Badge } from "@/components/ui/badge";
 
 type GuestListTabProps = {
   guests: Guest[];
@@ -234,6 +236,7 @@ export function GuestListTab({
                   <CreateGuestForm
                     onAddGuest={onAddGuest}
                     onClose={() => setIsCreateGuestModalOpen(false)}
+                    eventId={pathName.split("/").pop() as string}
                   />
                 </TabsContent>
 
@@ -248,6 +251,7 @@ export function GuestListTab({
           <Button className=" bg-lime-600 h-11" onClick={() => DownloadImage()}>
             Download Seat Plan
           </Button>
+          <AddUserTypeDialog eventId={pathName.split("/").pop() as string} />
         </div>
       </div>
 
@@ -272,6 +276,9 @@ export function GuestListTab({
                 </TableHead>
                 <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
                   Message Send
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
+                  Guest Type
                 </TableHead>
                 <TableHead className="font-semibold text-gray-900 text-base py-4 px-6 text-right">
                   Actions
@@ -365,6 +372,11 @@ export function GuestListTab({
                           <XCircle className="h-4 w-4" />
                         </span>
                       )}
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <Badge className=" bg-lime-700 text-sm">
+                        {guest?.type}
+                      </Badge>
                     </TableCell>
 
                     {/* Actions */}
@@ -464,32 +476,39 @@ export function GuestListTab({
               >
                 {/* Guest Header */}
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 ">
                     <h3 className="font-semibold text-gray-900 text-lg">
                       {guest.name}
                     </h3>
-                    {guest.isAssigned ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-lime-50 text-lime-700 border border-lime-200 mt-1">
-                        <CheckCircle className="h-3 w-3" />
-                        Seat #{guest.seat_number}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 mt-1">
-                        <XCircle className="h-3 w-3" />
-                        Not Seated
-                      </span>
-                    )}
-                    {guest?.isMessageSend ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-lime-50 text-lime-700 border border-lime-200 mt-1">
-                        <CheckCircle className="h-3 w-3" />
-                        Message Send
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 mt-1">
-                        <XCircle className="h-3 w-3" />
-                        Message Not Send
-                      </span>
-                    )}
+                    <div className=" w-full flex justify-between items-center">
+                      {guest.isAssigned ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-lime-50 text-lime-700 border border-lime-200 mt-1">
+                          <CheckCircle className="h-3 w-3" />
+                          Seat #{guest.seat_number}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 mt-1">
+                          <XCircle className="h-3 w-3" />
+                          Not Seated
+                        </span>
+                      )}
+                      {guest?.isMessageSend ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-lime-50 text-lime-700 border border-lime-200 mt-1">
+                          <CheckCircle className="h-3 w-3" />
+                          Message Send
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 mt-1">
+                          <XCircle className="h-3 w-3" />
+                          Message Not Send
+                        </span>
+                      )}
+                      {guest?.type && (
+                        <Badge className=" bg-lime-700 text-sm">
+                          {guest.type}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
 

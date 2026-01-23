@@ -7,6 +7,8 @@ import { SiteHeader } from "@/components/custom/common/site-header";
 import { SiteFooter } from "@/components/custom/common/site-footer";
 import { getHeader } from "@/actions/fetch-action";
 import Script from "next/script";
+import LayoutWrapper from "@/lib/LayoutWrapper";
+import Head from "next/head";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,7 +67,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <Head>
+        <meta name="google" content="notranslate" />
+      </Head>
       <QueryProvider>
+        <LayoutWrapper />
         <body
           className={`${geistSans.variable} ${geistMono.variable} ${sourceSans.variable} antialiased`}
         >

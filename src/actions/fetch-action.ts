@@ -301,8 +301,9 @@ export const getSubTokenFirst = async (sub:string)=>{
 
 }
 
-export const getAllThePlans = async ()=>{
-  const [data,error] = await GetRequestNormal<PricingPlan[]>(`/subscription/find-all-plans`);
+export const getAllThePlans = async (type?:string)=>{
+  const query = type?`?type=${type}`:""
+  const [data,error] = await GetRequestNormal<PricingPlan[]>(`/subscription/find-all-plans${query}`);
   return {data,error}
 }
 

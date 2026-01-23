@@ -31,3 +31,13 @@ export const deleteVendorCategory = async (id: string) => {
   const [data, error] = await GetRequestAxios(`/seo/${id}`);
   return { data, error };
 };
+
+
+export const GetGuestType = async (event_id: string)=>{
+  const [data, error] = await GetRequestAxios<{id:string,type:string[],event_id:string}>(`/guest/get-all-guest-type?event_id=${event_id}`);
+  return { data, error };
+}
+export const PostNewGuestType = async (payload: {type:string[],event_id:string})=>{
+  const [data, error] = await PostRequestAxios(`/guest/post-guest-type`,payload);
+  return { data, error };
+}
