@@ -83,14 +83,17 @@ export function SiteHeader() {
               src={data?.data?.imageUrl}
               alt="Logo"
               width={200}
-              height={200}
-              className="object-contain"
+              height={100}
+              className="h-auto max-h-16 w-auto max-w-[200px] object-contain"
+              style={{
+                width: "auto",
+                height: "auto",
+              }}
+              priority
             />
           )}
-          {/*      <span className="font-bold text-sm sm:text-lg truncate">
-            {data?.data?.title}
-          </span> */}
         </Link>
+
         <div className=" flex items-center gap-1">
           {user ? (
             // Logged In User
