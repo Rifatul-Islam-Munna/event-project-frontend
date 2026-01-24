@@ -31,7 +31,7 @@ export const featureMapping = {
 export const limitMapping = {
   "guests.total_max": "Maximum guests",
   "vendor.limit": " vendor Per event limit",
-  "events.monthly_limit": "Monthly events limit",
+  "events.monthly_limit": "events limit",
 
 
  
