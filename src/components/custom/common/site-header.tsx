@@ -79,18 +79,18 @@ export function SiteHeader() {
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
           {data?.data?.imageUrl && (
-            <Image
-              src={data?.data?.imageUrl}
-              alt="Logo"
-              width={200}
-              height={100}
-              className="aspect-video  max-w-28 object-contain"
-            />
+            <div className="relative h-16 max-w-[200px]">
+              <Image
+                src={data?.data?.imageUrl}
+                alt="Logo"
+                fill
+                sizes="200px"
+                className="object-contain object-left"
+              />
+            </div>
           )}
-          {/*      <span className="font-bold text-sm sm:text-lg truncate">
-            {data?.data?.title}
-          </span> */}
         </Link>
+
         <div className=" flex items-center gap-1">
           {user ? (
             // Logged In User
