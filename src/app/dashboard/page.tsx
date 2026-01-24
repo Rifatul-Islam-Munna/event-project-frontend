@@ -4,6 +4,7 @@ import { getUserInfo } from "@/actions/auth";
 import { deleteEvent } from "@/actions/fetch-action";
 import { PricingSection } from "@/components/custom/common/PricingSection";
 import { EventTable } from "@/components/custom/dasboard/event-table";
+import TemplateExploreBanner from "@/components/custom/dasboard/TemplateExploreBanner";
 import { UserInfoCard } from "@/components/custom/dasboard/user-info-card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -143,6 +144,7 @@ export default function DashboardPage() {
     <section className="bg-gradient-to-br min-h-dvh from-slate-50/10 via-blue-50/15 to-indigo-100 h-auto">
       <div className="container mx-auto py-8 px-4 md:px-6 space-y-8 ">
         <PricingSection />
+        <TemplateExploreBanner />
         <UserInfoCard />
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-3">
