@@ -1,6 +1,6 @@
 "use server"
 
-import { PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
+import { DeleteAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
 import { cookies } from "next/headers";
 type User = {
   name?: string;
@@ -59,4 +59,99 @@ export const updateProfileInformation = async (payload:User)=>{
     return {data,error}
 }
 
+type templeteData = {
+  imageUrl?: File;
+  title?: string; 
+  links?: string;
+  
+};
+export const postTemplateData = async (payload:templeteData)=>{
+    let thumbnailUrl:string = '';
+ 
+  
+  if(payload.imageUrl){
+     const fromData = new FormData();
+    if(payload.imageUrl) fromData.append("file",payload.imageUrl);
+
+    const [updatedData,err] = await PostRequestAxios("/images/upload-image",fromData);
+
+   if(err) return {data:null,error:err};
+    thumbnailUrl = updatedData as string;
+
+   
+
+  }
+  
+
+
+
+   
+    const newPayload = {
+    ...payload,
+   
+    ...(thumbnailUrl.trim()  && { imageUrl: thumbnailUrl }),
+  };
+    const [data,error] = await PostRequestAxios(`/template`,newPayload);
+    
+    console.log("PostData",data,"PostData",error);
+    return {data,error}
+}
+
+type templeteDataGet = {
+  imageUrl?: string;
+  title?: string; 
+  links?: string;
+  _id:string
+  
+};
+export const getTemplateData = async (page:number,limit:number)=>{
+  const [data,error] = await GetRequestNormal<{data:templeteDataGet[],metaData:{page:number,limit:number,total:number,totalPage:number}}>(`/template?limit=${limit}&page=${page}`);
+  return {data,error}
+
+
+}
+export const deleteTemplateData = async (id:string)=>{
+  const [data,error] = await DeleteAxios(`/template/delete-template?id=${id}`);
+  return {data,error}
+
+
+}
+
+type templeteDataEdit = {
+  imageUrl?: File | string;
+  title?: string; 
+  links?: string;
+  
+};
+export const updateTemplateData = async (payload:templeteDataEdit)=>{
+    let thumbnailUrl:string = '';
+ 
+  
+  if(payload.imageUrl){
+     const fromData = new FormData();
+    if(payload.imageUrl) fromData.append("file",payload.imageUrl);
+
+    const [updatedData,err] = await PostRequestAxios("/images/upload-image",fromData);
+
+   if(err) return {data:null,error:err};
+    thumbnailUrl = updatedData as string;
+
+   
+
+  }
+  
+
+
+
+   
+    const newPayload = {
+    ...payload,
+   
+    ...(thumbnailUrl.trim()  && { imageUrl: thumbnailUrl }),
+  };
+    const [data,error] = await PatchRequestAxios(`/template/updated-template`,newPayload);
+    
+    console.log("PostData",data,"PostData",error);
+    return {data,error}
+}
 

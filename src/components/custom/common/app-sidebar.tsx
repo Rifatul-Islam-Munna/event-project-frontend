@@ -11,6 +11,7 @@ import {
   SquareDashedBottom,
   Users,
   StepBack,
+  NotepadTextDashed,
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
@@ -66,6 +67,11 @@ const data = {
       title: "Vendor category",
       url: "/admin/dashboard/seo",
       icon: StepBack, // or Shield, Lock
+    },
+    {
+      title: "Template",
+      url: "/admin/dashboard/template",
+      icon: NotepadTextDashed, // or Shield, Lock
     },
   ],
 };

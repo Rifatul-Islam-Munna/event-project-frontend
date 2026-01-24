@@ -2,7 +2,14 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User2, ShieldCheck, Crown, Camera, Edit2 } from "lucide-react";
+import {
+  User2,
+  ShieldCheck,
+  Crown,
+  Camera,
+  Edit2,
+  LayoutTemplate,
+} from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { getUserInfo } from "@/actions/auth";
 import { User } from "@/@types/user-types";
@@ -69,6 +76,8 @@ export function UserInfoCard() {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  console.log("user-info", user);
 
   return (
     <Card className="border border-gray-200 shadow-none border-none bg-white overflow-hidden w-full">
@@ -176,32 +185,44 @@ export function UserInfoCard() {
               <div className="flex items-center justify-between text-sm py-2 border-t border-gray-200">
                 <span className="text-gray-600">Account</span>
                 <span className="font-medium text-gray-900">
-                  {user?.type ? (
+                  {user?.type && (
                     <span className="capitalize">{user.type}</span>
-                  ) : (
-                    "User"
                   )}
-                  {user?.subscription?.plan && (
+                  {/* {user?.subscription?.plan && (
                     <span className="text-lime-700 ml-2">
                       · {user.subscription.plan}
                     </span>
-                  )}
+                  )} */}
                 </span>
               </div>
 
-              {/* Admin Dashboard */}
-              {user?.type === "admin" && (
-                <Link href="/admin/dashboard/subscription" className="block">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 h-9"
-                  >
-                    <ShieldCheck className="h-4 w-4 mr-2" />
-                    Admin Dashboard
-                  </Button>
-                </Link>
-              )}
+              <div className=" w-full flex justify-between items-center gap-1">
+                {/* Admin Dashboard */}
+                {user?.type === "admin" && (
+                  <Link href="/admin/dashboard/subscription" className="block">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-fit justify-start text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 h-9"
+                    >
+                      <ShieldCheck className="h-4 w-4 mr-2" />
+                      Admin Dashboard
+                    </Button>
+                  </Link>
+                )}
+                {user?.plan?.permissions?.includes("event.template") && (
+                  <Link href={"/dashboard/template"}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-fit justify-start text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 h-9"
+                    >
+                      <LayoutTemplate className="h-4 w-4 mr-2" />
+                      Explore Templates
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>

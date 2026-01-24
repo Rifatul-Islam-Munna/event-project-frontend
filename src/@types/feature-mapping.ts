@@ -23,6 +23,7 @@ export const featureMapping = {
   "message.send": "SMS messaging",
 
   "vendor.manage": "Vendor management system",
+  "event.template": "Event templates",
 
 
 
@@ -32,6 +33,7 @@ export const limitMapping = {
   "guests.total_max": "Maximum guests",
   "vendor.limit": " vendor Per event limit",
   "events.monthly_limit": "events limit",
+  "event.template": "Event templates",
 
 
  
