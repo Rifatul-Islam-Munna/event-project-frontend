@@ -242,8 +242,7 @@ export function PricingSection() {
                     {config.tier}
                   </div>
                   <CardTitle className="text-2xl font-bold text-slate-900">
-                    {plan.title} <br />
-                    <span className="text-lime-800">{plan?.type}</span>
+                    {plan.title}
                   </CardTitle>
                 </div>
 
