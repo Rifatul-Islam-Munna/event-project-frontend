@@ -283,7 +283,7 @@ function WeddingPlanner() {
   // Venue dimensions from URL
   const venueWidth = parseFloat(Query.get("venueWidth") || "50"); // meters
   const venueHeight = parseFloat(Query.get("venueHeight") || "30"); // meters
-  const SCALE_FACTOR = 10; // 1 meter = 5 pixels
+  const SCALE_FACTOR = 14; // 1 meter = 5 pixels
   const venueWidthPx = venueWidth * SCALE_FACTOR * 5; // Applied your multiplier
   const venueHeightPx = venueHeight * SCALE_FACTOR * 5; // Applied your multiplier
 
