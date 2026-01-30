@@ -60,6 +60,7 @@ export type Guest = {
   event_id?:string
   adults?:number
   children?:number
+  type?:string
 };
 
 type AnyRow = Record<string, unknown>;
@@ -116,6 +117,7 @@ export async function updateMultipleGuest(file: File, eventId: string) {
     const kPhone = findKey(r, ['phone', 'phone number', 'mobile', 'contact']);
     const kaduls = findKey(r, ['adults', 'ADULTS', 'adult', 'adult count']);
     const kchild = findKey(r, ['children', 'child', '', 'adult count']);
+    const type = findKey(r, ['type', 'Type']);
 
     const name  = String(kName  ? r[kName]  : '').trim();
   
@@ -127,7 +129,7 @@ export async function updateMultipleGuest(file: File, eventId: string) {
     if (!name) continue;
     if (email && !looksLikeEmail(email)) continue;
 
-    result.push({ name, email, phone,adults,children,event_id: eventId });
+    result.push({ name, email, phone,adults,children,event_id: eventId,type:type });
   }
 
  

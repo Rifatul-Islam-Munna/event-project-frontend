@@ -41,9 +41,16 @@ export function UploadCsvForm({ onClose }: UploadCsvFormProps) {
   const downloadTemplate = () => {
     // Create CSV content with headers and sample data
     const csvContent = [
-      ["name", "email", "phone", "adults", "children"],
-      ["John Doe", "john@example.com", "+1234567890", "2", "1"],
-      ["Jane Smith", "jane@example.com", "+0987654321", "1", "0"],
+      ["name", "email", "phone", "adults", "children", "type"],
+      [
+        "John Doe",
+        "john@example.com",
+        "with country code phone number",
+        "2",
+        "1",
+        "Test",
+      ],
+      ["Jane Smith", "jane@example.com", "with country code", "1", "0", "Test"],
     ]
       .map((row) => row.join(","))
       .join("\n");
