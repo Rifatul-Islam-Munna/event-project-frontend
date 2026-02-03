@@ -346,16 +346,19 @@ function WeddingPlanner() {
     // Calculate optimal zoom to fit venue with padding
     const zoomX = (containerWidth * 0.6) / venueWidthPx;
     const zoomY = (containerHeight * 0.6) / venueHeightPx;
-    const optimalZoom = Math.min(zoomX, zoomY, 1.0);
-    const defaultZoom = Math.max(1.2, optimalZoom);
-    // Center the venue in the viewport
-    const centerX = (containerWidth - venueWidthPx * optimalZoom) / 2;
-    const centerY = (containerHeight - venueHeightPx * optimalZoom) / 2;
+    const optimalZoom = Math.min(zoomX, zoomY, 1.0); // Cap at max zoom of 1.0
+
+    // Use the SAME zoom value for calculation and return
+    const finalZoom = Math.max(0.09, optimalZoom); // Use minZoom instead of 1.2
+
+    // Center calculation must use the SAME zoom that's returned
+    const centerX = (containerWidth - venueWidthPx * finalZoom) / 2;
+    const centerY = (containerHeight - venueHeightPx * finalZoom) / 2;
 
     return {
       x: centerX,
       y: centerY,
-      zoom: defaultZoom,
+      zoom: finalZoom, // ✅ Same zoom used in calculations
     };
   }, [venueWidthPx, venueHeightPx]);
 
