@@ -2,6 +2,8 @@
 
 import { DeleteAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
 import { cookies } from "next/headers";
+
+
 type User = {
   name?: string;
   email?: string;
@@ -155,3 +157,19 @@ export const updateTemplateData = async (payload:templeteDataEdit)=>{
     return {data,error}
 }
 
+
+export const uploadFile = async(file:File)=>{
+  const formData = new FormData();
+    formData.append("file",file);
+    const [updatedData,err] = await PostRequestAxios("/images/upload-image",formData);
+    return {data:updatedData,error:err}
+}
+export const pdfToImage = async(file:File)=>{
+  
+
+  const formData = new FormData();
+    formData.append("file",file);
+    const [updatedData,err] = await PostRequestAxios("/images/upload-image",formData);
+      console.log("png-url->",updatedData);
+    return {data:updatedData,error:err}
+}

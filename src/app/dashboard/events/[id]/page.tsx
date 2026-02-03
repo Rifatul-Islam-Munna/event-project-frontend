@@ -22,6 +22,8 @@ const WeddingPlannerWrapper = dynamic(
   () => import("@/component/table-charts/wedding-planner"),
 );
 import Image from "next/image";
+import { MessageSendCard } from "@/components/custom/events/MessageSendCard";
+import { TemplatesList } from "@/app/admin/dashboard/template/TemplatesList";
 export default function EventDetailsPage() {
   const params = useParams();
   const eventSlug = params.slug as string;
@@ -232,7 +234,7 @@ export default function EventDetailsPage() {
               defaultValue="guests"
               className="w-full"
             >
-              <TabsList className="sticky shadow-none top-0 z-10 grid w-full grid-cols-3 border-b border-border bg-transparent rounded-none p-0 h-auto">
+              <TabsList className="sticky shadow-none top-0 z-10 grid w-full grid-cols-5 border-b border-border bg-transparent rounded-none p-0 h-auto">
                 <TabsTrigger
                   value="guests"
                   className="flex items-center gap-2 shadow-none  text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0 data-[state=active]:border-b-2  data-[state=active]:border-lime-600 rounded-none py-3 px-4"
@@ -277,7 +279,37 @@ export default function EventDetailsPage() {
                     </div>
                   </TabsTrigger>
                 ) : null}
+                <TabsTrigger
+                  value="message"
+                  className="flex items-center gap-2 text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0  data-[state=active]:border-b-2 data-[state=active]:border-lime-600 rounded-none py-3 px-4"
+                >
+                  <div className=" flex flex-col justify-center items-center">
+                    <Image
+                      src={"/images/message.png"}
+                      width={30}
+                      height={30}
+                      alt="guest"
+                    />
+                    <p className=" font-semibold text-sm"> Message</p>
+                  </div>
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="template"
+                  className="flex items-center gap-2 text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-t-0 data-[state=active]:border-l-0 data-[state=active]:border-r-0  data-[state=active]:border-b-2 data-[state=active]:border-lime-600 rounded-none py-3 px-4"
+                >
+                  <div className=" flex flex-col justify-center items-center">
+                    <Image
+                      src={"/images/window.png"}
+                      width={30}
+                      height={30}
+                      alt="guest"
+                    />
+                    <p className=" font-semibold text-sm"> Template</p>
+                  </div>
+                </TabsTrigger>
               </TabsList>
+
               <TabsContent
                 value="guests"
                 className="mt-0 p-6 border-none bg-transparent"
@@ -310,6 +342,21 @@ export default function EventDetailsPage() {
                   onUpdateVendor={handleUpdateVendor}
                   onDeleteVendor={handleDeleteVendor}
                 />
+              </TabsContent>
+              <TabsContent
+                value="message"
+                className="mt-0 p-6 border-none bg-transparent"
+              >
+                {" "}
+                <MessageSendCard />
+              </TabsContent>
+              <TabsContent
+                value="template"
+                className="mt-0 p-6 border-none bg-transparent"
+              >
+                {" "}
+                {/* Remove mt and border, add back padding */}
+                <TemplatesList />
               </TabsContent>
             </Tabs>
           </CardContent>

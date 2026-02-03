@@ -31,6 +31,7 @@ import { postEvent } from "@/actions/fetch-action";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { Textarea } from "@/components/ui/textarea";
+import { uploadFile } from "@/actions/profileInformation";
 
 // Dynamically import the map component to avoid SSR issues
 const MapLocationPicker = dynamic(() => import("./MapLocationPicker"), {
@@ -63,7 +64,7 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const [message, setMessage] = useState("");
-
+  const [pdf, setPdf] = useState<string | null>(null);
   const query = useQueryClient();
   const { mutate, isPending } = useMutation({
     mutationKey: ["createEvent"],
@@ -88,7 +89,23 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
       return toast.error(error.message);
     },
   });
-
+  const { mutate: uploadPdf, isPending: isPdfPending } = useMutation({
+    mutationKey: ["upload-pdf"],
+    mutationFn: (file: File) => uploadFile(file),
+    onSuccess: (data) => {
+      if (data.data) {
+        setPdf(data.data as string);
+        return;
+      }
+      return toast.error(data?.error?.message);
+    },
+  });
+  const handelPdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadPdf(file);
+    }
+  };
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -148,6 +165,7 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
     formdata.append("slug", slug);
     formdata.append("width", width.toString());
     formdata.append("height", height.toString());
+    if (pdf) formdata.append("pdf", pdf);
     if (message) formdata.append("message", message);
 
     mutate(formdata);
@@ -339,6 +357,54 @@ export function CreateEventForm({ onAddEvent, onClose }: CreateEventFormProps) {
             <p className="text-xs text-gray-500">
               Optional: Square image recommended (500x500px)
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-900">
+              Event Menu (must be pdf)
+            </Label>
+
+            {/* Logo Preview */}
+            {pdf && (
+              <div className="flex items-center gap-3 p-3 bg-lime-50 border border-lime-300 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-lime-900 truncate">
+                    {pdf}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setPdf(null)}
+                  className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Upload Button */}
+            <input
+              id="pdffile"
+              type="file"
+              accept="application/pdf"
+              onChange={handelPdfUpload}
+              className="hidden"
+            />
+            <Label
+              htmlFor="pdffile"
+              className="flex items-center justify-center gap-2 h-10 px-4 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-lime-600 hover:bg-lime-50 transition-colors"
+            >
+              {isPdfPending ? (
+                <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
+              ) : (
+                <Upload className="h-4 w-4 text-gray-600" />
+              )}
+              <span className="text-sm text-gray-700">
+                {pdf ? "Change Logo" : "Upload Logo"}
+              </span>
+            </Label>
           </div>
 
           {/* Divider */}

@@ -34,6 +34,9 @@ export const limitMapping = {
   "vendor.limit": " vendor Per event limit",
   "events.monthly_limit": "events limit",
   "event.template": "Event templates",
+  "event.message": "Sms limit",
+  "event.email": "Email limit",
+  "event.whatsapp": "whatsapp limit",
 
 
  

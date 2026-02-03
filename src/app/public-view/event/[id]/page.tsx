@@ -11,7 +11,7 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 
 import type { Guest } from "@/@types/events-details";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getAllGuest, getAllSeatPlan } from "@/actions/fetch-action";
 
@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { ReadOnlyTableNode } from "./table-node-readonly";
 import { ReadOnlyChairNode } from "./chair-node-readonly";
+import { Button } from "@/components/ui/button";
 export type TableType =
   | "rectangular"
   | "square"
@@ -49,7 +50,7 @@ const nodeTypes = {
 
 export const getRectangularSeatDistribution = (
   totalSeats: number,
-  isSquare: boolean
+  isSquare: boolean,
 ) => {
   let topSeats = 0;
   let bottomSeats = 0;
@@ -201,27 +202,39 @@ function ReadOnlyWeddingPlanner() {
       });
     }
   };
-
+  const router = useRouter();
   return (
     <div className="h-screen w-full relative">
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-white rounded-lg shadow-lg p-4 min-w-80">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            type="text"
-            placeholder="Search by guest name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10 h-16  w-xs"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+        <div className=" w-fit flex justify-center items-center gap-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search by guest name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10 h-16  w-xs"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <Button
+            onClick={() =>
+              router.push(
+                `/public-view/event-menu?id=${pathName.split("/").pop() as string}`,
+              )
+            }
+            variant={"outline"}
+          >
+            Event Menu
+          </Button>
         </div>
 
         {searchResults.length > 0 && (

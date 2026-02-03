@@ -144,7 +144,7 @@ export default function DashboardPage() {
     <section className="bg-gradient-to-br min-h-dvh from-slate-50/10 via-blue-50/15 to-indigo-100 h-auto">
       <div className="container mx-auto py-8 px-4 md:px-6 space-y-8 ">
         <PricingSection />
-        <TemplateExploreBanner />
+        {/*    <TemplateExploreBanner /> */}
         <UserInfoCard />
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-3">

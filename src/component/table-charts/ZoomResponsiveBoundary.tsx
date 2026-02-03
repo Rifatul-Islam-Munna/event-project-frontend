@@ -434,7 +434,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
                 width={imageState.width * zoom * 7}
                 height={imageState.height * zoom * 7}
                 draggable={isEditMode}
-                opacity={0.15}
+                opacity={0.15} // if need we will change the opacity
                 listening={isEditMode}
                 onDragMove={(e) => {
                   if (isEditMode) {

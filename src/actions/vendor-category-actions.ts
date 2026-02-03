@@ -1,6 +1,6 @@
 "use server"
 
-import { GetRequestAxios, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
+import { GetRequestAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
 
 
 export interface VendorCategory {
@@ -41,3 +41,26 @@ export const PostNewGuestType = async (payload: {type:string[],event_id:string})
   const [data, error] = await PostRequestAxios(`/guest/post-guest-type`,payload);
   return { data, error };
 }
+export type MessageSend = {
+  _id: string;
+  event_id: string;
+  numberOFSendMessageLimit?: number;
+  startingDate?: string | Date;
+  numberOfNotSend: {
+    sms: number;
+    mail: number;
+    whatsapp: number;
+  };
+  isMessageSend: boolean;
+};
+export const getMessageService = async (event_id:string)=>{
+  const [data, error] = await GetRequestNormal<MessageSend>(`/seat-plan/get-one-message-send?id=${event_id}`);
+  return { data, error };
+}
+export const updateMessageService = async (event_id: string, startingDate: string) => {
+  const [data, error] = await PatchRequestAxios<MessageSend>(
+    `/seat-plan/update-date`,
+    { date: startingDate, event_id: event_id }
+  );
+  return { data, error };
+};

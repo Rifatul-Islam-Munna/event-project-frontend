@@ -1,17 +1,21 @@
 import { useEffect, useLayoutEffect, useState } from "react";
-import { X } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import table from "./table.jpg";
 import { useZoomResponive } from "@/zustan-fn/zoomResponive";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { getAllImages } from "@/actions/fetch-action";
+import { pdfToImage } from "@/actions/profileInformation";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { pdfToPng } from "@/lib/pdf";
 
 export const ExtrasComponent = () => {
   // Add more images for demonstration - you can replace with your actual images
 
   const { imageUrl, setImageUrl, isEditMode } = useZoomResponive(
-    (state) => state
+    (state) => state,
   );
 
   const { data: images, refetch } = useQuery({
@@ -35,12 +39,31 @@ export const ExtrasComponent = () => {
     setImageUrl("");
   };
 
+  const { mutate: uploadPdf, isPending: isPdfPending } = useMutation({
+    mutationKey: ["upload-pdf"],
+    mutationFn: (file: File) => pdfToImage(file),
+    onSuccess: (data) => {
+      if (data.data) {
+        setImageUrl(data.data as string);
+        return;
+      }
+      return toast.error(data?.error?.message);
+    },
+  });
+  const handelPdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type === "application/pdf") {
+      const readyPngFile = await pdfToPng(file);
+      uploadPdf(readyPngFile);
+    }
+  };
+
   return (
     <div className="w-full bg-white rounded-lg   mb-4">
       {/* Header */}
       <div className="p-2 border-b border-gray-200">
         <h3 className="text-sm font-medium text-gray-900 text-left">
-          Extras{" "}
+          Layout Template{" "}
           <span
             className={cn(" text-[10px] text-red-300", {
               hidden: isEditMode,
@@ -113,6 +136,62 @@ export const ExtrasComponent = () => {
             Clear
           </button>
         )}
+
+        <div className=" mt-2">
+          <p className=" text-sm">
+            Or Upload Your Layout (pdf only){" "}
+            <span className=" text-yellow-700">
+              {!isEditMode && "(turn on edit mode to upload)"}
+            </span>
+          </p>
+          {imageUrl && (
+            <div className="flex items-center gap-3 p-3 bg-lime-50 border border-lime-300 rounded-lg">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-lime-900 truncate">
+                  {imageUrl}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setImageUrl("")}
+                className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+          {/* Upload Button */}
+          <input
+            id="pdffile"
+            type="file"
+            accept="application/pdf"
+            onChange={handelPdfUpload}
+            className="hidden"
+            disabled={isPdfPending || !isEditMode}
+          />
+          <Label
+            htmlFor="pdffile"
+            className={cn(
+              `flex items-center justify-center gap-2 h-10 px-4 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-lime-600 hover:bg-lime-50 transition-colors`,
+              {
+                "cursor-not-allowed": isPdfPending || !isEditMode,
+              },
+            )}
+            disabled={isPdfPending || !isEditMode}
+          >
+            {isPdfPending ? (
+              <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
+            ) : (
+              <Upload className="h-4 w-4 text-gray-600" />
+            )}
+            <span className="text-sm text-gray-700">
+              {imageUrl ? "Change Logo" : "Upload layout"}
+            </span>
+          </Label>
+        </div>
       </div>
     </div>
   );

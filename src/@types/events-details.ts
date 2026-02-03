@@ -41,6 +41,7 @@ export type EventItem = {
   width?: number;
   height?: number;
   message?: string;
+  pdf ? :string
 };
 
 export type EventList = {

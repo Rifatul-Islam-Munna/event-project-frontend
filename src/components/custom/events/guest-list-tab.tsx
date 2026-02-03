@@ -274,9 +274,9 @@ export function GuestListTab({
                 <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
                   Seat Status
                 </TableHead>
-                <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
+                {/* <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
                   Message Send
-                </TableHead>
+                </TableHead> */}
                 <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
                   Guest Type
                 </TableHead>
@@ -362,7 +362,7 @@ export function GuestListTab({
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="py-4 px-6">
+                    {/*   <TableCell className="py-4 px-6">
                       {guest?.isMessageSend ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-lime-50 text-lime-700 border border-lime-200">
                           <CheckCircle className="h-4 w-4" />
@@ -372,7 +372,7 @@ export function GuestListTab({
                           <XCircle className="h-4 w-4" />
                         </span>
                       )}
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell className="py-4 px-6">
                       <Badge className=" bg-lime-700 text-sm">
                         {guest?.type}
