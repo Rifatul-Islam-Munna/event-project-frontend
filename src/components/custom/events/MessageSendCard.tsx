@@ -129,7 +129,7 @@ export function MessageSendCard() {
   }
 
   // Error state
-  if (error || response?.error) {
+  if (!isPending || error) {
     return (
       <Card className="border-red-500/70 shadow-sm">
         <CardContent className="py-6">
@@ -147,7 +147,7 @@ export function MessageSendCard() {
       <Card className="border-lime-500/70 shadow-sm">
         <CardContent className="py-6">
           <p className="text-sm text-muted-foreground">
-            No message schedule found for this event.
+            No message schedule found for this event, Place some guests first
           </p>
         </CardContent>
       </Card>
