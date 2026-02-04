@@ -128,7 +128,7 @@ export function MessageSendCard() {
     );
   }
 
-  // Error state
+  /* // Error state
   if (!isPending || error) {
     return (
       <Card className="border-red-500/70 shadow-sm">
@@ -139,7 +139,7 @@ export function MessageSendCard() {
         </CardContent>
       </Card>
     );
-  }
+  } */
 
   // No data state
   if (!data) {

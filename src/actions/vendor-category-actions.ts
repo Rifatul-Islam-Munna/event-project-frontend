@@ -55,6 +55,8 @@ export type MessageSend = {
 };
 export const getMessageService = async (event_id:string)=>{
   const [data, error] = await GetRequestNormal<MessageSend>(`/seat-plan/get-one-message-send?id=${event_id}`);
+
+  console.log("search-data->",data,"search-error->",error);
   return { data, error };
 }
 export const updateMessageService = async (event_id: string, startingDate: string) => {
