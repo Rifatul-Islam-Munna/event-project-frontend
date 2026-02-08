@@ -21,14 +21,29 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import {
   getMessageService,
   updateMessageService,
 } from "@/actions/vendor-category-actions";
-import { format, parseISO } from "date-fns";
-import { Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { Loader2, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type MessageSend = {
   _id: string;
@@ -41,10 +56,120 @@ export type MessageSend = {
     whatsapp: number;
   };
   isMessageSend: boolean;
+  // No timeZone field in backend
+};
+
+// Curated list of major capital/country representative timezones
+const MAJOR_TIMEZONES = {
+  // European Timezones (Priority)
+  european: [
+    { value: "Europe/London", label: "London (United Kingdom)" },
+    { value: "Europe/Paris", label: "Paris (France)" },
+    { value: "Europe/Berlin", label: "Berlin (Germany)" },
+    { value: "Europe/Madrid", label: "Madrid (Spain)" },
+    { value: "Europe/Rome", label: "Rome (Italy)" },
+    { value: "Europe/Amsterdam", label: "Amsterdam (Netherlands)" },
+    { value: "Europe/Brussels", label: "Brussels (Belgium)" },
+    { value: "Europe/Vienna", label: "Vienna (Austria)" },
+    { value: "Europe/Stockholm", label: "Stockholm (Sweden)" },
+    { value: "Europe/Copenhagen", label: "Copenhagen (Denmark)" },
+    { value: "Europe/Oslo", label: "Oslo (Norway)" },
+    { value: "Europe/Helsinki", label: "Helsinki (Finland)" },
+    { value: "Europe/Warsaw", label: "Warsaw (Poland)" },
+    { value: "Europe/Prague", label: "Prague (Czech Republic)" },
+    { value: "Europe/Budapest", label: "Budapest (Hungary)" },
+    { value: "Europe/Bucharest", label: "Bucharest (Romania)" },
+    { value: "Europe/Athens", label: "Athens (Greece)" },
+    { value: "Europe/Istanbul", label: "Istanbul (Turkey)" },
+    { value: "Europe/Dublin", label: "Dublin (Ireland)" },
+    { value: "Europe/Lisbon", label: "Lisbon (Portugal)" },
+    { value: "Europe/Zurich", label: "Zurich (Switzerland)" },
+    { value: "Europe/Moscow", label: "Moscow (Russia)" },
+    { value: "Europe/Kiev", label: "Kyiv (Ukraine)" },
+  ],
+  // Americas
+  americas: [
+    { value: "America/New_York", label: "New York (USA Eastern)" },
+    { value: "America/Chicago", label: "Chicago (USA Central)" },
+    { value: "America/Denver", label: "Denver (USA Mountain)" },
+    { value: "America/Los_Angeles", label: "Los Angeles (USA Pacific)" },
+    { value: "America/Toronto", label: "Toronto (Canada)" },
+    { value: "America/Vancouver", label: "Vancouver (Canada)" },
+    { value: "America/Mexico_City", label: "Mexico City (Mexico)" },
+    { value: "America/Bogota", label: "Bogota (Colombia)" },
+    { value: "America/Lima", label: "Lima (Peru)" },
+    { value: "America/Santiago", label: "Santiago (Chile)" },
+    { value: "America/Buenos_Aires", label: "Buenos Aires (Argentina)" },
+    { value: "America/Sao_Paulo", label: "São Paulo (Brazil)" },
+    { value: "America/Caracas", label: "Caracas (Venezuela)" },
+    { value: "America/Panama", label: "Panama City (Panama)" },
+    { value: "America/Havana", label: "Havana (Cuba)" },
+  ],
+  // Asia
+  asia: [
+    { value: "Asia/Dubai", label: "Dubai (UAE)" },
+    { value: "Asia/Riyadh", label: "Riyadh (Saudi Arabia)" },
+    { value: "Asia/Tehran", label: "Tehran (Iran)" },
+    { value: "Asia/Karachi", label: "Karachi (Pakistan)" },
+    { value: "Asia/Kolkata", label: "Delhi/Mumbai (India)" },
+    { value: "Asia/Dhaka", label: "Dhaka (Bangladesh)" },
+    { value: "Asia/Kathmandu", label: "Kathmandu (Nepal)" },
+    { value: "Asia/Colombo", label: "Colombo (Sri Lanka)" },
+    { value: "Asia/Bangkok", label: "Bangkok (Thailand)" },
+    { value: "Asia/Jakarta", label: "Jakarta (Indonesia)" },
+    { value: "Asia/Singapore", label: "Singapore" },
+    { value: "Asia/Kuala_Lumpur", label: "Kuala Lumpur (Malaysia)" },
+    { value: "Asia/Manila", label: "Manila (Philippines)" },
+    { value: "Asia/Shanghai", label: "Beijing/Shanghai (China)" },
+    { value: "Asia/Hong_Kong", label: "Hong Kong" },
+    { value: "Asia/Taipei", label: "Taipei (Taiwan)" },
+    { value: "Asia/Seoul", label: "Seoul (South Korea)" },
+    { value: "Asia/Tokyo", label: "Tokyo (Japan)" },
+    { value: "Asia/Ho_Chi_Minh", label: "Ho Chi Minh (Vietnam)" },
+  ],
+  // Africa
+  africa: [
+    { value: "Africa/Cairo", label: "Cairo (Egypt)" },
+    { value: "Africa/Lagos", label: "Lagos (Nigeria)" },
+    { value: "Africa/Nairobi", label: "Nairobi (Kenya)" },
+    { value: "Africa/Johannesburg", label: "Johannesburg (South Africa)" },
+    { value: "Africa/Casablanca", label: "Casablanca (Morocco)" },
+    { value: "Africa/Algiers", label: "Algiers (Algeria)" },
+    { value: "Africa/Accra", label: "Accra (Ghana)" },
+  ],
+  // Oceania
+  oceania: [
+    { value: "Australia/Sydney", label: "Sydney (Australia)" },
+    { value: "Australia/Melbourne", label: "Melbourne (Australia)" },
+    { value: "Australia/Perth", label: "Perth (Australia)" },
+    { value: "Pacific/Auckland", label: "Auckland (New Zealand)" },
+    { value: "Pacific/Fiji", label: "Fiji" },
+    { value: "Pacific/Honolulu", label: "Honolulu (Hawaii)" },
+  ],
+};
+
+// Format timezone with GMT offset
+const formatTimezone = (tz: string) => {
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      timeZoneName: "shortOffset",
+    });
+    const parts = formatter.formatToParts(now);
+    const offset =
+      parts.find((part) => part.type === "timeZoneName")?.value || "";
+    return `${offset}`;
+  } catch {
+    return "";
+  }
 };
 
 export function MessageSendCard() {
   const [localDateTime, setLocalDateTime] = useState<string>("");
+  const [selectedTimezone, setSelectedTimezone] =
+    useState<string>("Europe/London");
+  const [open, setOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const pathName = usePathname();
   const eventId = pathName.split("/").pop() as string;
@@ -62,10 +187,11 @@ export function MessageSendCard() {
 
   const data = response?.data;
 
-  // Update mutation
+  // Update mutation - ONLY sends date as ISO string, no timezone
   const updateMutation = useMutation({
-    mutationFn: async (newDate: Date) => {
-      return await updateMessageService(eventId, newDate.toISOString());
+    mutationFn: async (dateISO: string) => {
+      // Only send the ISO date string to backend
+      return await updateMessageService(eventId, dateISO);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["message-send", eventId] });
@@ -74,13 +200,19 @@ export function MessageSendCard() {
   });
 
   // Initialize localDateTime when data loads
+  // Convert UTC date from backend to user's selected timezone for display
   useEffect(() => {
     if (data?.startingDate) {
-      const d = new Date(data.startingDate);
-      // Format for datetime-local input: "YYYY-MM-DDTHH:mm"
-      const formatted = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16);
+      // Get browser's timezone as default
+      const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      setSelectedTimezone(browserTimezone);
+
+      // Convert UTC date to browser timezone for display
+      const utcDate = new Date(data.startingDate);
+      const zonedDate = toZonedTime(utcDate, browserTimezone);
+
+      // Format for datetime-local input
+      const formatted = format(zonedDate, "yyyy-MM-dd'T'HH:mm");
       setLocalDateTime(formatted);
     }
   }, [data?.startingDate]);
@@ -113,8 +245,40 @@ export function MessageSendCard() {
 
   const handleSave = async () => {
     if (!localDateTime) return;
-    const newDate = new Date(localDateTime);
-    await updateMutation.mutateAsync(newDate);
+
+    // Convert the user's selected datetime (in their chosen timezone) to UTC
+    // Example: "2026-02-10T15:00" in "Asia/Dhaka" timezone
+    const utcDate = fromZonedTime(localDateTime, selectedTimezone);
+
+    // Convert to ISO string and send ONLY the date to backend (no timezone)
+    // Example result: "2026-02-10T09:00:00.000Z"
+    await updateMutation.mutateAsync(utcDate.toISOString());
+  };
+
+  // Format display date - convert UTC from backend to browser timezone
+  const formattedDisplayDate = useMemo(() => {
+    if (!data?.startingDate) return "Not set";
+
+    // Get browser timezone for display
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const utcDate = new Date(data.startingDate);
+    const zonedDate = toZonedTime(utcDate, browserTimezone);
+
+    return `${format(zonedDate, "PPp")}`;
+  }, [data?.startingDate]);
+
+  // Get selected timezone display label
+  const getSelectedLabel = (tzValue: string) => {
+    const allTimezones = [
+      ...MAJOR_TIMEZONES.european,
+      ...MAJOR_TIMEZONES.americas,
+      ...MAJOR_TIMEZONES.asia,
+      ...MAJOR_TIMEZONES.africa,
+      ...MAJOR_TIMEZONES.oceania,
+    ];
+    const tzInfo = allTimezones.find((tz) => tz.value === tzValue);
+    const offset = formatTimezone(tzValue);
+    return tzInfo ? `${tzInfo.label} ${offset}` : tzValue;
   };
 
   // Loading state
@@ -127,19 +291,6 @@ export function MessageSendCard() {
       </Card>
     );
   }
-
-  /* // Error state
-  if (!isPending || error) {
-    return (
-      <Card className="border-red-500/70 shadow-sm">
-        <CardContent className="py-6">
-          <p className="text-sm text-red-600">
-            Failed to load message schedule data. Please try again.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  } */
 
   // No data state
   if (!data) {
@@ -173,10 +324,8 @@ export function MessageSendCard() {
         <div className="grid gap-2 text-sm">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Starting date & time</span>
-            <span className="font-medium">
-              {data.startingDate
-                ? format(parseISO(data.startingDate.toString()), "PPp")
-                : "Not set"}
+            <span className="font-medium text-right max-w-[60%]">
+              {formattedDisplayDate}
             </span>
           </div>
           <div className="flex items-center justify-between">
@@ -185,15 +334,6 @@ export function MessageSendCard() {
               {data?.isMessageSend ? "Yes" : "No"}
             </span>
           </div>
-
-          {/* {typeof data.numberOFSendMessageLimit === "number" && (
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Send limit</span>
-              <span className="font-medium">
-                {data.numberOFSendMessageLimit}
-              </span>
-            </div>
-          )} */}
         </div>
 
         <div className="rounded-md bg-lime-50 px-3 py-2 text-sm text-lime-900">
@@ -224,13 +364,13 @@ export function MessageSendCard() {
             </Button>
           </DialogTrigger>
 
-          <DialogContent>
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Update starting date & time</DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-3 py-2">
-              <div className="space-y-1">
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
                 <Label htmlFor="datetime">Starting at</Label>
                 <Input
                   id="datetime"
@@ -239,6 +379,151 @@ export function MessageSendCard() {
                   onChange={(e) => setLocalDateTime(e.target.value)}
                   className="border-lime-500/60 focus-visible:ring-lime-600"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Time zone</Label>
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={open}
+                      className="w-full justify-between border-lime-500/60 focus-visible:ring-lime-600"
+                    >
+                      {selectedTimezone
+                        ? getSelectedLabel(selectedTimezone)
+                        : "Select timezone..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[450px] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search timezone..." />
+                      <CommandList>
+                        <CommandEmpty>No timezone found.</CommandEmpty>
+
+                        <CommandGroup heading="🇪🇺 European Timezones">
+                          {MAJOR_TIMEZONES.european.map((timezone) => (
+                            <CommandItem
+                              key={timezone.value}
+                              value={`${timezone.label} ${timezone.value}`}
+                              onSelect={() => {
+                                setSelectedTimezone(timezone.value);
+                                setOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedTimezone === timezone.value
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                              {timezone.label} {formatTimezone(timezone.value)}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+
+                        <CommandGroup heading="🌎 Americas">
+                          {MAJOR_TIMEZONES.americas.map((timezone) => (
+                            <CommandItem
+                              key={timezone.value}
+                              value={`${timezone.label} ${timezone.value}`}
+                              onSelect={() => {
+                                setSelectedTimezone(timezone.value);
+                                setOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedTimezone === timezone.value
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                              {timezone.label} {formatTimezone(timezone.value)}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+
+                        <CommandGroup heading="🌏 Asia">
+                          {MAJOR_TIMEZONES.asia.map((timezone) => (
+                            <CommandItem
+                              key={timezone.value}
+                              value={`${timezone.label} ${timezone.value}`}
+                              onSelect={() => {
+                                setSelectedTimezone(timezone.value);
+                                setOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedTimezone === timezone.value
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                              {timezone.label} {formatTimezone(timezone.value)}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+
+                        <CommandGroup heading="🌍 Africa">
+                          {MAJOR_TIMEZONES.africa.map((timezone) => (
+                            <CommandItem
+                              key={timezone.value}
+                              value={`${timezone.label} ${timezone.value}`}
+                              onSelect={() => {
+                                setSelectedTimezone(timezone.value);
+                                setOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedTimezone === timezone.value
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                              {timezone.label} {formatTimezone(timezone.value)}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+
+                        <CommandGroup heading="🌊 Oceania">
+                          {MAJOR_TIMEZONES.oceania.map((timezone) => (
+                            <CommandItem
+                              key={timezone.value}
+                              value={`${timezone.label} ${timezone.value}`}
+                              onSelect={() => {
+                                setSelectedTimezone(timezone.value);
+                                setOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedTimezone === timezone.value
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                              {timezone.label} {formatTimezone(timezone.value)}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground">
+                  Selected: {selectedTimezone}
+                </p>
               </div>
             </div>
 
