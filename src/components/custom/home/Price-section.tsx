@@ -250,9 +250,6 @@ export function PricingSection() {
                   <span className="text-4xl font-bold text-slate-900">
                     {formatPrice(plan.priceCents, plan.currency)}
                   </span>
-                  <span className="text-slate-500 text-sm font-medium">
-                    /year
-                  </span>
                 </div>
 
                 <p className="text-sm text-slate-600 px-2">
