@@ -35,7 +35,7 @@ interface PricingSectionProps {
 }
 
 export function PricingSection() {
-  const [planType, setPlanType] = useState<string>("Planer package");
+  const [planType, setPlanType] = useState<string>("Event package");
   const { data } = useQuery({
     queryKey: ["plans"],
     queryFn: () => getAllThePlans(),
