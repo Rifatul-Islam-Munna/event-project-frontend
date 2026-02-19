@@ -407,7 +407,7 @@ export function PricingSection() {
 
           {/* Tabs for Plan Types */}
           <Tabs
-            defaultValue="planner"
+            defaultValue="event"
             className="w-full"
             onValueChange={(value) =>
               setPlanType(
