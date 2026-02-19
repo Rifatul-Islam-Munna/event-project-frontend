@@ -141,7 +141,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <section className="bg-gradient-to-br min-h-dvh from-slate-50/10 via-blue-50/15 to-indigo-100 h-auto">
+    <section className="bg-gradient-to-br min-h-dvh relative from-slate-50/10 via-blue-50/15 to-indigo-100 h-auto">
       <div className="container mx-auto py-8 px-4 md:px-6 space-y-8 ">
         <PricingSection />
         {/*    <TemplateExploreBanner /> */}

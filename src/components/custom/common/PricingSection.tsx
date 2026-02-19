@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getFeatureDescription,
   getLimitDescription,
@@ -25,6 +25,8 @@ import {
   Shield,
 } from "lucide-react";
 import Link from "next/link";
+import { getUserInfo } from "@/actions/auth";
+import { isAfter } from "date-fns";
 
 export function PricingSection() {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,6 +35,21 @@ export function PricingSection() {
     queryKey: ["plans"],
     queryFn: () => getAllThePlans(),
   });
+  useEffect(() => {
+    const checkSubscription = async () => {
+      const info = await getUserInfo();
+
+      const isSubscriptionActive = info?.subscription?.endDate
+        ? isAfter(new Date(info.subscription.endDate), new Date())
+        : false;
+
+      if (!isSubscriptionActive) {
+        setIsOpen(true);
+      }
+    };
+
+    checkSubscription();
+  }, []);
 
   const formatPrice = (priceCents: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
