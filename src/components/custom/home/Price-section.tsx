@@ -9,11 +9,11 @@ import { getAllThePlans } from "@/actions/fetch-action";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import {
   Check,
   Crown,
-  Zap,
   Star,
   ArrowRight,
   Diamond,
@@ -24,41 +24,25 @@ import {
   Share2,
   Settings,
   Shield,
-  Download,
-  Navigation,
+  Tag,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-interface PricingSectionProps {
-  plans: PricingPlan[];
-}
-
 export function PricingSection() {
   const [planType, setPlanType] = useState<string>("Event package");
+  const [couponCode, setCouponCode] = useState("");
+
   const { data } = useQuery({
     queryKey: ["plans"],
     queryFn: () => getAllThePlans(),
   });
 
-  const formatPrice = (priceCents: number, currency: string) => {
+  const formatPrice = (priceCents: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "EUR",
     }).format(priceCents / 100);
-  };
-
-  const formatBillingUnit = (unit: string) => {
-    switch (unit) {
-      case "PER_MONTH":
-        return "/month";
-      case "PER_YEAR":
-        return "/year";
-      case "PER_EVENT":
-        return "/event";
-      default:
-        return `/${unit.toLowerCase()}`;
-    }
   };
 
   const getPlanConfig = (index: number) => {
@@ -139,10 +123,7 @@ export function PricingSection() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.1,
-      },
+      transition: { staggerChildren: 0.15, delayChildren: 0.1 },
     },
   };
 
@@ -151,31 +132,25 @@ export function PricingSection() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        duration: 0.5,
-        ease: [0.25, 0.4, 0.25, 1],
-      },
+      transition: { duration: 0.5, ease: [0.25, 0.4, 0.25, 1] },
     },
   };
 
   const pulseVariants = {
     animate: {
       scale: [1, 1.05, 1],
-      transition: {
-        duration: 2,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
+      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
     },
   };
 
-  // Filter plans by type
-  const plannerPackages = data?.data?.filter(
-    (plan) => plan.type === "Planer package",
-  );
-  const eventPackages = data?.data?.filter(
-    (plan) => plan.type === "Event package",
-  );
+  // ✅ Sorted by order ascending
+  const plannerPackages = data?.data
+    ?.filter((plan) => plan.type === "Planer package")
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const eventPackages = data?.data
+    ?.filter((plan) => plan.type === "Event package")
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   const renderPricingCards = (plans: PricingPlan[]) => (
     <m.div
@@ -187,7 +162,7 @@ export function PricingSection() {
     >
       {plans?.map((plan, index) => {
         const config = getPlanConfig(index);
-        const isPopular = index === 1;
+        const isPopular = plan.isPopular; // ✅ from DB, not hardcoded index
         const IconComponent = config.icon;
         const ButtonIcon = config.buttonIcon;
 
@@ -202,15 +177,13 @@ export function PricingSection() {
             className="group relative h-full"
           >
             <Card
-              className={`relative h-full bg-gradient-to-br ${
-                config.gradient
-              } border ${
+              className={`relative h-full bg-gradient-to-br ${config.gradient} border ${
                 config.border
               } rounded-2xl transition-all duration-300 hover:shadow-lg ${
                 isPopular ? "ring-2 ring-lime-300 scale-105" : ""
               }`}
             >
-              {/* Enhanced Popular Badge */}
+              {/* ✅ Popular badge driven by plan.isPopular */}
               {isPopular && (
                 <m.div
                   variants={pulseVariants}
@@ -224,7 +197,6 @@ export function PricingSection() {
                 </m.div>
               )}
 
-              {/* Enhanced Header with Beautiful Icons */}
               <CardHeader className="text-center pb-4 pt-8 px-6 space-y-4">
                 <div className="flex items-center justify-center mb-3">
                   <m.div
@@ -233,7 +205,7 @@ export function PricingSection() {
                     className="relative w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center group-hover:shadow-xl transition-shadow duration-300"
                   >
                     <IconComponent className={`h-8 w-8 ${config.iconColor}`} />
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-transparent rounded-2xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-transparent rounded-2xl" />
                   </m.div>
                 </div>
 
@@ -248,7 +220,7 @@ export function PricingSection() {
 
                 <div className="flex items-baseline justify-center gap-1 mb-2">
                   <span className="text-4xl font-bold text-slate-900">
-                    {formatPrice(plan.priceCents, plan.currency)}
+                    {formatPrice(plan.priceCents)}
                   </span>
                 </div>
 
@@ -257,12 +229,10 @@ export function PricingSection() {
                 </p>
               </CardHeader>
 
-              {/* Enhanced Content with Feature Icons */}
               <CardContent className="px-6 pb-6 space-y-6">
-                {/* Enhanced Features with Icons */}
                 <div>
                   <h4 className="flex items-center gap-2 font-semibold text-slate-800 text-sm mb-4 uppercase tracking-wide">
-                    <div className="w-2 h-2 bg-lime-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-lime-500 rounded-full" />
                     What's Included
                   </h4>
                   <ul className="space-y-3">
@@ -287,13 +257,12 @@ export function PricingSection() {
                   </ul>
                 </div>
 
-                {/* Enhanced Limits */}
                 {plan.limits.length > 0 && (
                   <div>
                     <h4 className="flex items-center gap-2 font-semibold text-slate-800 text-sm mb-3 uppercase tracking-wide">
                       <div
                         className={`w-2 h-2 bg-${config.accent}-500 rounded-full`}
-                      ></div>
+                      />
                       Usage Limits
                     </h4>
                     <div className="flex flex-col gap-2">
@@ -315,54 +284,58 @@ export function PricingSection() {
                   </div>
                 )}
 
-                {/* Super Attractive CTA Button */}
-                <Link
-                  href={`/payment?plan=${plan._id}&price=${plan.priceCents}`}
-                >
-                  <m.div
-                    whileHover={{
-                      scale: 1.03,
-                      y: -2,
-                      transition: { duration: 0.2 },
-                    }}
-                    whileTap={{
-                      scale: 0.98,
-                      transition: { duration: 0.1 },
-                    }}
-                    className="pt-4"
+                <div className="pt-2 space-y-2">
+                  <div className="relative">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      value={couponCode}
+                      onChange={(e) =>
+                        setCouponCode(e.target.value.toUpperCase())
+                      }
+                      placeholder="Coupon code (optional)"
+                      className="pl-9 h-10 w-full font-mono uppercase text-sm border-slate-300 focus-visible:ring-lime-500 bg-white"
+                    />
+                  </div>
+
+                  <Link
+                    href={`/payment?plan=${plan._id}&price=${plan.priceCents}${
+                      couponCode ? `&coupon=${couponCode}` : ""
+                    }`}
                   >
-                    <Button
-                      className={`group relative w-full bg-gradient-to-r ${config.button} text-white font-bold text-lg py-6 px-6 rounded-2xl ${config.buttonShadow} ${config.buttonHoverShadow} hover:scale-105 transition-all duration-400 border-0 overflow-hidden`}
-                      size="lg"
+                    <m.div
+                      whileHover={{
+                        scale: 1.03,
+                        y: -2,
+                        transition: { duration: 0.2 },
+                      }}
+                      whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
                     >
-                      {/* Animated Background Glow */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
-
-                      {/* Pulsing Background */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                      {/* Button Content */}
-                      <span className="relative z-10 flex items-center justify-center gap-3">
-                        <ButtonIcon className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
-                        {config.buttonText}
-                        <m.div
-                          whileHover={{ x: 4 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <ArrowRight className="h-5 w-5" />
-                        </m.div>
-                      </span>
-
-                      {/* Corner Sparkles */}
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <Sparkles className="h-4 w-4 text-white/60" />
-                      </div>
-                      <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                        <Sparkles className="h-3 w-3 text-white/40" />
-                      </div>
-                    </Button>
-                  </m.div>
-                </Link>
+                      <Button
+                        className={`group relative w-full bg-gradient-to-r ${config.button} text-white font-bold text-lg py-6 px-6 rounded-2xl ${config.buttonShadow} ${config.buttonHoverShadow} hover:scale-105 transition-all duration-400 border-0 overflow-hidden`}
+                        size="lg"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <span className="relative z-10 flex items-center justify-center gap-3">
+                          <ButtonIcon className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+                          {config.buttonText}
+                          <m.div
+                            whileHover={{ x: 4 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <ArrowRight className="h-5 w-5" />
+                          </m.div>
+                        </span>
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <Sparkles className="h-4 w-4 text-white/60" />
+                        </div>
+                        <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                          <Sparkles className="h-3 w-3 text-white/40" />
+                        </div>
+                      </Button>
+                    </m.div>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           </m.div>
@@ -378,7 +351,6 @@ export function PricingSection() {
         className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-b from-white to-lime-50/50"
       >
         <div className="container mx-auto px-4 md:px-6 max-w-7xl">
-          {/* Enhanced Header with Icons */}
           <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -402,7 +374,6 @@ export function PricingSection() {
             </p>
           </m.div>
 
-          {/* Tabs for Plan Types */}
           <Tabs
             defaultValue="event"
             className="w-full"
@@ -436,13 +407,11 @@ export function PricingSection() {
             <TabsContent value="planner" className="mt-0">
               {renderPricingCards(plannerPackages || [])}
             </TabsContent>
-
             <TabsContent value="event" className="mt-0">
               {renderPricingCards(eventPackages || [])}
             </TabsContent>
           </Tabs>
 
-          {/* Enhanced Bottom Accent */}
           <m.div
             initial={{ opacity: 0, scaleX: 0 }}
             whileInView={{ opacity: 1, scaleX: 1 }}

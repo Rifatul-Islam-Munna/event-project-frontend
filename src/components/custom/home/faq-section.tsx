@@ -195,7 +195,7 @@ export function FAQSection() {
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/50">
                 <span className="w-2 h-2 bg-yellow-500 rounded-full" />
                 <span className="text-sm font-medium text-slate-700">
-                  Ζωντανή υποστήριξη σύντομα
+                  Ζωντανή υποστήριξη
                 </span>
               </div>
             </div>

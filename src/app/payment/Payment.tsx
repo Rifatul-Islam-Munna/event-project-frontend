@@ -190,11 +190,12 @@ function Checkout({
 export default function BillingPage() {
   const params = useSearchParams();
   const plan = params.get("plan") ?? "basic";
+  const coupon = params.get("coupon");
   const total = (params.get("price") as number | null) ?? 0;
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["create-intent", plan],
-    queryFn: () => subScript(plan),
+    queryFn: () => subScript(plan, coupon),
     enabled: !params.get("payment_intent_client_secret"),
     staleTime: 0,
   });
@@ -239,6 +240,7 @@ export default function BillingPage() {
 
   const clientSecret = data?.data?.key;
   const customerSessionSecret = data?.data?.customerSessionSecret;
+  const finalAmount = data?.data?.finalAmount;
   if (!clientSecret) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
@@ -281,7 +283,7 @@ export default function BillingPage() {
           <Checkout
             clientSecret={clientSecret}
             plan={plan}
-            price={total / 100}
+            price={finalAmount / 100}
           />
         </Elements>
       </div>

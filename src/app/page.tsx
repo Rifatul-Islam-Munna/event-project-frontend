@@ -18,10 +18,35 @@ import { ReliabilitySupportSection } from "@/components/custom/home/ReliabilityS
 import { TestimonialsSection } from "@/components/custom/home/testimonials-section";
 import { ValuePropositionSection } from "@/components/custom/home/ValuePropositionSection";
 import { Metadata } from "next";
+import TawkMessengerReact from "@tawk.to/tawk-messenger-react";
+import Script from "next/script";
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col  ">
+      {/*  <TawkMessengerReact
+        propertyId="6999d9f5f093ee1c3c746061"
+        widgetId="c764ddf8eaa5e9f0f99f40d22e2515ec511d5cb4"
+      /> */}
+      <Script
+        id="tawk-to"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+          var Tawk_API = Tawk_API || {};
+          var Tawk_LoadStart = new Date();
+          (function(){
+            var s1 = document.createElement("script"),
+                s0 = document.getElementsByTagName("script")[0];
+            s1.async = true;
+            s1.src = 'https://embed.tawk.to/6999d9f5f093ee1c3c746061/1ji0fmqho';
+            s1.charset = 'UTF-8';
+            s1.setAttribute('crossorigin','*');
+            s0.parentNode.insertBefore(s1, s0);
+          })();
+        `,
+        }}
+      />
       <main className="flex-1">
         {/*  <HeroSlider /> */}
         <HeroSection />

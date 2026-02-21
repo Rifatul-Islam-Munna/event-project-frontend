@@ -274,9 +274,9 @@ export const deleteSubScribe = async (id:string) =>{
     return {data,error}
 }
 
-export const subScript = async (sub:string)=>{
+export const subScript = async (sub:string,coupon?:string | null)=>{
   const user  = await getUserInfo();
-  const payload = {userId:user?._id,subscriptionType:sub}
+  const payload = {userId:user?._id,subscriptionType:sub,coupon:coupon};
    const [data,error] = await PostRequestAxios(`/subscription/create-sub`,payload);
     console.log("vendor-data->",data,"vendor-error->",error);
     return {data,error}

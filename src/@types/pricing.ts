@@ -17,6 +17,8 @@ export interface PricingPlan {
   active: boolean
   createdAt: string
   updatedAt: string
+    order: number;        
+  isPopular: boolean; 
   __v: number
 }
 
@@ -50,5 +52,7 @@ export interface CreatePlanRequest {
   billingUnit: string
   permissions: string[]
   limits: PricingLimit[]
+  order: number;        // ✅ NEW
+  isPopular: boolean;   // ✅ NEW
   type?:string
 }

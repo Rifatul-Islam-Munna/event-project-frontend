@@ -1,6 +1,6 @@
 "use server"
 
-import { GetRequestAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
+import { DeleteAxios, GetRequestAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
 
 
 export interface VendorCategory {
@@ -64,5 +64,36 @@ export const updateMessageService = async (event_id: string, startingDate: strin
     `/seat-plan/update-date`,
     { date: startingDate, event_id: event_id }
   );
+  return { data, error };
+};
+
+
+// ─── Coupon Action Functions ───────────────────────────────────────────────
+
+export const getAllCoupons = async (page: number = 1, limit: number = 10) => {
+  const [data, error] = await GetRequestNormal<any>(
+    `/coupons?page=${page}&limit=${limit}`
+  );
+  return { data, error };
+};
+
+export const createCoupon = async (payload: Record<string, unknown>) => {
+  const [data, error] = await PostRequestAxios<any>(`/coupons`, payload);
+  return { data, error };
+};
+
+
+export const updateCoupon = async (payload:any) => {
+
+  console.log("payload->",payload);
+  const [data, error] = await PatchRequestAxios<any>(
+    `/coupons`,
+    payload
+  );
+  return { data, error };
+};
+
+export const deleteCoupon = async (id: string) => {
+  const [data, error] = await DeleteAxios<any>(`/coupons?id=${id}`);
   return { data, error };
 };

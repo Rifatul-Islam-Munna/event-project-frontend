@@ -1,13 +1,13 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Star, Hash } from "lucide-react";
 import { featureMapping, limitMapping } from "@/@types/feature-mapping";
 import { CreatePlanRequest, PricingLimit } from "@/@types/pricing";
 
@@ -44,46 +44,46 @@ export function PlanForm({
     permissions: initialData?.permissions || [],
     limits: initialData?.limits || [],
     type: initialData?.type || "",
+    order: initialData?.order || 1, // ✅ NEW
+    isPopular: initialData?.isPopular || false, // ✅ NEW
   });
 
   const availablePermissions = Object.keys(featureMapping);
   const availableLimits = Object.keys(limitMapping);
 
+  const setField = (key: keyof CreatePlanRequest, value: unknown) =>
+    setFormData((prev) => ({ ...prev, [key]: value }));
+
   const handlePermissionChange = (permission: string, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      permissions: checked
-        ? [...prev.permissions, permission]
-        : prev.permissions.filter((p) => p !== permission),
-    }));
+    setField(
+      "permissions",
+      checked
+        ? [...formData.permissions, permission]
+        : formData.permissions.filter((p) => p !== permission),
+    );
   };
 
-  const addLimit = () => {
-    setFormData((prev) => ({
-      ...prev,
-      limits: [...prev.limits, { key: "", limit: 0 }],
-    }));
-  };
+  const addLimit = () =>
+    setField("limits", [...formData.limits, { key: "", limit: 0 }]);
 
   const updateLimit = (
     index: number,
     field: keyof PricingLimit,
     value: string | number,
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      limits: prev.limits.map((limit, i) =>
+    setField(
+      "limits",
+      formData.limits.map((limit, i) =>
         i === index ? { ...limit, [field]: value } : limit,
       ),
-    }));
+    );
   };
 
-  const removeLimit = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      limits: prev.limits.filter((_, i) => i !== index),
-    }));
-  };
+  const removeLimit = (index: number) =>
+    setField(
+      "limits",
+      formData.limits.filter((_, i) => i !== index),
+    );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,132 +91,190 @@ export function PlanForm({
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>{initialData ? "Edit Plan" : "Create New Plan"}</CardTitle>
+    <Card className="w-full max-w-4xl mx-auto border-slate-200 shadow-sm">
+      <CardHeader className="border-b border-slate-100 bg-slate-50/50 px-8 py-6">
+        <CardTitle className="text-xl font-semibold text-slate-900">
+          {initialData?.title
+            ? `Edit — ${initialData.title}`
+            : "Create New Plan"}
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
+
+      <CardContent className="p-8">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* ── Row 1: Title + Price ──────────────────────────────────────── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Plan Title</Label>
+              <Label
+                htmlFor="title"
+                className="text-sm font-medium text-slate-900"
+              >
+                Plan Title *
+              </Label>
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, title: e.target.value }))
-                }
+                onChange={(e) => setField("title", e.target.value)}
+                placeholder="e.g. Pro Plan"
+                className="h-11 border-slate-300 focus-visible:ring-lime-500"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Price (cents)</Label>
+              <Label
+                htmlFor="price"
+                className="text-sm font-medium text-slate-900"
+              >
+                Price (cents) *
+                <span className="text-slate-400 font-normal ml-1">
+                  — e.g. 1900 = €19.00
+                </span>
+              </Label>
               <Input
                 id="price"
                 type="number"
                 value={formData.priceCents}
                 onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    priceCents: Number.parseInt(e.target.value) || 0,
-                  }))
+                  setField("priceCents", parseInt(e.target.value) || 0)
                 }
+                placeholder="1900"
+                className="h-11 border-slate-300 focus-visible:ring-lime-500"
                 required
               />
             </div>
           </div>
-          <div className=" flex justify-start items-center gap-1">
-            <h3 className=" text-sm">Select a Plan</h3>
-            <Select
-              value={formData?.type || ""}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, type: value }))
-              }
-            >
-              <SelectTrigger className="w-full max-w-48">
-                <SelectValue placeholder="Select Plan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Select A plan</SelectLabel>
-                  <SelectItem value="Event package">Event package</SelectItem>
-                  <SelectItem value="Planer package">Planer package</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+
+          {/* ── Row 2: Order + Plan Type ──────────────────────────────────── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* ✅ Order */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="order"
+                className="text-sm font-medium text-slate-900 flex items-center gap-1.5"
+              >
+                <Hash className="h-3.5 w-3.5 text-slate-500" />
+                Display Order *
+              </Label>
+              <Input
+                id="order"
+                type="number"
+                min={1}
+                value={formData.order}
+                onChange={(e) =>
+                  setField("order", parseInt(e.target.value) || "")
+                }
+                placeholder="1 = first, 2 = second..."
+                className="h-11 border-slate-300 focus-visible:ring-lime-500"
+                required
+              />
+            </div>
+
+            {/* Plan Type */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-slate-900">
+                Plan Type *
+              </Label>
+              <Select
+                value={formData.type}
+                onValueChange={(value) => setField("type", value)}
+              >
+                <SelectTrigger className="h-11 border-slate-300 focus:ring-lime-500">
+                  <SelectValue placeholder="Select plan type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Plan Type</SelectLabel>
+                    <SelectItem value="Event package">Event Package</SelectItem>
+                    <SelectItem value="Planer package">
+                      Planner Package
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
+          {/* ── Description ──────────────────────────────────────────────── */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label
+              htmlFor="description"
+              className="text-sm font-medium text-slate-900"
+            >
+              Description *
+            </Label>
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
+              onChange={(e) => setField("description", e.target.value)}
+              placeholder="Describe what this plan offers..."
+              className="border-slate-300 focus-visible:ring-lime-500 resize-none"
+              rows={3}
               required
             />
           </div>
 
-          {/*   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
-              <Select
-                value={formData.currency}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, currency: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* ✅ isPopular Toggle ──────────────────────────────────────────── */}
+          <div className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-200">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-amber-100 flex items-center justify-center">
+                <Star className="h-4 w-4 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  Mark as Popular
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Adds a "Most Popular" badge and highlights this plan on the
+                  pricing page
+                </p>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="billing">Billing Unit</Label>
-              <Select
-                value={formData.billingUnit}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, billingUnit: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PER_MONTH">Per Month</SelectItem>
-                  <SelectItem value="PER_YEAR">Per Year</SelectItem>
-                  <SelectItem value="PER_EVENT">Per Event</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div> */}
+            <Switch
+              checked={formData.isPopular}
+              onCheckedChange={(v) => setField("isPopular", v)}
+              className="data-[state=checked]:bg-amber-500"
+            />
+          </div>
 
-          {/* Permissions */}
-          <div className="space-y-4">
-            <Label>Permissions</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto border rounded-lg p-4">
+          {/* ── Permissions ──────────────────────────────────────────────── */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-slate-900">
+              Permissions
+              <span className="ml-2 text-xs font-normal text-slate-400">
+                ({formData.permissions.length} selected)
+              </span>
+            </Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto border border-slate-200 rounded-xl p-4 bg-slate-50/50">
               {availablePermissions.map((permission) => (
-                <div key={permission} className="flex items-center space-x-2">
+                <div
+                  key={permission}
+                  onClick={() =>
+                    handlePermissionChange(
+                      permission,
+                      !formData.permissions.includes(permission),
+                    )
+                  }
+                  className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                    formData.permissions.includes(permission)
+                      ? "bg-lime-50 border-lime-300"
+                      : "bg-white border-slate-200 hover:border-slate-300"
+                  }`}
+                >
                   <Checkbox
                     id={permission}
                     checked={formData.permissions.includes(permission)}
                     onCheckedChange={(checked) =>
                       handlePermissionChange(permission, checked as boolean)
                     }
+                    className="data-[state=checked]:bg-lime-600 data-[state=checked]:border-lime-600"
                   />
                   <Label
                     htmlFor={permission}
-                    className="text-sm cursor-pointer"
+                    className={`text-xs cursor-pointer font-medium ${
+                      formData.permissions.includes(permission)
+                        ? "text-lime-700"
+                        : "text-slate-600"
+                    }`}
                   >
                     {featureMapping[permission as keyof typeof featureMapping]}
                   </Label>
@@ -225,75 +283,115 @@ export function PlanForm({
             </div>
           </div>
 
-          {/* Limits */}
-          <div className="space-y-4">
+          {/* ── Limits ───────────────────────────────────────────────────── */}
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Limits</Label>
+              <Label className="text-sm font-medium text-slate-900">
+                Resource Limits
+                <span className="ml-2 text-xs font-normal text-slate-400">
+                  ({formData.limits.length} added)
+                </span>
+              </Label>
               <Button
                 type="button"
                 onClick={addLimit}
                 size="sm"
                 variant="outline"
+                className="h-8 border-slate-300 hover:bg-lime-50 hover:border-lime-300 hover:text-lime-700"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
                 Add Limit
               </Button>
             </div>
-            <div className="space-y-3">
-              {formData.limits.map((limit, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3 p-3 border rounded-lg"
-                >
-                  <Select
-                    value={limit.key}
-                    onValueChange={(value) => updateLimit(index, "key", value)}
+
+            {formData.limits.length === 0 ? (
+              <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                <p className="text-sm text-slate-400">No limits added yet.</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Click "Add Limit" to add resource limits.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {formData.limits.map((limit, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl"
                   >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select limit type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableLimits.map((limitKey) => (
-                        <SelectItem key={limitKey} value={limitKey}>
-                          {limitMapping[limitKey as keyof typeof limitMapping]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    type="number"
-                    placeholder="Limit value"
-                    value={limit.limit}
-                    onChange={(e) =>
-                      updateLimit(
-                        index,
-                        "limit",
-                        Number.parseInt(e.target.value) || 0,
-                      )
-                    }
-                    className="w-32"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => removeLimit(index)}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+                    <Select
+                      value={limit.key}
+                      onValueChange={(value) =>
+                        updateLimit(index, "key", value)
+                      }
+                    >
+                      <SelectTrigger className="flex-1 h-9 border-slate-300 bg-white">
+                        <SelectValue placeholder="Select limit type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableLimits.map((limitKey) => (
+                          <SelectItem key={limitKey} value={limitKey}>
+                            {
+                              limitMapping[
+                                limitKey as keyof typeof limitMapping
+                              ]
+                            }
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      placeholder="Value (-1 = unlimited)"
+                      value={limit.limit}
+                      onChange={(e) =>
+                        updateLimit(
+                          index,
+                          "limit",
+                          parseInt(e.target.value) || 0,
+                        )
+                      }
+                      className="w-40 h-9 border-slate-300 bg-white focus-visible:ring-lime-500"
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => removeLimit(index)}
+                      size="sm"
+                      variant="outline"
+                      className="h-9 w-9 p-0 border-slate-300 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onCancel}>
+          {/* ── Actions ──────────────────────────────────────────────────── */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="border-slate-300 hover:bg-slate-100"
+            >
               Cancel
             </Button>
-            <Button disabled={isPending} type="submit">
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{" "}
-              {initialData ? "Update Plan" : "Create Plan"}
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="bg-lime-600 hover:bg-lime-700 text-white min-w-[130px]"
+            >
+              {isPending ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </div>
+              ) : initialData?.title ? (
+                "Update Plan"
+              ) : (
+                "Create Plan"
+              )}
             </Button>
           </div>
         </form>

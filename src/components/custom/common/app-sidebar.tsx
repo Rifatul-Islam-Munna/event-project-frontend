@@ -12,6 +12,7 @@ import {
   Users,
   StepBack,
   NotepadTextDashed,
+  Tag,
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
@@ -37,6 +38,11 @@ const data = {
       title: "Plans",
       url: "/admin/dashboard/plans",
       icon: Layers, // or Package, BookOpen
+    },
+    {
+      title: "Coupon",
+      url: "/admin/dashboard/coupon",
+      icon: Tag, // or Package, BookOpen
     },
     {
       title: "User",
