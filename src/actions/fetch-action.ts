@@ -155,9 +155,12 @@ export const uploadOneGuest =async (payload:Record<string,unknown>)=>{
 }
 
 
-export const getAllGuest= async (id:string) =>{
+export const getAllGuest= async (id:string,type?:string | null) =>{
+  const query = new URLSearchParams()
+  query.append("event_id", id);
+ if(type) query.append("type", type);
 
-    const [data,error] = await GetRequestNormal<Gu[]>(`/guest/get-all-guest?event_id=${id}`);
+    const [data,error] = await GetRequestNormal<Gu[]>(`/guest/get-all-guest?${query.toString()}`);
     console.log("guest-data->",data,"guest-error->",error);
     return {data,error}
 }
@@ -281,6 +284,13 @@ export const subScript = async (sub:string,coupon?:string | null)=>{
     console.log("vendor-data->",data,"vendor-error->",error);
     return {data,error}
 }
+export const AddSubForAddOn = async (sub:string,coupon?:string | null)=>{
+  const user  = await getUserInfo();
+  const payload = {userId:user?._id,addOnId:sub};
+   const [data,error] = await PostRequestAxios(`/add-ons/buy-add-on`,payload);
+    console.log("vendor-data->",data,"vendor-error->",error);
+    return {data,error}
+}
  
 interface AuthResponse {
   success: boolean;
@@ -297,6 +307,14 @@ export const getSubTokenFirst = async (sub:string)=>{
       coookies.set("user_info",JSON.stringify(data?.user),{maxAge:60*60*24,path:'/',httpOnly:true})
       coookies.set("sub_token",data?.subToken,{maxAge:60*60*24,path:'/',httpOnly:true})
    }
+   const r = {success:true}
+  
+  return {r,error}
+
+}
+export const getUserBuyToken = async (sub:string)=>{
+  const [data,error] = await GetRequestNormal<AuthResponse>(`/add-ons/create-payment?paymentIntentId=${sub}`);
+  
    const r = {success:true}
   
   return {r,error}

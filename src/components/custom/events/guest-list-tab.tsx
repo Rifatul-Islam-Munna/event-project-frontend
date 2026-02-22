@@ -23,6 +23,13 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Plus,
   UserPlus,
   Upload,
@@ -53,6 +60,7 @@ import { User } from "@/@types/user-types";
 import { getUserInfo } from "@/actions/auth";
 import { AddUserTypeDialog } from "./AddUserTypeDialog";
 import { Badge } from "@/components/ui/badge";
+import { GetGuestType } from "@/actions/vendor-category-actions";
 
 type GuestListTabProps = {
   guests: Guest[];
@@ -76,6 +84,7 @@ export function GuestListTab({
   const [guestToDelete, setGuestToDelete] = useState<Guest | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [user, SetUser] = useState<User | null>(null);
+  const [typeOfUser, setTypeOfUser] = useState<string | null>(null);
 
   useEffect(() => {
     const getuserInfo = async () => {
@@ -101,18 +110,18 @@ export function GuestListTab({
     setGuestToDelete(guest);
     setIsDeleteConfirmModalOpen(true);
   };
+
   const pathName = usePathname();
+  const eventId = pathName.split("/").pop() as string;
 
   const { mutate: DownloadImage, isPending: isDownloadPending } = useMutation({
     mutationKey: ["downloadImage"],
-    mutationFn: () => DownloadGuestPdf(pathName.split("/").pop() as string),
+    mutationFn: () => DownloadGuestPdf(eventId),
     onSuccess: (result) => {
       if (result.error || !result.data) {
         toast.error("Failed to download CSV");
         return;
       }
-
-      // Client-side download
       const blob = new Blob([result.data], { type: "text/csv" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -122,7 +131,6 @@ export function GuestListTab({
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
       toast.success("CSV downloaded successfully");
     },
   });
@@ -149,9 +157,15 @@ export function GuestListTab({
     mutate(guestToDelete._id);
   };
 
+  // ✅ typeOfUser added to queryKey — auto refetches on type change
   const { data, isPending } = useQuery({
-    queryKey: ["get-all-guest"],
-    queryFn: () => getAllGuest(pathName.split("/").pop() as string),
+    queryKey: ["get-all-guest", typeOfUser],
+    queryFn: () => getAllGuest(eventId, typeOfUser),
+  });
+
+  const { data: userType } = useQuery({
+    queryKey: ["get-all-user-Type"],
+    queryFn: () => GetGuestType(eventId),
   });
 
   const filterSearch =
@@ -166,7 +180,7 @@ export function GuestListTab({
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 px-4 ">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 px-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">
             Guest List
@@ -190,6 +204,26 @@ export function GuestListTab({
               className="pl-10 h-11 border-gray-300 focus:border-lime-600 focus:ring-lime-600"
             />
           </div>
+
+          {/* ✅ Guest Type Filter Dropdown */}
+          <Select
+            value={typeOfUser ?? "all"}
+            onValueChange={(value) =>
+              setTypeOfUser(value === "all" ? null : value)
+            }
+          >
+            <SelectTrigger className="h-11 w-full sm:w-44 border-gray-300 focus:border-lime-600 focus:ring-lime-600">
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {userType?.data?.type?.map((type: string) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* Add Guest Button */}
           <Dialog
@@ -236,7 +270,7 @@ export function GuestListTab({
                   <CreateGuestForm
                     onAddGuest={onAddGuest}
                     onClose={() => setIsCreateGuestModalOpen(false)}
-                    eventId={pathName.split("/").pop() as string}
+                    eventId={eventId}
                   />
                 </TabsContent>
 
@@ -248,10 +282,19 @@ export function GuestListTab({
               </Tabs>
             </DialogContent>
           </Dialog>
-          <Button className=" bg-lime-600 h-11" onClick={() => DownloadImage()}>
+
+          <Button
+            className="bg-lime-600 h-11"
+            onClick={() => DownloadImage()}
+            disabled={isDownloadPending}
+          >
+            {isDownloadPending ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : null}
             Download Seat Plan
           </Button>
-          <AddUserTypeDialog eventId={pathName.split("/").pop() as string} />
+
+          <AddUserTypeDialog eventId={eventId} />
         </div>
       </div>
 
@@ -274,9 +317,6 @@ export function GuestListTab({
                 <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
                   Seat Status
                 </TableHead>
-                {/* <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
-                  Message Send
-                </TableHead> */}
                 <TableHead className="font-semibold text-gray-900 text-base py-4 px-6">
                   Guest Type
                 </TableHead>
@@ -289,13 +329,13 @@ export function GuestListTab({
             <TableBody>
               {isPending ? (
                 <TableRow className="hover:bg-white">
-                  <TableCell colSpan={5} className="h-40 text-center">
+                  <TableCell colSpan={6} className="h-40 text-center">
                     <Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto" />
                   </TableCell>
                 </TableRow>
               ) : !hasGuests ? (
                 <TableRow className="hover:bg-white">
-                  <TableCell colSpan={5} className="h-48 text-center">
+                  <TableCell colSpan={6} className="h-48 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-500">
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                         <UserPlus className="h-8 w-8 text-gray-400" />
@@ -311,7 +351,7 @@ export function GuestListTab({
                 </TableRow>
               ) : filterSearch?.length === 0 ? (
                 <TableRow className="hover:bg-white">
-                  <TableCell colSpan={5} className="h-48 text-center">
+                  <TableCell colSpan={6} className="h-48 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-500">
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                         <Search className="h-8 w-8 text-gray-400" />
@@ -331,24 +371,20 @@ export function GuestListTab({
                     key={guest._id}
                     className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                   >
-                    {/* Guest Name */}
                     <TableCell className="py-4 px-6">
                       <span className="font-medium text-gray-900">
                         {guest.name}
                       </span>
                     </TableCell>
 
-                    {/* Email */}
                     <TableCell className="py-4 px-6 text-gray-700">
                       {guest.email}
                     </TableCell>
 
-                    {/* Phone */}
                     <TableCell className="py-4 px-6 text-gray-700">
                       {guest.phone || "—"}
                     </TableCell>
 
-                    {/* Seat Status */}
                     <TableCell className="py-4 px-6">
                       {guest.isAssigned ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-lime-50 text-lime-700 border border-lime-200">
@@ -362,24 +398,13 @@ export function GuestListTab({
                         </span>
                       )}
                     </TableCell>
-                    {/*   <TableCell className="py-4 px-6">
-                      {guest?.isMessageSend ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-lime-50 text-lime-700 border border-lime-200">
-                          <CheckCircle className="h-4 w-4" />
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                          <XCircle className="h-4 w-4" />
-                        </span>
-                      )}
-                    </TableCell> */}
+
                     <TableCell className="py-4 px-6">
-                      <Badge className=" bg-lime-700 text-sm">
-                        {guest?.type}
+                      <Badge className="bg-lime-700 text-sm">
+                        {guest?.type ?? "—"}
                       </Badge>
                     </TableCell>
 
-                    {/* Actions */}
                     <TableCell className="py-4 px-6">
                       <div className="flex items-center justify-end gap-2">
                         <Button
@@ -476,11 +501,11 @@ export function GuestListTab({
               >
                 {/* Guest Header */}
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0 ">
+                  <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 text-lg">
                       {guest.name}
                     </h3>
-                    <div className=" w-full flex justify-between items-center">
+                    <div className="w-full flex justify-between items-center">
                       {guest.isAssigned ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-lime-50 text-lime-700 border border-lime-200 mt-1">
                           <CheckCircle className="h-3 w-3" />
@@ -495,16 +520,16 @@ export function GuestListTab({
                       {guest?.isMessageSend ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-lime-50 text-lime-700 border border-lime-200 mt-1">
                           <CheckCircle className="h-3 w-3" />
-                          Message Send
+                          Message Sent
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 mt-1">
                           <XCircle className="h-3 w-3" />
-                          Message Not Send
+                          Message Not Sent
                         </span>
                       )}
                       {guest?.type && (
-                        <Badge className=" bg-lime-700 text-sm">
+                        <Badge className="bg-lime-700 text-sm">
                           {guest.type}
                         </Badge>
                       )}
@@ -619,7 +644,6 @@ export function GuestListTab({
                     {selectedGuest.name}
                   </span>
                 </div>
-
                 <div className="flex items-start gap-3">
                   <Label className="text-sm font-medium text-gray-600 w-24 flex-shrink-0 pt-0.5">
                     Email:
@@ -628,7 +652,6 @@ export function GuestListTab({
                     {selectedGuest.email}
                   </span>
                 </div>
-
                 <div className="flex items-start gap-3">
                   <Label className="text-sm font-medium text-gray-600 w-24 flex-shrink-0 pt-0.5">
                     Phone:
@@ -637,7 +660,14 @@ export function GuestListTab({
                     {selectedGuest.phone || "Not provided"}
                   </span>
                 </div>
-
+                <div className="flex items-start gap-3">
+                  <Label className="text-sm font-medium text-gray-600 w-24 flex-shrink-0 pt-0.5">
+                    Type:
+                  </Label>
+                  <Badge className="bg-lime-700 text-sm">
+                    {selectedGuest?.type ?? "—"}
+                  </Badge>
+                </div>
                 <div className="flex items-start gap-3">
                   <Label className="text-sm font-medium text-gray-600 w-24 flex-shrink-0 pt-0.5">
                     Status:

@@ -2,7 +2,7 @@
 import { loadStripe } from "@stripe/stripe-js";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { getSubTokenFirst } from "@/actions/fetch-action";
+import { getSubTokenFirst, getUserBuyToken } from "@/actions/fetch-action";
 import { CheckCircle, XCircle, Clock, AlertCircle, Home } from "lucide-react";
 
 const stripePromise = loadStripe(
@@ -14,6 +14,7 @@ export default function ReturnPage() {
   const router = useRouter();
 
   const plan = params.get("plan") ?? "basic";
+  const type = params.get("type") ?? null;
   const clientSecret = params.get("payment_intent_client_secret") ?? "";
   console.log("clientSecret->", clientSecret);
   const q = useQuery({
@@ -28,7 +29,9 @@ export default function ReturnPage() {
       if (!paymentIntent) throw new Error("No PaymentIntent found");
 
       if (paymentIntent.status === "succeeded") {
-        await getSubTokenFirst(paymentIntent.id);
+        type === "add-on"
+          ? await getUserBuyToken(paymentIntent.id)
+          : await getSubTokenFirst(paymentIntent.id);
         return { status: "succeeded" as const };
       }
       return { status: paymentIntent.status as string };

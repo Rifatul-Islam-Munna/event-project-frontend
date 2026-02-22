@@ -59,6 +59,18 @@ export const getMessageService = async (event_id:string)=>{
   console.log("search-data->",data,"search-error->",error);
   return { data, error };
 }
+export const RequestForResend = async (event_id:string)=>{
+  const [data, error] = await GetRequestNormal<MessageSend>(`/seat-plan/ResendRequest?id=${event_id}`);
+
+  console.log("search-data->",data,"search-error->",error);
+  return { data, error };
+}
+export const getMyLimit = async ()=>{
+  const [data, error] = await GetRequestNormal(`/user-limits/get-my-limit`);
+
+  console.log("search-data->",data,"search-error->",error);
+  return { data, error };
+}
 export const updateMessageService = async (event_id: string, startingDate: string) => {
   const [data, error] = await PatchRequestAxios<MessageSend>(
     `/seat-plan/update-date`,
@@ -95,5 +107,28 @@ export const updateCoupon = async (payload:any) => {
 
 export const deleteCoupon = async (id: string) => {
   const [data, error] = await DeleteAxios<any>(`/coupons?id=${id}`);
+  return { data, error };
+};
+export const getAllAddOns = async () => {
+  const [data, error] = await GetRequestNormal<any>(`/add-ons`);
+  return { data, error };
+};
+export const getForUser = async () => {
+  const [data, error] = await GetRequestNormal<any>(`/add-ons/get-for-user`);
+  return { data, error };
+};
+
+export const createAddOn = async (payload: Record<string, unknown>) => {
+  const [data, error] = await PostRequestAxios<any>(`/add-ons`, payload);
+  return { data, error };
+};
+
+export const updateAddOn = async (payload: any) => {
+  const [data, error] = await PatchRequestAxios<any>(`/add-ons`, payload);
+  return { data, error };
+};
+
+export const deleteAddOn = async (id: string) => {
+  const [data, error] = await DeleteAxios<any>(`/add-ons?id=${id}`);
   return { data, error };
 };

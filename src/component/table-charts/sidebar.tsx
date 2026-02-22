@@ -29,6 +29,16 @@ import OC from "@/images/sideicons/Rectangular-one-sided.png";
 import Image from "next/image";
 import { useZoomResponive } from "@/zustan-fn/zoomResponive";
 import { DecorativeDrawer } from "./decorative-node/decorative-sidebar";
+import { useQuery } from "@tanstack/react-query";
+import { GetGuestType } from "@/actions/vendor-category-actions";
+import { usePathname } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SidebarProps {
   onAddTableClick: (type: TableType) => void;
@@ -68,11 +78,23 @@ export function Sidebar({
   };
 
   const [seachUser, setSeachUser] = useState("");
-  const getSeachUser = guests.filter(
-    (guest) =>
+  const [typeOfUser, setTypeOfUser] = useState<string | null>(null);
+  const getSeachUser = guests.filter((guest) => {
+    const matchesSearch =
       guest.name.toLowerCase().includes(seachUser.toLowerCase()) ||
-      guest.email.toLowerCase().includes(seachUser.toLowerCase()),
-  );
+      guest.email.toLowerCase().includes(seachUser.toLowerCase());
+
+    const matchesType = typeOfUser ? guest.type === typeOfUser : true;
+
+    return matchesSearch && matchesType;
+  });
+
+  const pathName = usePathname();
+  const eventId = pathName.split("/").pop() as string;
+  const { data: userType } = useQuery({
+    queryKey: ["get-all-user-Type"],
+    queryFn: () => GetGuestType(eventId),
+  });
 
   // Don't render at all when hidden
   if (!showSidebar) {
@@ -232,6 +254,24 @@ export function Sidebar({
             Unassigned Guests (
             {getSeachUser?.filter((guest) => !guest.isAssigned).length})
           </h2>
+          <Select
+            value={typeOfUser ?? "all"}
+            onValueChange={(value) =>
+              setTypeOfUser(value === "all" ? null : value)
+            }
+          >
+            <SelectTrigger className="h-11 mb-4 w-full sm:w-44 border-gray-300 focus:border-lime-600 focus:ring-lime-600">
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {userType?.data?.type?.map((type: string) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <div className="flex gap-2 mb-4">
             <Input
               placeholder="Search guests..."

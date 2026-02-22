@@ -45,6 +45,11 @@ const data = {
       icon: Tag, // or Package, BookOpen
     },
     {
+      title: "Add On",
+      url: "/admin/dashboard/add-on",
+      icon: Tag, // or Package, BookOpen
+    },
+    {
       title: "User",
       url: "/admin/dashboard/users",
       icon: Users, // or User, UserCircle

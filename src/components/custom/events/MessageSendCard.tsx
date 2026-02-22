@@ -22,6 +22,17 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -34,34 +45,46 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import {
   getMessageService,
-  updateMessageService,
+  getMyLimit,
+  RequestForResend,
+  updateMessageService as updateMessageServiceAction,
 } from "@/actions/vendor-category-actions";
 import { format } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
-import { Loader2, Check, ChevronsUpDown } from "lucide-react";
+import {
+  Loader2,
+  Check,
+  ChevronsUpDown,
+  MessageSquare,
+  Mail,
+  Phone,
+  RefreshCw,
+  CalendarClock,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  CreditCard,
+  Wallet,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import AddOnCards from "../common/AddOnCards";
 
 export type MessageSend = {
   _id: string;
   event_id: string;
-  numberOFSendMessageLimit?: number;
   startingDate?: string | Date;
-  numberOfNotSend: {
-    sms: number;
-    mail: number;
-    whatsapp: number;
-  };
+  numberOfNotSend: { sms: number; mail: number; whatsapp: number };
   isMessageSend: boolean;
-  // No timeZone field in backend
 };
 
-// Curated list of major capital/country representative timezones
+// ─── Timezones ────────────────────────────────────────────────────────────────
 const MAJOR_TIMEZONES = {
-  // European Timezones (Priority)
   european: [
     { value: "Europe/London", label: "London (United Kingdom)" },
     { value: "Europe/Paris", label: "Paris (France)" },
@@ -87,7 +110,6 @@ const MAJOR_TIMEZONES = {
     { value: "Europe/Moscow", label: "Moscow (Russia)" },
     { value: "Europe/Kiev", label: "Kyiv (Ukraine)" },
   ],
-  // Americas
   americas: [
     { value: "America/New_York", label: "New York (USA Eastern)" },
     { value: "America/Chicago", label: "Chicago (USA Central)" },
@@ -105,7 +127,6 @@ const MAJOR_TIMEZONES = {
     { value: "America/Panama", label: "Panama City (Panama)" },
     { value: "America/Havana", label: "Havana (Cuba)" },
   ],
-  // Asia
   asia: [
     { value: "Asia/Dubai", label: "Dubai (UAE)" },
     { value: "Asia/Riyadh", label: "Riyadh (Saudi Arabia)" },
@@ -127,7 +148,6 @@ const MAJOR_TIMEZONES = {
     { value: "Asia/Tokyo", label: "Tokyo (Japan)" },
     { value: "Asia/Ho_Chi_Minh", label: "Ho Chi Minh (Vietnam)" },
   ],
-  // Africa
   africa: [
     { value: "Africa/Cairo", label: "Cairo (Egypt)" },
     { value: "Africa/Lagos", label: "Lagos (Nigeria)" },
@@ -137,7 +157,6 @@ const MAJOR_TIMEZONES = {
     { value: "Africa/Algiers", label: "Algiers (Algeria)" },
     { value: "Africa/Accra", label: "Accra (Ghana)" },
   ],
-  // Oceania
   oceania: [
     { value: "Australia/Sydney", label: "Sydney (Australia)" },
     { value: "Australia/Melbourne", label: "Melbourne (Australia)" },
@@ -148,404 +167,621 @@ const MAJOR_TIMEZONES = {
   ],
 };
 
-// Format timezone with GMT offset
 const formatTimezone = (tz: string) => {
   try {
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat("en-US", {
+    const parts = new Intl.DateTimeFormat("en-US", {
       timeZone: tz,
       timeZoneName: "shortOffset",
-    });
-    const parts = formatter.formatToParts(now);
-    const offset =
-      parts.find((part) => part.type === "timeZoneName")?.value || "";
-    return `${offset}`;
+    }).formatToParts(new Date());
+    return parts.find((p) => p.type === "timeZoneName")?.value || "";
   } catch {
     return "";
   }
 };
 
+// ─── Limit Credit Pill ────────────────────────────────────────────────────────
+function CreditPill({
+  icon: Icon,
+  label,
+  value,
+  color,
+  isEmpty,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: number | string;
+  color: string;
+  isEmpty: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all",
+        isEmpty ? "bg-slate-50 border-slate-200 text-slate-400" : color,
+      )}
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="text-xs opacity-75">{label}</span>
+      <span
+        className={cn(
+          "ml-auto font-bold tabular-nums",
+          isEmpty && "text-slate-400",
+        )}
+      >
+        {isEmpty ? "—" : value}
+      </span>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export function MessageSendCard() {
   const [localDateTime, setLocalDateTime] = useState<string>("");
   const [selectedTimezone, setSelectedTimezone] =
     useState<string>("Europe/London");
   const [open, setOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const pathName = usePathname();
   const eventId = pathName.split("/").pop() as string;
   const queryClient = useQueryClient();
 
+  // ── Queries ───────────────────────────────────────────────────────────
   const {
     data: response,
     isPending,
-    error,
+    refetch,
   } = useQuery({
     queryKey: ["message-send", eventId],
     queryFn: () => getMessageService(eventId),
     enabled: !!eventId,
   });
 
-  const data = response?.data;
+  const { data: userLimitRes } = useQuery({
+    queryKey: ["get-user-limit"],
+    queryFn: () => getMyLimit(),
+  });
 
-  // Update mutation - ONLY sends date as ISO string, no timezone
-  const updateMutation = useMutation({
-    mutationFn: async (dateISO: string) => {
-      // Only send the ISO date string to backend
-      return await updateMessageService(eventId, dateISO);
+  const data = response?.data;
+  const limitData = userLimitRes?.data;
+
+  // ── Extracted limits ──────────────────────────────────────────────────
+  const smsLimit = limitData?.message ?? 0;
+  const whatsappLimit = limitData?.whatsapp ?? 0;
+  const emailLimit = limitData?.email ?? 0;
+  const flushCardCoupon = limitData?.flashCardCoupon ?? null;
+
+  // ── Mutations ─────────────────────────────────────────────────────────
+  const resendMutation = useMutation({
+    mutationFn: () => RequestForResend(eventId),
+    onSuccess: () => {
+      toast.success("Resend request submitted!");
+      refetch();
     },
+    onError: () => toast.error("Failed to submit resend request."),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (dateISO: string) =>
+      await updateMessageServiceAction(eventId, dateISO),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["message-send", eventId] });
       setIsDialogOpen(false);
+      toast.success("Schedule updated successfully!");
     },
+    onError: () => toast.error("Failed to update schedule."),
   });
 
-  // Initialize localDateTime when data loads
-  // Convert UTC date from backend to user's selected timezone for display
   useEffect(() => {
     if (data?.startingDate) {
-      // Get browser's timezone as default
-      const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      setSelectedTimezone(browserTimezone);
-
-      // Convert UTC date to browser timezone for display
-      const utcDate = new Date(data.startingDate);
-      const zonedDate = toZonedTime(utcDate, browserTimezone);
-
-      // Format for datetime-local input
-      const formatted = format(zonedDate, "yyyy-MM-dd'T'HH:mm");
-      setLocalDateTime(formatted);
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      setSelectedTimezone(tz);
+      setLocalDateTime(
+        format(
+          toZonedTime(new Date(data.startingDate), tz),
+          "yyyy-MM-dd'T'HH:mm",
+        ),
+      );
     }
   }, [data?.startingDate]);
 
+  // ── Derived ───────────────────────────────────────────────────────────
   const hasPending = useMemo(() => {
     if (!data) return false;
-    const n = data.numberOfNotSend ?? { sms: 0, mail: 0, whatsapp: 0 };
+    const n = data.numberOfNotSend ?? {};
     return (n.sms ?? 0) > 0 || (n.mail ?? 0) > 0 || (n.whatsapp ?? 0) > 0;
   }, [data]);
 
   const totalPending = useMemo(() => {
     if (!data) return 0;
-    const n = data.numberOfNotSend ?? { sms: 0, mail: 0, whatsapp: 0 };
+    const n = data.numberOfNotSend ?? {};
     return (n.sms ?? 0) + (n.mail ?? 0) + (n.whatsapp ?? 0);
   }, [data]);
 
-  const statusLabel = useMemo(() => {
-    if (!data) return "Loading...";
-    if (data.isMessageSend && !hasPending) return "All messages sent";
-    if (hasPending) return "Some messages not sent";
-    return "Ready to send";
-  }, [data, hasPending]);
+  const formattedDisplayDate = useMemo(() => {
+    if (!data?.startingDate) return "Not set";
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return format(toZonedTime(new Date(data.startingDate), tz), "PPp");
+  }, [data?.startingDate]);
 
-  const statusColorClass = useMemo(() => {
-    if (!data) return "bg-lime-700 text-lime-50";
-    if (data.isMessageSend && !hasPending) return "bg-lime-600 text-lime-50";
-    if (hasPending) return "bg-lime-500 text-lime-950";
-    return "bg-lime-700 text-lime-50";
-  }, [data, hasPending]);
+  const getSelectedLabel = (tzValue: string) => {
+    const all = Object.values(MAJOR_TIMEZONES).flat();
+    const tz = all.find((t) => t.value === tzValue);
+    return tz ? `${tz.label} ${formatTimezone(tzValue)}` : tzValue;
+  };
 
   const handleSave = async () => {
     if (!localDateTime) return;
-
-    // Convert the user's selected datetime (in their chosen timezone) to UTC
-    // Example: "2026-02-10T15:00" in "Asia/Dhaka" timezone
-    const utcDate = fromZonedTime(localDateTime, selectedTimezone);
-
-    // Convert to ISO string and send ONLY the date to backend (no timezone)
-    // Example result: "2026-02-10T09:00:00.000Z"
-    await updateMutation.mutateAsync(utcDate.toISOString());
+    await updateMutation.mutateAsync(
+      fromZonedTime(localDateTime, selectedTimezone).toISOString(),
+    );
   };
 
-  // Format display date - convert UTC from backend to browser timezone
-  const formattedDisplayDate = useMemo(() => {
-    if (!data?.startingDate) return "Not set";
+  const statusConfig = useMemo(() => {
+    if (!data)
+      return {
+        label: "Loading",
+        cls: "bg-slate-100 text-slate-600 border-slate-200",
+        icon: Clock,
+      };
+    if (data.isMessageSend && !hasPending)
+      return {
+        label: "All Sent",
+        cls: "bg-lime-100 text-lime-700 border-lime-200",
+        icon: CheckCircle2,
+      };
+    if (hasPending)
+      return {
+        label: "Partially Sent",
+        cls: "bg-amber-100 text-amber-700 border-amber-200",
+        icon: AlertCircle,
+      };
+    return {
+      label: "Ready to Send",
+      cls: "bg-blue-100 text-blue-700 border-blue-200",
+      icon: Clock,
+    };
+  }, [data, hasPending]);
 
-    // Get browser timezone for display
-    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const utcDate = new Date(data.startingDate);
-    const zonedDate = toZonedTime(utcDate, browserTimezone);
+  const StatusIcon = statusConfig.icon;
 
-    return `${format(zonedDate, "PPp")}`;
-  }, [data?.startingDate]);
-
-  // Get selected timezone display label
-  const getSelectedLabel = (tzValue: string) => {
-    const allTimezones = [
-      ...MAJOR_TIMEZONES.european,
-      ...MAJOR_TIMEZONES.americas,
-      ...MAJOR_TIMEZONES.asia,
-      ...MAJOR_TIMEZONES.africa,
-      ...MAJOR_TIMEZONES.oceania,
-    ];
-    const tzInfo = allTimezones.find((tz) => tz.value === tzValue);
-    const offset = formatTimezone(tzValue);
-    return tzInfo ? `${tzInfo.label} ${offset}` : tzValue;
-  };
-
-  // Loading state
-  if (isPending) {
+  // ── Loading ───────────────────────────────────────────────────────────
+  if (isPending)
     return (
-      <Card className="border-lime-500/70 shadow-sm">
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-lime-600" />
+      <Card className="border-slate-200 shadow-sm">
+        <CardContent className="flex items-center justify-center py-14">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-9 h-9 border-[3px] border-lime-200 border-t-lime-600 rounded-full animate-spin" />
+            <p className="text-sm text-slate-400">Loading schedule...</p>
+          </div>
         </CardContent>
       </Card>
     );
-  }
 
-  // No data state
-  if (!data) {
+  if (!data)
     return (
-      <Card className="border-lime-500/70 shadow-sm">
-        <CardContent className="py-6">
-          <p className="text-sm text-muted-foreground">
-            No message schedule found for this event, Place some guests first
+      <Card className="border-slate-200 shadow-sm">
+        <CardContent className="flex flex-col items-center justify-center py-14 gap-2">
+          <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center">
+            <MessageSquare className="h-6 w-6 text-slate-400" />
+          </div>
+          <p className="text-sm font-medium text-slate-600">
+            No message schedule found
+          </p>
+          <p className="text-xs text-slate-400">
+            Place some guests first to activate messaging
           </p>
         </CardContent>
       </Card>
     );
-  }
 
   return (
-    <Card className="border-lime-500/70 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <div>
-          <CardTitle className="text-lg">Message schedule</CardTitle>
-          <CardDescription>
-            Control sending status for this event.
-          </CardDescription>
-        </div>
+    <>
+      <Card className="border-slate-200 bg-white shadow-md rounded-2xl overflow-hidden">
+        {/* ── Top accent ── */}
+        <div className="h-1 w-full bg-gradient-to-r from-lime-500 to-lime-600" />
 
-        <Badge className={`${statusColorClass} font-medium`}>
-          {statusLabel}
-        </Badge>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        <div className="grid gap-2 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Starting date & time</span>
-            <span className="font-medium text-right max-w-[60%]">
-              {formattedDisplayDate}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">All message send</span>
-            <span className="font-medium">
-              {data?.isMessageSend ? "Yes" : "No"}
-            </span>
-          </div>
-        </div>
-
-        <div className="rounded-md bg-lime-50 px-3 py-2 text-sm text-lime-900">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold">Not sent</span>
-            <span className="font-semibold">Total: {totalPending}</span>
-          </div>
-          <div className="mt-1 flex flex-wrap gap-3">
-            <span>SMS: {data.numberOfNotSend?.sms ?? 0}</span>
-            <span>Mail: {data.numberOfNotSend?.mail ?? 0}</span>
-            <span>WhatsApp: {data.numberOfNotSend?.whatsapp ?? 0}</span>
-          </div>
-        </div>
-      </CardContent>
-
-      <CardFooter className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">
-          Event ID: {data.event_id}
-        </span>
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              className="bg-lime-600 hover:bg-lime-700 text-lime-50"
-              size="sm"
-            >
-              Update date & time
-            </Button>
-          </DialogTrigger>
-
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Update starting date & time</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label htmlFor="datetime">Starting at</Label>
-                <Input
-                  id="datetime"
-                  type="datetime-local"
-                  value={localDateTime}
-                  onChange={(e) => setLocalDateTime(e.target.value)}
-                  className="border-lime-500/60 focus-visible:ring-lime-600"
-                />
+        {/* ── Header ── */}
+        <CardHeader className="px-5 pt-4 pb-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-lg bg-lime-100 flex items-center justify-center">
+                <CalendarClock className="h-4.5 w-4.5 text-lime-600" />
               </div>
+              <div>
+                <CardTitle className="text-base text-slate-900 leading-tight">
+                  Message Schedule
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-400">
+                  Sending status for this event
+                </CardDescription>
+              </div>
+            </div>
+            <Badge
+              className={cn(
+                "flex items-center gap-1 border text-xs font-medium px-2.5 py-1",
+                statusConfig.cls,
+              )}
+            >
+              <StatusIcon className="h-3 w-3" />
+              {statusConfig.label}
+            </Badge>
+          </div>
+        </CardHeader>
 
-              <div className="space-y-2">
-                <Label>Time zone</Label>
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={open}
-                      className="w-full justify-between border-lime-500/60 focus-visible:ring-lime-600"
-                    >
-                      {selectedTimezone
-                        ? getSelectedLabel(selectedTimezone)
-                        : "Select timezone..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[450px] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search timezone..." />
-                      <CommandList>
-                        <CommandEmpty>No timezone found.</CommandEmpty>
+        <Separator />
 
-                        <CommandGroup heading="🇪🇺 European Timezones">
-                          {MAJOR_TIMEZONES.european.map((timezone) => (
-                            <CommandItem
-                              key={timezone.value}
-                              value={`${timezone.label} ${timezone.value}`}
-                              onSelect={() => {
-                                setSelectedTimezone(timezone.value);
-                                setOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedTimezone === timezone.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {timezone.label} {formatTimezone(timezone.value)}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
+        <CardContent className="px-5 py-4 space-y-4">
+          {/* ── Available Credits ─────────────────────────────────────── */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-3.5 w-3.5 text-slate-400" />
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Available Credits
+              </p>
+            </div>
 
-                        <CommandGroup heading="🌎 Americas">
-                          {MAJOR_TIMEZONES.americas.map((timezone) => (
-                            <CommandItem
-                              key={timezone.value}
-                              value={`${timezone.label} ${timezone.value}`}
-                              onSelect={() => {
-                                setSelectedTimezone(timezone.value);
-                                setOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedTimezone === timezone.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {timezone.label} {formatTimezone(timezone.value)}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
+            <div className="grid grid-cols-2 gap-2">
+              <CreditPill
+                icon={MessageSquare}
+                label="SMS"
+                value={smsLimit}
+                color="bg-blue-50 border-blue-200 text-blue-700"
+                isEmpty={smsLimit === 0}
+              />
+              <CreditPill
+                icon={Phone}
+                label="WhatsApp"
+                value={whatsappLimit}
+                color="bg-green-50 border-green-200 text-green-700"
+                isEmpty={whatsappLimit === 0}
+              />
+              <CreditPill
+                icon={Mail}
+                label="Email"
+                value={emailLimit}
+                color="bg-purple-50 border-purple-200 text-purple-700"
+                isEmpty={emailLimit === 0}
+              />
 
-                        <CommandGroup heading="🌏 Asia">
-                          {MAJOR_TIMEZONES.asia.map((timezone) => (
-                            <CommandItem
-                              key={timezone.value}
-                              value={`${timezone.label} ${timezone.value}`}
-                              onSelect={() => {
-                                setSelectedTimezone(timezone.value);
-                                setOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedTimezone === timezone.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {timezone.label} {formatTimezone(timezone.value)}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-
-                        <CommandGroup heading="🌍 Africa">
-                          {MAJOR_TIMEZONES.africa.map((timezone) => (
-                            <CommandItem
-                              key={timezone.value}
-                              value={`${timezone.label} ${timezone.value}`}
-                              onSelect={() => {
-                                setSelectedTimezone(timezone.value);
-                                setOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedTimezone === timezone.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {timezone.label} {formatTimezone(timezone.value)}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-
-                        <CommandGroup heading="🌊 Oceania">
-                          {MAJOR_TIMEZONES.oceania.map((timezone) => (
-                            <CommandItem
-                              key={timezone.value}
-                              value={`${timezone.label} ${timezone.value}`}
-                              onSelect={() => {
-                                setSelectedTimezone(timezone.value);
-                                setOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedTimezone === timezone.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {timezone.label} {formatTimezone(timezone.value)}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                <p className="text-xs text-muted-foreground">
-                  Selected: {selectedTimezone}
-                </p>
+              {/* Flush Card Coupon */}
+              <div
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium",
+                  flushCardCoupon
+                    ? "bg-orange-50 border-orange-200 text-orange-700"
+                    : "bg-slate-50 border-slate-200 text-slate-400",
+                )}
+              >
+                <CreditCard className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-xs opacity-75">Flush Card</span>
+                <span
+                  className={cn(
+                    "ml-auto font-bold font-mono text-xs tracking-wider",
+                    !flushCardCoupon && "text-slate-400",
+                  )}
+                >
+                  {flushCardCoupon ?? "—"}
+                </span>
               </div>
             </div>
 
-            <DialogFooter>
-              <Button
-                onClick={handleSave}
-                disabled={!localDateTime || updateMutation.isPending}
-                className="bg-lime-700 hover:bg-lime-800 text-lime-50"
-              >
-                {updateMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save"
+            {/* No credits at all warning */}
+            {smsLimit === 0 &&
+              whatsappLimit === 0 &&
+              emailLimit === 0 &&
+              !flushCardCoupon && (
+                <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  You have no credits. Purchase an add-on below to start
+                  sending.
+                </p>
+              )}
+          </div>
+
+          <Separator />
+
+          {/* ── Schedule info ── */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-400 flex items-center gap-1.5 text-xs">
+                <Clock className="h-3.5 w-3.5" /> Scheduled for
+              </span>
+              <span className="font-semibold text-slate-800 text-xs">
+                {formattedDisplayDate}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-400 flex items-center gap-1.5 text-xs">
+                <CheckCircle2 className="h-3.5 w-3.5" /> All messages sent
+              </span>
+              <span
+                className={cn(
+                  "text-xs font-semibold",
+                  data.isMessageSend ? "text-lime-600" : "text-slate-500",
                 )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardFooter>
-    </Card>
+              >
+                {data.isMessageSend ? "Yes ✓" : "No"}
+              </span>
+            </div>
+          </div>
+
+          {/* ── Pending breakdown ── */}
+          <div
+            className={cn(
+              "rounded-xl border p-3 space-y-2.5",
+              hasPending
+                ? "bg-amber-50 border-amber-200"
+                : "bg-lime-50 border-lime-200",
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className={cn(
+                  "text-xs font-semibold",
+                  hasPending ? "text-amber-700" : "text-lime-700",
+                )}
+              >
+                {hasPending ? "Pending messages" : "No pending messages"}
+              </span>
+              {hasPending && (
+                <span className="text-xs font-bold bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">
+                  {totalPending} total
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                {
+                  label: "SMS",
+                  value: data.numberOfNotSend?.sms ?? 0,
+                  icon: MessageSquare,
+                  color: "text-blue-600 bg-blue-50 border-blue-200",
+                },
+                {
+                  label: "Mail",
+                  value: data.numberOfNotSend?.mail ?? 0,
+                  icon: Mail,
+                  color: "text-purple-600 bg-purple-50 border-purple-200",
+                },
+                {
+                  label: "WhatsApp",
+                  value: data.numberOfNotSend?.whatsapp ?? 0,
+                  icon: Phone,
+                  color: "text-green-600 bg-green-50 border-green-200",
+                },
+              ].map(({ label, value, icon: Icon, color }) => (
+                <div
+                  key={label}
+                  className={cn(
+                    "flex flex-col items-center gap-0.5 rounded-lg border py-2 px-1",
+                    color,
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span className="text-base font-bold leading-tight">
+                    {value}
+                  </span>
+                  <span className="text-[10px] font-medium opacity-70">
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+
+        <Separator />
+
+        {/* ── Footer actions ── */}
+        <CardFooter className="px-5 py-3 flex items-center justify-between gap-2">
+          <span className="text-[10px] text-slate-400 hidden sm:block">
+            ID:{" "}
+            <span className="font-mono">{String(data.event_id).slice(-8)}</span>
+          </span>
+
+          <div className="flex items-center gap-2 ml-auto">
+            {/* ── Resend AlertDialog ── */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={resendMutation.isPending}
+                  className="h-8 text-xs border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5"
+                >
+                  {resendMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />{" "}
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5" /> Resend
+                    </>
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                      <RefreshCw className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <AlertDialogTitle>Resend messages?</AlertDialogTitle>
+                  </div>
+                  <AlertDialogDescription className="text-slate-600 leading-relaxed">
+                    This will re-queue <strong>all pending messages</strong> —
+                    SMS <strong>({data.numberOfNotSend?.sms ?? 0})</strong>,{" "}
+                    Mail <strong>({data.numberOfNotSend?.mail ?? 0})</strong>,{" "}
+                    WhatsApp{" "}
+                    <strong>({data.numberOfNotSend?.whatsapp ?? 0})</strong>.
+                    <br />
+                    <br />
+                    Recipients who already received a message{" "}
+                    <strong>may receive it again</strong>.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => resendMutation.mutate()}
+                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" /> Yes, resend all
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* ── Update schedule ── */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  size="sm"
+                  className="h-8 text-xs bg-lime-600 hover:bg-lime-700 text-white gap-1.5"
+                >
+                  <CalendarClock className="h-3.5 w-3.5" /> Update schedule
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-lime-100 flex items-center justify-center">
+                      <CalendarClock className="h-5 w-5 text-lime-600" />
+                    </div>
+                    <DialogTitle>Update starting date & time</DialogTitle>
+                  </div>
+                </DialogHeader>
+
+                <div className="space-y-4 py-2">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="datetime"
+                      className="text-slate-700 font-medium"
+                    >
+                      Starting at
+                    </Label>
+                    <Input
+                      id="datetime"
+                      type="datetime-local"
+                      value={localDateTime}
+                      onChange={(e) => setLocalDateTime(e.target.value)}
+                      className="h-11 border-slate-300 focus-visible:ring-lime-500"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-medium">
+                      Time zone
+                    </Label>
+                    <Popover open={open} onOpenChange={setOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between h-11 border-slate-300"
+                        >
+                          <span className="truncate">
+                            {getSelectedLabel(selectedTimezone)}
+                          </span>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[450px] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search timezone..." />
+                          <CommandList>
+                            <CommandEmpty>No timezone found.</CommandEmpty>
+                            {[
+                              {
+                                heading: "🇪🇺 Europe",
+                                list: MAJOR_TIMEZONES.european,
+                              },
+                              {
+                                heading: "🌎 Americas",
+                                list: MAJOR_TIMEZONES.americas,
+                              },
+                              {
+                                heading: "🌏 Asia",
+                                list: MAJOR_TIMEZONES.asia,
+                              },
+                              {
+                                heading: "🌍 Africa",
+                                list: MAJOR_TIMEZONES.africa,
+                              },
+                              {
+                                heading: "🌊 Oceania",
+                                list: MAJOR_TIMEZONES.oceania,
+                              },
+                            ].map(({ heading, list }) => (
+                              <CommandGroup key={heading} heading={heading}>
+                                {list.map((tz) => (
+                                  <CommandItem
+                                    key={tz.value}
+                                    value={`${tz.label} ${tz.value}`}
+                                    onSelect={() => {
+                                      setSelectedTimezone(tz.value);
+                                      setOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        selectedTimezone === tz.value
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                    {tz.label} {formatTimezone(tz.value)}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-slate-400">
+                      Selected: {selectedTimezone}
+                    </p>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)}
+                    className="border-slate-300"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    disabled={!localDateTime || updateMutation.isPending}
+                    className="bg-lime-600 hover:bg-lime-700 text-white min-w-[110px]"
+                  >
+                    {updateMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                        Saving...
+                      </>
+                    ) : (
+                      "Save schedule"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardFooter>
+      </Card>
+
+      {/* ── Add-on cards below ── */}
+      <AddOnCards />
+    </>
   );
 }

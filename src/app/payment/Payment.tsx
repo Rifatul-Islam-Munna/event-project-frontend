@@ -9,7 +9,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { subScript } from "@/actions/fetch-action";
+import { AddSubForAddOn, subScript } from "@/actions/fetch-action";
 import {
   Card,
   CardContent,
@@ -32,10 +32,12 @@ function Checkout({
   clientSecret,
   plan,
   price,
+  type,
 }: {
   clientSecret: string;
   plan: string;
   price: number;
+  type?: string | null;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -55,7 +57,7 @@ function Checkout({
         confirmParams: {
           return_url: `${
             window.location.origin
-          }/payment/confirm?plan=${encodeURIComponent(plan)}`,
+          }/payment/confirm?plan=${encodeURIComponent(plan)}&type=${type}`,
         },
         redirect: "always",
       });
@@ -191,11 +193,13 @@ export default function BillingPage() {
   const params = useSearchParams();
   const plan = params.get("plan") ?? "basic";
   const coupon = params.get("coupon");
+  const type = params.get("type") ?? null;
   const total = (params.get("price") as number | null) ?? 0;
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["create-intent", plan],
-    queryFn: () => subScript(plan, coupon),
+    queryFn: () =>
+      type === "add-on" ? AddSubForAddOn(plan) : subScript(plan, coupon),
     enabled: !params.get("payment_intent_client_secret"),
     staleTime: 0,
   });
@@ -284,6 +288,7 @@ export default function BillingPage() {
             clientSecret={clientSecret}
             plan={plan}
             price={finalAmount / 100}
+            type={type}
           />
         </Elements>
       </div>
