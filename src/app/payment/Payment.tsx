@@ -7,7 +7,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AddSubForAddOn, subScript } from "@/actions/fetch-action";
 import {
@@ -195,7 +195,7 @@ export default function BillingPage() {
   const coupon = params.get("coupon");
   const type = params.get("type") ?? null;
   const total = (params.get("price") as number | null) ?? 0;
-
+  const router = useRouter();
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["create-intent", plan],
     queryFn: () =>
@@ -245,6 +245,12 @@ export default function BillingPage() {
   const clientSecret = data?.data?.key;
   const customerSessionSecret = data?.data?.customerSessionSecret;
   const finalAmount = data?.data?.finalAmount;
+  const isSuccess = data?.data?.success;
+  console.log("data", data);
+  if (isSuccess) {
+    router.push("/dashboard");
+  }
+
   if (!clientSecret) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
