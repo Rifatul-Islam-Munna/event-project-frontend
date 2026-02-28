@@ -249,7 +249,7 @@ export function MessageSendCard() {
   const smsLimit = limitData?.message ?? 0;
   const whatsappLimit = limitData?.whatsapp ?? 0;
   const emailLimit = limitData?.email ?? 0;
-  const flushCardCoupon = limitData?.flashCardCoupon ?? null;
+  const flushCardCoupon = limitData?.flushCardCoupon ?? null;
 
   // ── Mutations ─────────────────────────────────────────────────────────
   const resendMutation = useMutation({

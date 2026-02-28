@@ -9,7 +9,6 @@ import { getAllThePlans } from "@/actions/fetch-action";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import {
   Check,
@@ -24,15 +23,16 @@ import {
   Share2,
   Settings,
   Shield,
-  Tag,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useCheckoutStore } from "@/zustan-fn/checkout-store";
+import { useRouter } from "next/navigation";
 
 export function PricingSection() {
   const [planType, setPlanType] = useState<string>("Event package");
-  const [couponCode, setCouponCode] = useState("");
-
+  const setPlanId = useCheckoutStore((s) => s.setPlanId);
+  const router = useRouter();
   const { data } = useQuery({
     queryKey: ["plans"],
     queryFn: () => getAllThePlans(),
@@ -143,7 +143,6 @@ export function PricingSection() {
     },
   };
 
-  // ✅ Sorted by order ascending
   const plannerPackages = data?.data
     ?.filter((plan) => plan.type === "Planer package")
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -162,7 +161,7 @@ export function PricingSection() {
     >
       {plans?.map((plan, index) => {
         const config = getPlanConfig(index);
-        const isPopular = plan.isPopular; // ✅ from DB, not hardcoded index
+        const isPopular = plan.isPopular;
         const IconComponent = config.icon;
         const ButtonIcon = config.buttonIcon;
 
@@ -183,7 +182,6 @@ export function PricingSection() {
                 isPopular ? "ring-2 ring-lime-300 scale-105" : ""
               }`}
             >
-              {/* ✅ Popular badge driven by plan.isPopular */}
               {isPopular && (
                 <m.div
                   variants={pulseVariants}
@@ -284,23 +282,13 @@ export function PricingSection() {
                   </div>
                 )}
 
-                <div className="pt-2 space-y-2">
-                  <div className="relative">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                      value={couponCode}
-                      onChange={(e) =>
-                        setCouponCode(e.target.value.toUpperCase())
-                      }
-                      placeholder="Coupon code (optional)"
-                      className="pl-9 h-10 w-full font-mono uppercase text-sm border-slate-300 focus-visible:ring-lime-500 bg-white"
-                    />
-                  </div>
-
-                  <Link
-                    href={`/payment?plan=${plan._id}&price=${plan.priceCents}${
-                      couponCode ? `&coupon=${couponCode}` : ""
-                    }`}
+                {/* ✅ Direct checkout link — no coupon */}
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      router.push(`/checkout`);
+                      setPlanId(plan._id);
+                    }}
                   >
                     <m.div
                       whileHover={{
@@ -334,7 +322,7 @@ export function PricingSection() {
                         </div>
                       </Button>
                     </m.div>
-                  </Link>
+                  </button>
                 </div>
               </CardContent>
             </Card>

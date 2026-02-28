@@ -284,6 +284,13 @@ export const subScript = async (sub:string,coupon?:string | null)=>{
     console.log("vendor-data->",data,"vendor-error->",error);
     return {data,error}
 }
+export const CreateSubWithAddOn = async (plan:string,coupon?:string | null,addons?:string[] | [])=>{
+  const user  = await getUserInfo();
+  const payload = {userId:user?._id,plan:plan,coupon:coupon,addons:addons};
+   const [data,error] = await PostRequestAxios(`/subscription/create-sub-with-add-ons`,payload);
+    console.log("add-on-data->",data,"set-add-on-error->",error);
+    return {data,error}
+}
 export const AddSubForAddOn = async (sub:string,coupon?:string | null)=>{
   const user  = await getUserInfo();
   const payload = {userId:user?._id,addOnId:sub};
@@ -301,6 +308,20 @@ interface AuthResponse {
 
 export const getSubTokenFirst = async (sub:string)=>{
   const [data,error] = await GetRequestNormal<AuthResponse>(`/subscription/create-payment?paymentIntentId=${sub}`);
+   if(data?.success){
+     const coookies = await cookies();
+       coookies.set("access_token",data?.access_token,{maxAge:60*60*24,path:'/',httpOnly:true});
+      coookies.set("user_info",JSON.stringify(data?.user),{maxAge:60*60*24,path:'/',httpOnly:true})
+      coookies.set("sub_token",data?.subToken,{maxAge:60*60*24,path:'/',httpOnly:true})
+   }
+   const r = {success:true}
+  
+  return {r,error}
+
+}
+export const createFreePlan = async (plan:string,coupon?:string | null,addons?:string[] | [])=>{
+  const payload = {plan:plan,coupon:coupon,addons:addons};
+  const [data,error] = await PostRequestAxios(`/subscription/creates-free-plans`,payload);
    if(data?.success){
      const coookies = await cookies();
        coookies.set("access_token",data?.access_token,{maxAge:60*60*24,path:'/',httpOnly:true});

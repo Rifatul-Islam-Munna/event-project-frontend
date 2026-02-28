@@ -26,13 +26,16 @@ import {
   Settings,
   Shield,
 } from "lucide-react";
-import Link from "next/link";
 import { getUserInfo } from "@/actions/auth";
 import { isAfter } from "date-fns";
+import { useCheckoutStore } from "@/zustan-fn/checkout-store";
+import { useRouter } from "next/navigation";
 
 export function PricingSection() {
   const [isOpen, setIsOpen] = useState(false);
   const [planType, setPlanType] = useState<string>("Event package");
+  const setPlanId = useCheckoutStore((s) => s.setPlanId);
+  const router = useRouter();
 
   const { data } = useQuery({
     queryKey: ["plans"],
@@ -55,7 +58,7 @@ export function PricingSection() {
   const formatPrice = (priceCents: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: currency,
+      currency,
     }).format(priceCents / 100);
   };
 
@@ -195,7 +198,6 @@ export function PricingSection() {
                 isPopular ? "ring-2 ring-lime-300 scale-105" : ""
               }`}
             >
-              {/* Popular Badge */}
               {isPopular && (
                 <m.div
                   variants={pulseVariants}
@@ -209,7 +211,6 @@ export function PricingSection() {
                 </m.div>
               )}
 
-              {/* Card Header */}
               <CardHeader className="text-center pb-4 pt-8 px-6 space-y-4">
                 <div className="flex items-center justify-center mb-3">
                   <m.div
@@ -235,7 +236,6 @@ export function PricingSection() {
                   <span className="text-4xl font-bold text-slate-900">
                     {formatPrice(plan.priceCents, plan.currency)}
                   </span>
-                  <span className="text-slate-500 text-sm font-medium"></span>
                 </div>
 
                 <p className="text-sm text-slate-600 px-2">
@@ -243,7 +243,6 @@ export function PricingSection() {
                 </p>
               </CardHeader>
 
-              {/* Card Content */}
               <CardContent className="px-6 pb-6 space-y-6">
                 {/* Features */}
                 <div>
@@ -299,10 +298,8 @@ export function PricingSection() {
                   </div>
                 )}
 
-                {/* CTA Button */}
-                <Link
-                  href={`/payment?plan=${plan._id}&price=${plan.priceCents}`}
-                >
+                {/* ✅ CTA — setPlanId first, then navigate, no Link/button wrapper */}
+                <div className="pt-2">
                   <m.div
                     whileHover={{
                       scale: 1.03,
@@ -310,9 +307,13 @@ export function PricingSection() {
                       transition: { duration: 0.2 },
                     }}
                     whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
-                    className="pt-4"
                   >
                     <Button
+                      onClick={() => {
+                        setPlanId(plan._id); // ✅ store first
+                        setIsOpen(false); // ✅ close sheet
+                        router.push("/checkout"); // ✅ then navigate
+                      }}
                       className={`group relative w-full bg-gradient-to-r ${config.button} text-white font-bold text-lg py-6 px-6 rounded-2xl ${config.buttonShadow} ${config.buttonHoverShadow} hover:scale-105 transition-all duration-400 border-0 overflow-hidden`}
                       size="lg"
                     >
@@ -336,7 +337,7 @@ export function PricingSection() {
                       </div>
                     </Button>
                   </m.div>
-                </Link>
+                </div>
               </CardContent>
             </Card>
           </m.div>
@@ -347,7 +348,7 @@ export function PricingSection() {
 
   return (
     <>
-      {/* Sticky Upgrade Banner */}
+      {/* ── Sticky Upgrade Banner ── */}
       <div className="flex justify-between items-center w-full p-4 bg-gradient-to-r from-lime-500 via-lime-600 to-lime-600 border-b border-lime-700 shadow-lg">
         <div className="flex items-center mx-auto gap-3">
           <Sparkles className="h-5 w-5 text-white" />
@@ -366,7 +367,7 @@ export function PricingSection() {
         </div>
       </div>
 
-      {/* Sheet Modal */}
+      {/* ── Sheet Modal ── */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent
           side="top"
@@ -375,7 +376,6 @@ export function PricingSection() {
           <LazyMotion features={domAnimation}>
             <section className="w-full py-16 md:py-24 lg:py-32">
               <div className="container mx-auto px-4 md:px-6 max-w-7xl">
-                {/* Header */}
                 <m.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -399,7 +399,6 @@ export function PricingSection() {
                   </p>
                 </m.div>
 
-                {/* Tabs */}
                 <Tabs
                   defaultValue="event"
                   className="w-full"
@@ -435,13 +434,11 @@ export function PricingSection() {
                   <TabsContent value="planner" className="mt-0">
                     {renderPricingCards(plannerPackages || [])}
                   </TabsContent>
-
                   <TabsContent value="event" className="mt-0">
                     {renderPricingCards(eventPackages || [])}
                   </TabsContent>
                 </Tabs>
 
-                {/* Bottom Accent */}
                 <m.div
                   initial={{ opacity: 0, scaleX: 0 }}
                   whileInView={{ opacity: 1, scaleX: 1 }}

@@ -4,15 +4,17 @@ import * as React from "react";
 import {
   CreditCard,
   FileText,
-  Heading,
-  Images,
-  Layers,
+  Heading1,
+  ImageIcon,
+  Layers3,
   ShieldCheck,
-  SquareDashedBottom,
-  Users,
-  StepBack,
-  NotepadTextDashed,
+  Users2,
+  ArrowLeftCircle,
+  NotepadText,
   Tag,
+  LayoutDashboard,
+  Gift,
+  PuzzleIcon,
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
@@ -20,7 +22,6 @@ import { NavMain } from "./nav-main";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -32,75 +33,90 @@ const data = {
     {
       title: "Subscription",
       url: "/admin/dashboard/subscription",
-      icon: CreditCard, // or BadgeDollarSign, Crown
+      icon: CreditCard,
     },
     {
       title: "Plans",
       url: "/admin/dashboard/plans",
-      icon: Layers, // or Package, BookOpen
+      icon: Layers3,
     },
     {
       title: "Coupon",
       url: "/admin/dashboard/coupon",
-      icon: Tag, // or Package, BookOpen
+      icon: Gift,
     },
     {
       title: "Add On",
       url: "/admin/dashboard/add-on",
-      icon: Tag, // or Package, BookOpen
+      icon: PuzzleIcon,
     },
     {
-      title: "User",
+      title: "Users",
       url: "/admin/dashboard/users",
-      icon: Users, // or User, UserCircle
+      icon: Users2,
     },
     {
       title: "Title",
       url: "/admin/dashboard/title",
-      icon: Heading, // or Type, TextCursorInput
+      icon: Heading1,
     },
     {
       title: "Images",
       url: "/admin/dashboard/images",
-      icon: Images, // or Image, ImagePlus
+      icon: ImageIcon,
     },
     {
       title: "Terms",
       url: "/admin/dashboard/terms",
-      icon: FileText, // or ScrollText, FileCheck
+      icon: FileText,
     },
     {
       title: "Privacy",
       url: "/admin/dashboard/privacy",
-      icon: ShieldCheck, // or Shield, Lock
+      icon: ShieldCheck,
     },
     {
-      title: "Vendor category",
+      title: "Vendor Category",
       url: "/admin/dashboard/seo",
-      icon: StepBack, // or Shield, Lock
+      icon: ArrowLeftCircle,
     },
     {
       title: "Template",
       url: "/admin/dashboard/template",
-      icon: NotepadTextDashed, // or Shield, Lock
+      icon: NotepadText,
     },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar className=" pt-11" collapsible="offcanvas" {...props}>
-      <SidebarHeader>
+    <Sidebar
+      className="pt-20 border-r border-lime-100 bg-white"
+      collapsible="offcanvas"
+      {...props}
+    >
+      <SidebarHeader className="px-4 pb-4 border-b border-lime-100">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
-            ></SidebarMenuButton>
+            >
+              {/* Logo / Brand area */}
+              <div className="flex items-center gap-3 px-2 py-1">
+                <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-lime-500 to-lime-700 flex items-center justify-center shadow-md shadow-lime-200">
+                  <LayoutDashboard className="h-4 w-4 text-white" />
+                </div>
+                <span className="font-bold text-slate-800 text-base tracking-tight">
+                  Admin Panel
+                </span>
+              </div>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+
+      <SidebarContent className="px-3 py-4">
         <NavMain items={data.navMain} />
       </SidebarContent>
     </Sidebar>
