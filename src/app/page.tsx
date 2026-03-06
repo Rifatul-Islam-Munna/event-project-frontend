@@ -24,11 +24,7 @@ import Script from "next/script";
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col  ">
-      {/*  <TawkMessengerReact
-        propertyId="6999d9f5f093ee1c3c746061"
-        widgetId="c764ddf8eaa5e9f0f99f40d22e2515ec511d5cb4"
-      /> */}
-      <Script
+      {/*  <Script
         id="tawk-to"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
@@ -46,7 +42,7 @@ export default function Home() {
           })();
         `,
         }}
-      />
+      /> */}
       <main className="flex-1">
         {/*  <HeroSlider /> */}
         <HeroSection />
