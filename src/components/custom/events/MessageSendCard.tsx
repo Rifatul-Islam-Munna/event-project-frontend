@@ -70,6 +70,7 @@ import {
   Clock,
   CreditCard,
   Wallet,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -445,25 +446,67 @@ export function MessageSendCard() {
               />
 
               {/* Flush Card Coupon */}
-              <div
+              <a
+                href="https://flashback.camera/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-200",
+                  "group hover:shadow-md active:scale-[0.98]",
                   flushCardCoupon
-                    ? "bg-orange-50 border-orange-200 text-orange-700"
-                    : "bg-slate-50 border-slate-200 text-slate-400",
+                    ? "bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-300"
+                    : "bg-slate-50 border-slate-200 hover:bg-slate-100 hover:border-slate-300",
                 )}
               >
-                <CreditCard className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-xs opacity-75">Flush Card</span>
-                <span
+                {/* Left icon */}
+                <div
                   className={cn(
-                    "ml-auto font-bold font-mono text-xs tracking-wider",
-                    !flushCardCoupon && "text-slate-400",
+                    "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+                    flushCardCoupon ? "bg-orange-100" : "bg-slate-100",
                   )}
                 >
-                  {flushCardCoupon ?? "—"}
-                </span>
-              </div>
+                  <CreditCard
+                    className={cn(
+                      "h-4 w-4",
+                      flushCardCoupon ? "text-orange-500" : "text-slate-400",
+                    )}
+                  />
+                </div>
+
+                {/* Text block */}
+                <div className="flex flex-col min-w-0">
+                  <span
+                    className={cn(
+                      "text-xs font-semibold",
+                      flushCardCoupon ? "text-orange-700" : "text-slate-500",
+                    )}
+                  >
+                    Flush Card
+                  </span>
+                  <span
+                    className={cn(
+                      "font-mono font-bold text-xs tracking-wider truncate",
+                      flushCardCoupon ? "text-orange-600" : "text-slate-400",
+                    )}
+                  >
+                    {flushCardCoupon ?? "—"}
+                  </span>
+                </div>
+
+                {/* Right — visit label + icon */}
+                <div
+                  className={cn(
+                    "ml-auto flex items-center gap-1 text-xs font-semibold shrink-0",
+                    "px-2 py-1 rounded-lg transition-colors duration-200",
+                    flushCardCoupon
+                      ? "bg-orange-100 text-orange-600 group-hover:bg-orange-200"
+                      : "bg-slate-100 text-slate-400 group-hover:bg-slate-200",
+                  )}
+                >
+                  Visit
+                  <ExternalLink className="h-3 w-3" />
+                </div>
+              </a>
             </div>
 
             {/* No credits at all warning */}

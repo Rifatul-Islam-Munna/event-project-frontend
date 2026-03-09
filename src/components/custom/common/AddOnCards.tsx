@@ -251,6 +251,7 @@ export default function AddOnCards({
                   )}
 
                   {/* ── Flush Card — blurred coupon + optional message ── */}
+                  {/* ── Flush Card — blurred coupon + optional message ── */}
                   {isFlushCard && (
                     <div className="space-y-3">
                       {/* Optional message for flush card */}
@@ -270,18 +271,13 @@ export default function AddOnCards({
 
                       {/* Blurred coupon box */}
                       <div className="relative flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-xl overflow-hidden">
-                        {/* Lock — always on top */}
                         <Lock className="h-4 w-4 text-orange-400 shrink-0 relative z-10" />
-
-                        {/* Blurred code */}
                         <span
                           className="font-mono font-bold tracking-widest text-sm text-slate-800 select-none blur-sm"
                           aria-hidden="true"
                         >
                           {addOn.flushCardCoupon || "XXXXXXXXXXXX"}
                         </span>
-
-                        {/* Frosted overlay */}
                         <div className="absolute inset-0 bg-orange-50/40 backdrop-blur-[2px]" />
                       </div>
 
@@ -290,6 +286,21 @@ export default function AddOnCards({
                         <Lock className="h-3 w-3" />
                         Revealed after purchase
                       </p>
+
+                      {/* ── Flashback link ── */}
+                      <a
+                        href="https://flashback.camera/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl border",
+                          "text-sm font-semibold text-orange-600 border-orange-200 bg-orange-50",
+                          "hover:bg-orange-100 transition-colors duration-200",
+                        )}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Visit Flashback Camera
+                      </a>
                     </div>
                   )}
                 </CardContent>
