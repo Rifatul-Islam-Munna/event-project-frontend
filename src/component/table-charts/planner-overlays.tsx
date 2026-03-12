@@ -9,6 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PlannerActionBarProps {
   pendingChanges: number;
@@ -257,6 +258,45 @@ export function PlannerEmptyState() {
           Use the sidebar to create layout pieces, then drag guests directly onto
           seats.
         </p>
+      </div>
+    </div>
+  );
+}
+
+export function PlannerLoadingSkeleton() {
+  return (
+    <div className="absolute inset-0 z-50 flex overflow-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#eef6f2_100%)]">
+      <div className="hidden h-full w-full max-w-[360px] shrink-0 border-r border-slate-200/80 bg-white/80 p-4 md:flex">
+        <div className="flex w-full flex-col gap-4">
+          <Skeleton className="h-20 rounded-3xl" />
+          <Skeleton className="h-36 rounded-3xl" />
+          <Skeleton className="h-32 rounded-3xl" />
+          <Skeleton className="h-28 rounded-3xl" />
+          <Skeleton className="flex-1 rounded-3xl" />
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col p-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <Skeleton className="h-11 w-11 rounded-2xl" />
+          <Skeleton className="h-12 w-[min(360px,60vw)] rounded-3xl" />
+        </div>
+
+        <div className="relative flex-1 overflow-hidden rounded-[32px] border border-white/70 bg-white/65 p-4 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.35)]">
+          <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-[1.6fr_0.9fr]">
+            <Skeleton className="h-full min-h-[320px] rounded-[28px]" />
+            <div className="hidden flex-col gap-4 md:flex">
+              <Skeleton className="h-28 rounded-[28px]" />
+              <Skeleton className="h-28 rounded-[28px]" />
+              <Skeleton className="flex-1 rounded-[28px]" />
+            </div>
+          </div>
+
+          <div className="absolute bottom-4 left-4 flex gap-3">
+            <Skeleton className="h-12 w-36 rounded-3xl" />
+            <Skeleton className="hidden h-24 w-36 rounded-3xl md:block" />
+          </div>
+        </div>
       </div>
     </div>
   );

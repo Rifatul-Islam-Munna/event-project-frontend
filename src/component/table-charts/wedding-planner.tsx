@@ -7,7 +7,6 @@ import { useIdleTimer } from "react-idle-timer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useSearchParams } from "next/navigation";
 import { jsPDF } from "jspdf";
-import { toPng } from "html-to-image";
 import { Menu } from "lucide-react";
 import { toast } from "sonner";
 import type { Guest } from "@/@types/events-details";
@@ -38,6 +37,7 @@ import { PlannerAddItemDialog, PlannerEditDialog } from "./planner-dialogs";
 import {
   PlannerActionBar,
   PlannerEmptyState,
+  PlannerLoadingSkeleton,
   PlannerSelectionActions,
   PlannerViewportControls,
 } from "./planner-overlays";
@@ -93,6 +93,7 @@ function WeddingPlanner() {
   const [editDialogState, setEditDialogState] = useState<EditDialogState | null>(
     null,
   );
+  const [hasHydratedInitialPlanner, setHasHydratedInitialPlanner] = useState(false);
   const [changedObjects, setChangedObjects] = useState<ChangedObjects>({
     guest: [],
     node: [],
@@ -117,8 +118,8 @@ function WeddingPlanner() {
   const nodesRef = useRef(nodes);
   const guestsRef = useRef(guests);
   const stageRef = useRef<Konva.Stage | null>(null);
+  const boundaryStageRef = useRef<Konva.Stage | null>(null);
   const plannerViewportRef = useRef<HTMLDivElement>(null);
-  const plannerSurfaceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     viewportRef.current = viewport;
@@ -165,17 +166,17 @@ function WeddingPlanner() {
     return () => observer.disconnect();
   }, []);
 
-  const { data: guestResponse } = useQuery({
+  const { data: guestResponse, isPending: isGuestPending } = useQuery({
     queryKey: ["get-all-guest", eventId],
     queryFn: () => getAllGuest(eventId),
   });
 
-  const { data: seatPlanResponse } = useQuery({
+  const { data: seatPlanResponse, isPending: isSeatPlanPending } = useQuery({
     queryKey: ["seat-plan", eventId],
     queryFn: () => getAllSeatPlan(eventId),
   });
 
-  const { data: decoratorResponse } = useQuery({
+  const { data: decoratorResponse, isPending: isDecoratorPending } = useQuery({
     queryKey: ["seat-plan-decorator", eventId],
     queryFn: () => getDecorator(eventId),
   });
@@ -446,6 +447,10 @@ function WeddingPlanner() {
   }, [guestResponse?.data]);
 
   useEffect(() => {
+    setHasHydratedInitialPlanner(false);
+  }, [eventId]);
+
+  useEffect(() => {
     if (!stageSize.width || !stageSize.height) {
       return;
     }
@@ -463,6 +468,7 @@ function WeddingPlanner() {
     setNodes(hydratedNodes);
     setSelectedNodeId(null);
     setViewport(getInitialViewport());
+    setHasHydratedInitialPlanner(true);
   }, [
     decoratorResponse?.data,
     getInitialViewport,
@@ -470,6 +476,14 @@ function WeddingPlanner() {
     stageSize.height,
     stageSize.width,
   ]);
+
+  const isInitialPlannerLoading =
+    isGuestPending ||
+    isSeatPlanPending ||
+    isDecoratorPending ||
+    !stageSize.width ||
+    !stageSize.height ||
+    !hasHydratedInitialPlanner;
 
   const selectedNode = useMemo(
     () => nodes.find((node) => node.id === selectedNodeId) ?? null,
@@ -711,8 +725,8 @@ function WeddingPlanner() {
   }, [changedObjects, updateAllGuests, updateDecorativeNodes, updateSeatPlanNodes]);
 
   const handleDownloadPdf = useCallback(async () => {
-    if (!plannerSurfaceRef.current) {
-      toast.error("Planner surface not found.");
+    if (!stageRef.current || stageSize.width === 0 || stageSize.height === 0) {
+      toast.error("Planner stage not ready.");
       return;
     }
 
@@ -727,12 +741,48 @@ function WeddingPlanner() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 250));
 
-      const dataUrl = await toPng(plannerSurfaceRef.current, {
-        backgroundColor: "#ffffff",
-        pixelRatio: 2.5,
-        cacheBust: true,
-      });
+      stageRef.current.batchDraw();
+      boundaryStageRef.current?.batchDraw();
 
+      const exportPixelRatio = 2;
+      const mainStageUrl = stageRef.current.toDataURL({
+        pixelRatio: exportPixelRatio,
+      });
+      const mainStageImage = await loadImageElement(mainStageUrl);
+      const compositeCanvas = document.createElement("canvas");
+      compositeCanvas.width = mainStageImage.width;
+      compositeCanvas.height = mainStageImage.height;
+
+      const context = compositeCanvas.getContext("2d");
+
+      if (!context) {
+        throw new Error("Unable to create export canvas.");
+      }
+
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+
+      if (boundaryStageRef.current) {
+        const boundaryStageUrl = boundaryStageRef.current.toDataURL({
+          pixelRatio: exportPixelRatio,
+        });
+        const boundaryStageImage = await loadImageElement(boundaryStageUrl);
+        const boundaryPadding = exportViewport.zoom * 30;
+        const boundaryOffsetX =
+          (exportViewport.x - boundaryPadding) * exportPixelRatio;
+        const boundaryOffsetY =
+          (exportViewport.y - boundaryPadding) * exportPixelRatio;
+
+        context.drawImage(
+          boundaryStageImage,
+          boundaryOffsetX,
+          boundaryOffsetY,
+        );
+      }
+
+      context.drawImage(mainStageImage, 0, 0);
+
+      const dataUrl = compositeCanvas.toDataURL("image/jpeg", 0.9);
       const image = await loadImageElement(dataUrl);
       const canvasWidthMm = image.width * 0.264583;
       const canvasHeightMm = image.height * 0.264583;
@@ -743,7 +793,7 @@ function WeddingPlanner() {
         orientation: canvasWidthMm > canvasHeightMm ? "landscape" : "portrait",
         unit: "mm",
         format: [pageWidth, pageHeight],
-        compress: false,
+        compress: true,
       });
 
       const title = companyInfo?.data?.title || "Wedding Planner";
@@ -772,7 +822,7 @@ function WeddingPlanner() {
 
       pdf.addImage(
         image,
-        "PNG",
+        "JPEG",
         (pageWidth - canvasWidthMm) / 2,
         55,
         canvasWidthMm,
@@ -800,7 +850,14 @@ function WeddingPlanner() {
       setIsExporting(false);
       setIsPdfDownloading(false);
     }
-  }, [companyInfo?.data?.imageUrl, companyInfo?.data?.title, getContentBounds, getViewportForBounds]);
+  }, [
+    companyInfo?.data?.imageUrl,
+    companyInfo?.data?.title,
+    getContentBounds,
+    getViewportForBounds,
+    stageSize.height,
+    stageSize.width,
+  ]);
 
   const pendingChangesCount =
     changedObjects.guest.length +
@@ -829,7 +886,7 @@ function WeddingPlanner() {
   });
 
   return (
-    <div className="flex h-[100dvh] min-h-[100dvh] w-full overflow-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#eef6f2_100%)]">
+    <div className="relative flex h-[100dvh] min-h-[100dvh] w-full overflow-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#eef6f2_100%)]">
       <Sidebar
         onAddTableClick={handleAddTableClick}
         guests={guests}
@@ -844,16 +901,14 @@ function WeddingPlanner() {
         onDragOver={(event) => event.preventDefault()}
         onDrop={handleDrop}
       >
-        <div
-          ref={plannerSurfaceRef}
-          className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_top,#ffffff,#f8fafc_55%,#eef2f7)]"
-        >
+        <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_top,#ffffff,#f8fafc_55%,#eef2f7)]">
           <ZoomResponsiveBoundary
             venueWidth={venueWidth}
             venueHeight={venueHeight}
             SCALE_FACTOR={SCALE_FACTOR}
             venu_id={eventId}
             viewport={viewport}
+            exportStageRef={boundaryStageRef}
           />
 
           <Stage
@@ -966,7 +1021,9 @@ function WeddingPlanner() {
           </Stage>
         </div>
 
-        {!isExporting && nodes.length === 0 ? <PlannerEmptyState /> : null}
+        {!isExporting && !isInitialPlannerLoading && nodes.length === 0 ? (
+          <PlannerEmptyState />
+        ) : null}
 
         <Button
           variant="outline"
@@ -1099,6 +1156,8 @@ function WeddingPlanner() {
         }
         onConfirm={handleEditConfirm}
       />
+
+      {isInitialPlannerLoading ? <PlannerLoadingSkeleton /> : null}
     </div>
   );
 }

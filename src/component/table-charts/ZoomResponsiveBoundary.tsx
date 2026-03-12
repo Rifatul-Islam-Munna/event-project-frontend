@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
+import type { MutableRefObject } from "react";
 import type Konva from "konva";
 import {
   Stage,
@@ -37,6 +38,7 @@ interface SmoothDraggableVenueShapeProps {
   venu_id: string;
   onDimensionsChange?: (width: number, height: number) => void; // NEW: callback for dimension changes
   viewport: PlannerViewport;
+  exportStageRef?: MutableRefObject<Konva.Stage | null>;
 }
 
 interface VenueConfigDB {
@@ -71,6 +73,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
   venu_id,
   onDimensionsChange,
   viewport,
+  exportStageRef,
 }) => {
   const { x, y, zoom } = viewport;
   const CANVAS_SCALE_MULTIPLIER = 5;
@@ -112,7 +115,6 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
     height: venueHeight * SCALE_FACTOR,
   });
   const pathName = usePathname();
-  const stageRef = useRef<Konva.Stage | null>(null);
   const imageRef = useRef<Konva.Image | null>(null);
   const searchParams = useSearchParams();
   const [activeImageUrl, setActiveImageUrl] = useState<string | null>(null);
@@ -435,7 +437,11 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
           pointerEvents: isEditMode ? "auto" : "none",
           zIndex: 6,
         }}
-        ref={stageRef}
+        ref={(node) => {
+          if (exportStageRef) {
+            exportStageRef.current = node;
+          }
+        }}
       >
         <Layer>
           <Group>
