@@ -1,45 +1,16 @@
 "use client";
-import type React from "react";
-import { useState, useCallback, useEffect, useRef } from "react";
-import ReactFlow, {
-  MiniMap,
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  type Edge,
-  type Connection,
-  ReactFlowProvider,
-  useReactFlow,
-  useViewport,
-  BackgroundVariant,
-} from "reactflow";
-import "reactflow/dist/style.css";
-import { v4 as uuidv4 } from "uuid";
-import { Sidebar } from "./sidebar";
-import { TableNode } from "./custom-nodes/table-node";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { toast } from "sonner";
-import { Menu, FileText, Database, Loader2 } from "lucide-react";
-import * as htmlToImage from "html-to-image";
-import { toSvg } from "html-to-image";
-import { jsPDF } from "jspdf";
-import type { Guest } from "@/@types/events-details";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type Konva from "konva";
+import { Group, Layer, Line, Rect, Stage } from "react-konva";
+import { useIdleTimer } from "react-idle-timer";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { jsPDF } from "jspdf";
+import { toPng } from "html-to-image";
+import { Menu } from "lucide-react";
+import { toast } from "sonner";
+import type { Guest } from "@/@types/events-details";
 import {
   deleteDecorator,
   deleteGuest,
@@ -54,2088 +25,1086 @@ import {
   updateDecorator,
   updateSeatPlan,
 } from "@/actions/fetch-action";
-import { useIdleTimer } from "react-idle-timer";
+import { Button } from "@/components/ui/button";
 import { useStore } from "@/zustan-fn/save-alert";
-import { ChairNode } from "./custom-nodes/chair-node";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import ZoomResponsiveBoundary from "./ZoomResponsiveBoundary";
 import {
-  DecorativeNode,
-  type DecorativeNodeData,
-} from "./decorative-node/decorative-node";
-import { DecorativeSidebar } from "./decorative-node/decorative-sidebar";
-// Define types for custom node data and guest data
-export type TableType =
-  | "rectangular"
-  | "square"
-  | "circular"
-  | "rectangular-one-sided"
-  | "circular-single-seat"
-  | "chair-row"
-  | "chair-column"
-  | "line-horizontal" // ✅ ADD THIS
-  | "line-vertical"; // ✅ ADD THIS
-interface ChangedObjects {
-  guest: Guest[];
-  node: Array<{
-    id: string;
-    type: string;
-    event_id: string;
-    position: { x: number; y: number };
-    data: {
-      label: string;
-      type: TableType;
-      seats: {
-        id: string;
-        occupiedBy: string | null;
-        occupiedByName: string | null;
-      }[];
-      width: number;
-      height: number;
-      numSeats: number;
-    };
-    style: {
-      width: string;
-      height: string;
-    };
-  }>;
-  decorativeItems: Array<{
-    // Add this new array
-    id: string;
-    type: string;
-    event_id: string;
-    position: { x: number; y: number };
-    data: {
-      label: string;
-      imageUrl: string;
-      width: number;
-      height: number;
-      category: string;
-    };
-  }>;
-}
+  ChairCanvasNode,
+  DecorativeCanvasNode,
+  PlannerMiniMap,
+  TableCanvasNode,
+} from "./planner-canvas";
+import { PlannerAddItemDialog, PlannerEditDialog } from "./planner-dialogs";
+import {
+  PlannerActionBar,
+  PlannerEmptyState,
+  PlannerSelectionActions,
+  PlannerViewportControls,
+} from "./planner-overlays";
+import { Sidebar } from "./sidebar";
+import { usePlannerActions } from "./use-planner-actions";
+import type {
+  ChangedObjects, DecorativePlannerNode, EditDialogState, GuestDragState,
+  LineResizeState, PersistedDecorativeNode, PersistedSeatPlanNode, PlannerNode,
+  PlannerViewport, Point, SeatHitTarget, SeatingPlannerNode, TableType,
+} from "./planner-types";
+import { FOCUS_ZOOM, GRID_GAP, LARGE_CANVAS_SIZE, MAX_ZOOM, MIN_ZOOM, ZOOM_STEP } from "./planner-types";
+import {
+  clamp, getNodeHeight, getNodeWidth, getSeatGeometries, hydrateDecorativeNode,
+  hydrateSeatPlanNode, isChairNode, isTableNode, loadImageElement,
+  serializeDecorativeNode, serializeSeatPlanNode,
+} from "./planner-utils";
 
-export interface TableNodeData {
-  event_id: string;
-  label: string;
-  type: TableType;
-  seats: {
-    id: string;
-    occupiedBy: string | null;
-    occupiedByName: string | null;
-  }[];
-  width: number;
-  height: number;
-  numSeats: number;
-  measurementType: string;
-  widthTable: number;
-  heightTable: number;
-  onGuestDrop: (event: React.DragEvent, nodeId: string, seatId: string) => void;
-  onRemoveGuestFromSeat: (
-    nodeId: string,
-    seatId: string,
-    guestId: string,
-  ) => void;
-  onDeleteTable: (nodeId: string) => void;
-  onEditTable: (nodeId: string, newLabel: string, newNumSeats: number) => void;
-}
-
-interface ChangedObjects {
-  guest: Guest[];
-  node: Array<{
-    id: string;
-    type: string;
-    event_id: string;
-    position: { x: number; y: number };
-    data: {
-      label: string;
-      type: TableType;
-      seats: {
-        id: string;
-        occupiedBy: string | null;
-        occupiedByName: string | null;
-      }[];
-      width: number;
-      height: number;
-      numSeats: number;
-    };
-    style: {
-      width: string;
-      height: string;
-    };
-  }>;
-}
-
-interface extentNode {
-  event_id: string;
-}
-
-const nodeTypes = {
-  tableNode: TableNode,
-  decorativeNode: DecorativeNode,
-  chairNode: ChairNode,
-};
-
-const snapGrid: [number, number] = [15, 15];
-
-// Helper function to determine seat distribution for rectangular/square tables
-export const getRectangularSeatDistribution = (
-  totalSeats: number,
-  isSquare: boolean,
-) => {
-  let topSeats = 0;
-  let bottomSeats = 0;
-  let leftSeats = 0;
-  let rightSeats = 0;
-
-  if (totalSeats < 1)
-    return { topSeats: 0, rightSeats: 0, bottomSeats: 0, leftSeats: 0 };
-
-  if (isSquare) {
-    const seatsPerSide = Math.floor(totalSeats / 4);
-    let remainder = totalSeats % 4;
-
-    topSeats = seatsPerSide + (remainder > 0 ? 1 : 0);
-    remainder = Math.max(0, remainder - 1);
-    rightSeats = seatsPerSide + (remainder > 0 ? 1 : 0);
-    remainder = Math.max(0, remainder - 1);
-    bottomSeats = seatsPerSide + (remainder > 0 ? 1 : 0);
-    remainder = Math.max(0, remainder - 1);
-    leftSeats = seatsPerSide + (remainder > 0 ? 1 : 0);
-  } else {
-    if (totalSeats === 8) {
-      topSeats = 3;
-      bottomSeats = 3;
-      leftSeats = 1;
-      rightSeats = 1;
-    } else {
-      topSeats = Math.ceil(totalSeats / 2);
-      bottomSeats = Math.floor(totalSeats / 2);
-      leftSeats = 0;
-      rightSeats = 0;
-    }
-  }
-  return { topSeats, rightSeats, bottomSeats, leftSeats };
-};
-
-const calculateTableDimensions = (
-  type: TableType,
-  numSeats: number,
-): { width: number; height: number } => {
-  const seatDiameter = 30;
-  const seatSpacing = 15;
-  const tablePadding = 60;
-
-  if (type === "circular-single-seat") {
-    return { width: 100, height: 100 };
-  } else if (type === "circular") {
-    const minCircumference = numSeats * (seatDiameter + seatSpacing);
-    const minDiameter = Math.max(150, minCircumference / Math.PI);
-    return { width: minDiameter, height: minDiameter };
-  } else if (type === "rectangular-one-sided") {
-    const requiredSeatWidth =
-      numSeats * seatDiameter +
-      (numSeats > 1 ? (numSeats - 1) * seatSpacing : 0);
-    const calculatedWidth = Math.max(200, requiredSeatWidth + tablePadding);
-    return { width: calculatedWidth, height: 100 };
-  } else {
-    const { topSeats, rightSeats, bottomSeats, leftSeats } =
-      getRectangularSeatDistribution(numSeats, type === "square");
-
-    const maxHorizontalSeats = Math.max(topSeats, bottomSeats);
-    const maxVerticalSeats = Math.max(leftSeats, rightSeats);
-
-    const minWidthForSeats =
-      maxHorizontalSeats > 0
-        ? maxHorizontalSeats * seatDiameter +
-          (maxHorizontalSeats - 1) * seatSpacing
-        : 0;
-    const minHeightForSeats =
-      maxVerticalSeats > 0
-        ? maxVerticalSeats * seatDiameter + (maxVerticalSeats - 1) * seatSpacing
-        : 0;
-
-    let calculatedWidth = Math.max(100, minWidthForSeats + tablePadding);
-    let calculatedHeight = Math.max(60, minHeightForSeats + tablePadding);
-
-    if (type === "square") {
-      const maxDim = Math.max(calculatedWidth, calculatedHeight);
-      calculatedWidth = maxDim;
-      calculatedHeight = maxDim;
-    }
-
-    return { width: calculatedWidth, height: calculatedHeight };
-  }
-};
+export type { TableNodeData, TableType } from "./planner-types";
+export { getRectangularSeatDistribution } from "./planner-utils";
 
 function WeddingPlanner() {
-  const [nodes, setNodes, onNodesChange] = useNodesState<TableNodeData>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const query = useSearchParams();
+  const pathname = usePathname();
+  const eventId = pathname.split("/").pop() as string;
+  const queryClient = useQueryClient();
+  const setDirtyCount = useStore((state) => state.setDataLength);
+
+  const venueWidth = parseFloat(query.get("venueWidth") || "50");
+  const venueHeight = parseFloat(query.get("venueHeight") || "30");
+  const SCALE_FACTOR = 19;
+  const venueWidthPx = venueWidth * SCALE_FACTOR * 5;
+  const venueHeightPx = venueHeight * SCALE_FACTOR * 5;
+  const estimatedCapacity = Math.floor((venueWidth * venueHeight) / 25);
+
+  const [nodes, setNodes] = useState<PlannerNode[]>([]);
   const [guests, setGuests] = useState<Guest[]>([]);
-  const Query = useSearchParams();
-
-  // Venue dimensions from URL
-  const venueWidth = parseFloat(Query.get("venueWidth") || "50"); // meters
-  const venueHeight = parseFloat(Query.get("venueHeight") || "30"); // meters
-  const SCALE_FACTOR = 19; // 1 meter = 5 pixels
-  const venueWidthPx = venueWidth * SCALE_FACTOR * 5; // Applied your multiplier
-  const venueHeightPx = venueHeight * SCALE_FACTOR * 5; // Applied your multiplier
-
-  // Calculate realistic table capacity
-  const estimatedCapacity = Math.floor((venueWidth * venueHeight) / 25); // ~25m² per table including circulation
-
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [viewport, setViewport] = useState<PlannerViewport>({
+    x: 0,
+    y: 0,
+    zoom: MIN_ZOOM,
+  });
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [hoveredSeatKey, setHoveredSeatKey] = useState<string | null>(null);
+  const [isAddTableDialogOpen, setIsAddTableDialogOpen] = useState(false);
+  const [newTableType, setNewTableType] = useState<TableType | null>(null);
+  const [newTableNumSeats, setNewTableNumSeats] = useState(8);
+  const [newTableLabel, setNewTableLabel] = useState("");
+  const [measurementType, setMeasurementType] = useState("");
+  const [tableWidthInput, setTableWidthInput] = useState(0);
+  const [tableHeightInput, setTableHeightInput] = useState(0);
+  const [editDialogState, setEditDialogState] = useState<EditDialogState | null>(
+    null,
+  );
   const [changedObjects, setChangedObjects] = useState<ChangedObjects>({
     guest: [],
     node: [],
     decorativeItems: [],
   });
-
-  console.log("changedObjects->", changedObjects.decorativeItems);
-  const setDataLength = useStore((state) => state.setDataAll);
-  const dataLength = useStore((state) => state.setDataLength);
-  const pathName = usePathname();
-  const [isAddTableDialogOpen, setIsAddTableDialogOpen] = useState(false);
-  const [newTableType, setNewTableType] = useState<TableType | null>(null);
-  const [newTableNumSeats, setNewTableNumSeats] = useState(8);
-  const [newTableLabel, setNewTableLabel] = useState("");
-  const [showSidebar, setShowSidebar] = useState(true);
-  const [mType, setMtype] = useState("");
-  const [tWidth, setTWidth] = useState(0);
-  const [tHeight, setTHeight] = useState(0);
-  const { screenToFlowPosition, setViewport, getNodes, fitView, getViewport } =
-    useReactFlow();
-  console.log("guestes-out-sidegn->", guests);
-
-  //added new
-
-  const [newChairLayout, setNewChairLayout] = useState<
-    "chair-row" | "chair-column" | null
-  >(null);
-
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
-
-  const handleAddChairClick = (layout: "chair-row" | "chair-column") => {
-    setNewTableType(layout);
-    setNewChairLayout(layout);
-    setNewTableNumSeats(5); // Default 5 chairs
-    setNewTableLabel("");
-    setIsAddTableDialogOpen(true);
-  };
-
-  // Use refs to store stable callback references
-  const callbacksRef = useRef({
-    handleGuestDrop: null as any,
-    handleRemoveGuestFromSeat: null as any,
-    handleDeleteTable: null as any,
-    handleEditTable: null as any,
-  });
-
-  // IMPROVED: Calculate initial centered viewport
-  const getInitialViewport = useCallback(() => {
-    const containerWidth =
-      reactFlowWrapper.current?.offsetWidth || window.innerWidth - 300;
-    const containerHeight =
-      reactFlowWrapper.current?.offsetHeight || window.innerHeight;
-
-    // Calculate optimal zoom to fit venue with padding
-    const zoomX = (containerWidth * 0.6) / venueWidthPx;
-    const zoomY = (containerHeight * 0.6) / venueHeightPx;
-    const optimalZoom = Math.min(zoomX, zoomY, 1.0); // Cap at max zoom of 1.0
-
-    // Use the SAME zoom value for calculation and return
-    const finalZoom = Math.max(0.09, optimalZoom); // Use minZoom instead of 1.2
-
-    // Center calculation must use the SAME zoom that's returned
-    const centerX = (containerWidth - venueWidthPx * finalZoom) / 2;
-    const centerY = (containerHeight - venueHeightPx * finalZoom) / 2;
-
-    return {
-      x: centerX,
-      y: centerY,
-      zoom: finalZoom, // ✅ Same zoom used in calculations
-    };
-  }, [venueWidthPx, venueHeightPx]);
-
-  // IMPROVED: More lenient viewport constraints
-  // NEW: Auto-zoom to new table when created
-  const zoomToNewTable = useCallback(
-    (tablePosition: { x: number; y: number }) => {
-      const containerWidth =
-        reactFlowWrapper.current?.offsetWidth || window.innerWidth - 300;
-      const containerHeight =
-        reactFlowWrapper.current?.offsetHeight || window.innerHeight;
-
-      // Calculate position to center the new table with good zoom level
-      const targetZoom = 1.8; // High zoom for detailed table work
-      const targetX = containerWidth / 2 - tablePosition.x * targetZoom;
-      const targetY = containerHeight / 2 - tablePosition.y * targetZoom;
-
-      setViewport(
-        {
-          x: targetX,
-          y: targetY,
-          zoom: targetZoom,
-        },
-        { duration: 800 }, // Smooth 800ms animation
-      );
-    },
-    [setViewport],
+  const [guestDragState, setGuestDragState] = useState<GuestDragState | null>(
+    null,
   );
-
-  const { data: seatPlandata, isLoading } = useQuery({
-    queryKey: ["seat-plan", pathName.split("/").pop()],
-    queryFn: () => getAllSeatPlan(pathName.split("/").pop() as string),
-  });
-  const { data: DecoratorData, isLoading: DecoratorLoading } = useQuery({
-    queryKey: ["seat-plan-decorator", pathName.split("/").pop()],
-    queryFn: () => getDecorator(pathName.split("/").pop() as string),
-  });
-  const { mutate: PostNewDecorator } = useMutation({
-    mutationKey: ["added-new-chair-deco"],
-    mutationFn: (payload: Record<string, unknown>) => postDecorator(payload),
-    onSuccess: (data) => {
-      if (data?.error) {
-        return toast.error(data?.error.message);
-      }
-    },
-  });
-  const { mutate: UpdateDecorator } = useMutation({
-    mutationKey: ["added-new-chair-deco"],
-    mutationFn: (payload: Record<string, unknown>[]) =>
-      updateDecorator(payload),
-    onSuccess: (data) => {
-      if (data?.error) {
-        return toast.error(data?.error.message);
-      }
-      setChangedObjects((prev) => ({ ...prev, decorativeItems: [] }));
-      dataLength(0);
-    },
-  });
-  const { mutate: DeleteDeco } = useMutation({
-    mutationKey: ["delte-new-chair-dec"],
-    mutationFn: (id: string) => deleteDecorator(id),
-    onSuccess: (data) => {
-      if (data?.error) {
-        return toast.error(data?.error.message);
-      }
-    },
-  });
-
-  const { mutate: SeatPlan } = useMutation({
-    mutationKey: ["added-new-chair"],
-    mutationFn: (payload: Record<string, unknown>) => postSeatPlan(payload),
-    onSuccess: (data) => {
-      if (data?.error) {
-        return toast.error(data?.error.message);
-      }
-    },
-  });
-
-  const { mutate: DeteTable } = useMutation({
-    mutationKey: ["delte-new-chair"],
-    mutationFn: (id: string) => deleteSeatPlan(id),
-    onSuccess: (data) => {
-      if (data?.error) {
-        return toast.error(data?.error.message);
-      }
-    },
-  });
-
-  const { mutate: updateSeatAll } = useMutation({
-    mutationKey: ["update-seat-plan"],
-    mutationFn: (id: Record<string, unknown>) => updateSeatPlan(id),
-    onSuccess: (data) => {
-      if (data?.error) {
-        return toast.error(data?.error.message);
-      }
-      toast.success("Guest sit Plan updated successfully");
-      setChangedObjects((prev) => ({ ...prev, node: [] }));
-      dataLength(0);
-    },
-  });
-
-  const { mutate: updateAllguest } = useMutation({
-    mutationKey: ["update-guests"],
-    mutationFn: (id: Guest[]) => updateBulkGuest(id),
-    onSuccess: (data) => {
-      if (data?.error) {
-        return toast.error(data?.error.message);
-      }
-
-      toast.success("Guest updated successfully");
-
-      setChangedObjects((prev) => ({ ...prev, guest: [] }));
-      dataLength(0);
-    },
-  });
-
-  const trackChange = useCallback(
-    (
-      id: string,
-      type: "node" | "guest",
-      action: "created" | "updated" | "deleted",
-      data: any,
-    ) => {
-      setChangedObjects((prev) => {
-        const newChangedObjects = { ...prev };
-
-        if (type === "guest") {
-          // Remove duplicate guest by ID, then add new one
-          const filteredGuests = prev.guest.filter((guest) => guest._id !== id);
-          newChangedObjects.guest = [...filteredGuests, data];
-        } else {
-          // Remove duplicate node by ID, then add new one
-          const filteredNodes = prev.node.filter((node: any) => node.id !== id);
-          let nodeDataForDB = data;
-
-          if (data.type === "chairNode") {
-            nodeDataForDB = {
-              ...data,
-              data: {
-                ...data.data,
-                seats: data.data.chairs || data.data.seats || [],
-                numSeats: data.data.numChairs || data.data.numSeats || 0,
-                chairs: undefined,
-                numChairs: undefined,
-              },
-            };
-          }
-
-          newChangedObjects.node = [...filteredNodes, nodeDataForDB];
-        }
-
-        // ✅ Update store with CORRECT total count
-        const totalLength =
-          newChangedObjects.guest.length +
-          newChangedObjects.node.length +
-          newChangedObjects.decorativeItems.length;
-        setDataLength(totalLength);
-
-        return newChangedObjects;
-      });
-    },
-    [setDataLength], // ✅ Add setDataLength as dependency
+  const [lineResizeState, setLineResizeState] = useState<LineResizeState | null>(
+    null,
   );
-
-  const trackDecorativeChange = useCallback(
-    (id: string, action: "created" | "updated" | "deleted", data: any) => {
-      setChangedObjects((prev) => {
-        const filteredItems = prev.decorativeItems.filter(
-          (item) => item.id !== id,
-        );
-
-        const newDecoItems =
-          action === "deleted" ? filteredItems : [...filteredItems, data];
-
-        const newChangedObjects = {
-          ...prev,
-          decorativeItems: newDecoItems,
-        };
-
-        // ✅ Update store with CORRECT total count
-        const totalLength =
-          newChangedObjects.guest.length +
-          newChangedObjects.node.length +
-          newChangedObjects.decorativeItems.length;
-        setDataLength(totalLength);
-
-        return newChangedObjects;
-      });
-    },
-    [setDataLength], // ✅ Add dependency
-  );
-
-  const onConnect = useCallback(
-    (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges],
-  );
-
-  const { data, isPending } = useQuery({
-    queryKey: ["get-all-guest", pathName.split("/").pop()],
-    queryFn: () => getAllGuest(pathName.split("/").pop() as string),
-  });
-
-  const handleAddTableClick = (type: TableType) => {
-    setNewTableType(type);
-    if (type === "circular-single-seat") {
-      setNewTableNumSeats(1);
-    } else if (type === "circular") {
-      setNewTableNumSeats(10);
-    } else {
-      setNewTableNumSeats(8);
-    }
-    setNewTableLabel("");
-    setTHeight(0);
-    setTWidth(0);
-    setIsAddTableDialogOpen(true);
-  };
-  // At the top of your component, add this ref:
-  const isProcessingDropRef = useRef(false);
-
-  // Then replace your entire handleGuestDrop with this:
-  const handleGuestDrop = useCallback(
-    (event: React.DragEvent, nodeId: string, seatId: string) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const guestId = event.dataTransfer.getData("guestId");
-      const guestName = event.dataTransfer.getData("guestName");
-      const fromTableId = event.dataTransfer.getData("fromTableId");
-      const fromSeatId = event.dataTransfer.getData("fromSeatId");
-
-      if (!guestId || !guestName) {
-        toast.error("Invalid guest data");
-        return;
-      }
-
-      setGuests((currentGuests) => {
-        const guest = currentGuests.find((g) => g._id === guestId);
-
-        if (!guest) {
-          toast.error("Guest not found");
-          return currentGuests;
-        }
-
-        const totalSeatsNeeded = Math.max(
-          1,
-          (guest.adults ?? 0) + (guest.children ?? 0),
-        );
-
-        // Check if this guest is already seated at the target
-        let alreadySeated = false;
-        setNodes((nds) => {
-          const targetNode = nds.find((n) => n.id === nodeId);
-          if (targetNode) {
-            const seatsArray =
-              targetNode.type === "chairNode"
-                ? targetNode.data.chairs
-                : targetNode.data.seats;
-            const existingSeats = seatsArray.filter(
-              (seat) => seat.occupiedBy === guestId,
-            );
-            if (existingSeats.length > 0) {
-              alreadySeated = true;
-              console.log("🚫 Guest already seated here!");
-            }
-          }
-          return nds;
-        });
-
-        if (alreadySeated) {
-          console.log("🚫 BLOCKED - Guest already assigned to this table");
-          return currentGuests;
-        }
-
-        console.log("💺 TOTAL SEATS NEEDED:", totalSeatsNeeded);
-
-        // ✅ Track if the guest was successfully seated
-        let wasSuccessfullySeated = false;
-
-        // Remove from source table/chair
-        if (fromTableId && fromSeatId && fromTableId !== nodeId) {
-          setNodes((nds) =>
-            nds.map((node) => {
-              if (node.id === fromTableId) {
-                const seatsArray =
-                  node.type === "chairNode"
-                    ? node.data.chairs
-                    : node.data.seats;
-                const updatedSeats = seatsArray.map((seat) =>
-                  seat.occupiedBy === guestId
-                    ? { ...seat, occupiedBy: null, occupiedByName: null }
-                    : seat,
-                );
-
-                const updatedNode = {
-                  ...node,
-                  data: {
-                    ...node.data,
-                    ...(node.type === "chairNode"
-                      ? { chairs: updatedSeats }
-                      : { seats: updatedSeats }),
-                  },
-                };
-
-                trackChange(fromTableId, "node", "updated", updatedNode);
-                return updatedNode;
-              }
-              return node;
-            }),
-          );
-        }
-
-        // Add to target table/chair
-        setNodes((nds) =>
-          nds.map((node) => {
-            if (node.id === nodeId) {
-              const seatsArray =
-                node.type === "chairNode" ? node.data.chairs : node.data.seats;
-              const targetSeatIndex = seatsArray.findIndex(
-                (seat) => seat.id === seatId,
-              );
-
-              if (targetSeatIndex === -1) {
-                toast.error("Seat not found");
-                return node;
-              }
-
-              if (seatsArray[targetSeatIndex].occupiedBy === guestId) {
-                console.log("🚫 Target seat already has this guest!");
-                return node;
-              }
-
-              const availableSeats = seatsArray
-                .map((seat, index) => (!seat.occupiedBy ? index : -1))
-                .filter((i) => i !== -1);
-
-              if (availableSeats.length < totalSeatsNeeded) {
-                toast.error(
-                  `Not enough seats! Need ${totalSeatsNeeded} seat${
-                    totalSeatsNeeded > 1 ? "s" : ""
-                  }`,
-                );
-                // ✅ Don't set wasSuccessfullySeated = true
-                return node;
-              }
-
-              let consecutiveSeats: number[] = [];
-
-              if (!seatsArray[targetSeatIndex].occupiedBy) {
-                consecutiveSeats.push(targetSeatIndex);
-              }
-
-              if (consecutiveSeats.length < totalSeatsNeeded) {
-                for (
-                  let i = targetSeatIndex + 1;
-                  i < seatsArray.length &&
-                  consecutiveSeats.length < totalSeatsNeeded;
-                  i++
-                ) {
-                  if (!seatsArray[i].occupiedBy) consecutiveSeats.push(i);
-                  else break;
-                }
-              }
-
-              if (consecutiveSeats.length < totalSeatsNeeded) {
-                for (
-                  let i = targetSeatIndex - 1;
-                  i >= 0 && consecutiveSeats.length < totalSeatsNeeded;
-                  i--
-                ) {
-                  if (!seatsArray[i].occupiedBy) consecutiveSeats.unshift(i);
-                  else break;
-                }
-              }
-
-              console.log("🪑 CONSECUTIVE SEATS FOUND:", consecutiveSeats);
-
-              if (consecutiveSeats.length < totalSeatsNeeded) {
-                toast.error(
-                  `Cannot find ${totalSeatsNeeded} consecutive seats!`,
-                );
-                // ✅ Don't set wasSuccessfullySeated = true
-                return node;
-              }
-
-              const updatedSeats = seatsArray.map((seat, index) => {
-                if (seat.id === fromSeatId && fromTableId === nodeId) {
-                  return { ...seat, occupiedBy: null, occupiedByName: null };
-                }
-
-                if (consecutiveSeats.includes(index)) {
-                  const seatPosition = consecutiveSeats.indexOf(index);
-                  let displayName = guestName;
-
-                  if (seatPosition === 0) {
-                    displayName = guestName;
-                  } else if (seatPosition <= (guest?.adults ?? 0)) {
-                    displayName = `${guestName} (Adult ${seatPosition})`;
-                  } else if (
-                    seatPosition - (guest?.adults ?? 0) <=
-                    (guest?.children ?? 0)
-                  ) {
-                    displayName = `${guestName} (Child ${
-                      seatPosition - (guest?.adults ?? 0)
-                    })`;
-                  } else {
-                    displayName = guestName;
-                  }
-
-                  return {
-                    ...seat,
-                    occupiedBy: guestId,
-                    occupiedByName: displayName,
-                  };
-                }
-                return seat;
-              });
-
-              const updatedNode = {
-                ...node,
-                data: {
-                  ...node.data,
-                  ...(node.type === "chairNode"
-                    ? { chairs: updatedSeats }
-                    : { seats: updatedSeats }),
-                },
-              };
-
-              trackChange(nodeId, "node", "updated", updatedNode);
-
-              // ✅ Mark as successfully seated
-              wasSuccessfullySeated = true;
-
-              return updatedNode;
-            }
-            return node;
-          }),
-        );
-
-        // ✅ Only update guest status if they were successfully seated
-        if (!wasSuccessfullySeated) {
-          console.log("❌ Guest was NOT seated - keeping isAssigned as false");
-          return currentGuests; // Don't change anything
-        }
-
-        const updatedGuests = currentGuests.map((g) => {
-          if (g._id === guestId) {
-            const updatedGuest = { ...g, isAssigned: true };
-            trackChange(guestId, "guest", "updated", updatedGuest);
-            return updatedGuest;
-          }
-          return g;
-        });
-
-        const familyText =
-          totalSeatsNeeded === 1
-            ? `${guestName} assigned!`
-            : `${guestName} and family assigned! (${totalSeatsNeeded} seats)`;
-
-        toast.success(familyText);
-
-        return updatedGuests;
-      });
-    },
-    [setNodes, setGuests, trackChange],
-  );
-
-  const handleRemoveGuestFromSeat = useCallback(
-    (nodeId: string, seatId: string, guestId: string) => {
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === nodeId) {
-            const seatsArray =
-              node.type === "chairNode" ? node.data.chairs : node.data.seats;
-
-            // ✅ Remove ALL seats with this guest ID (entire family)
-            const updatedSeats = seatsArray.map((seat) => {
-              if (seat.occupiedBy === guestId) {
-                return { ...seat, occupiedBy: null, occupiedByName: null };
-              }
-              return seat;
-            });
-
-            const updatedNode = {
-              ...node,
-              data: {
-                ...node.data,
-                ...(node.type === "chairNode"
-                  ? { chairs: updatedSeats }
-                  : { seats: updatedSeats }),
-              },
-            };
-
-            trackChange(nodeId, "node", "updated", updatedNode);
-            return updatedNode;
-          }
-          return node;
-        }),
-      );
-
-      setGuests((prevGuests) =>
-        prevGuests.map((guest) => {
-          if (guest._id === guestId) {
-            const updatedGuest = { ...guest, isAssigned: false };
-            trackChange(guestId, "guest", "updated", updatedGuest);
-            return updatedGuest;
-          }
-          return guest;
-        }),
-      );
-
-      toast.info(`Guest and family removed from seat.`);
-    },
-    [setNodes, setGuests, trackChange],
-  );
-
-  const handleDeleteTable = useCallback(
-    (nodeId: string) => {
-      setNodes((nds) => {
-        const nodeToDelete = nds.find((n) => n.id === nodeId);
-        if (nodeToDelete) {
-          const seatsArray =
-            nodeToDelete.type === "chairNode"
-              ? nodeToDelete.data.chairs
-              : nodeToDelete.data.seats;
-
-          // ✅ Get unique guest IDs (family members share same ID)
-          const uniqueGuestIds = new Set<string>();
-          seatsArray.forEach((seat) => {
-            if (seat.occupiedBy) {
-              uniqueGuestIds.add(seat.occupiedBy);
-            }
-          });
-
-          // ✅ Unassign all unique guests
-          uniqueGuestIds.forEach((guestId) => {
-            setGuests((prevGuests) =>
-              prevGuests.map((guest) => {
-                if (guest._id === guestId) {
-                  const updatedGuest = { ...guest, isAssigned: false };
-                  trackChange(guest._id, "guest", "updated", updatedGuest);
-                  return updatedGuest;
-                }
-                return guest;
-              }),
-            );
-          });
-        }
-        return nds.filter((node) => node.id !== nodeId);
-      });
-
-      DeteTable(nodeId);
-      const itemType = nodeToDelete?.type === "chairNode" ? "Chairs" : "Table";
-      toast.info(`${itemType} removed.`);
-    },
-    [setNodes, setGuests, DeteTable, trackChange],
-  );
-
-  const handleEditTable = useCallback(
-    (nodeId: string, newLabel: string, newNumSeats: number) => {
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === nodeId) {
-            const currentSeats = node.data.seats;
-            let updatedSeats = [...currentSeats];
-            let finalNumSeats = newNumSeats;
-
-            if (node.data.type === "circular-single-seat") {
-              finalNumSeats = 1;
-              updatedSeats = [
-                {
-                  id: currentSeats[0]?.id || uuidv4(),
-                  occupiedBy: currentSeats[0]?.occupiedBy || null,
-                  occupiedByName: currentSeats[0]?.occupiedByName || null,
-                },
-              ];
-            } else if (finalNumSeats > currentSeats.length) {
-              for (let i = currentSeats.length; i < finalNumSeats; i++) {
-                updatedSeats.push({
-                  id: uuidv4(),
-                  occupiedBy: null,
-                  occupiedByName: null,
-                });
-              }
-            } else if (finalNumSeats < currentSeats.length) {
-              const removedSeats = updatedSeats.splice(finalNumSeats);
-              removedSeats.forEach((seat) => {
-                if (seat.occupiedBy) {
-                  setGuests((prevGuests) =>
-                    prevGuests.map((guest) => {
-                      if (guest._id === seat.occupiedBy) {
-                        const updatedGuest = { ...guest, isAssigned: false };
-                        trackChange(
-                          guest._id,
-                          "guest",
-                          "updated",
-                          updatedGuest,
-                        );
-                        return updatedGuest;
-                      }
-                      return guest;
-                    }),
-                  );
-                }
-              });
-            }
-
-            const { width, height } = calculateTableDimensions(
-              node.data.type,
-              finalNumSeats,
-            );
-
-            const updatedNode = {
-              ...node,
-              data: {
-                ...node.data,
-                label: newLabel,
-                numSeats: finalNumSeats,
-                seats: updatedSeats,
-                width,
-                height,
-              },
-              style: { width: `${width}px`, height: `${height}px` },
-            };
-
-            trackChange(nodeId, "node", "updated", updatedNode);
-            return updatedNode;
-          }
-          return node;
-        }),
-      );
-      toast.success(`Table "${newLabel}" has been updated.`);
-    },
-    [setNodes, setGuests, trackChange],
-  );
-
-  // Update callback refs
-  callbacksRef.current = {
-    handleGuestDrop,
-    handleRemoveGuestFromSeat,
-    handleDeleteTable,
-    handleEditTable,
-  };
-
-  // Helper function to create node with callbacks
-  const createNodeWithCallbacks = (nodeData: any) => ({
-    ...nodeData,
-    data: {
-      ...nodeData.data,
-      onGuestDrop: callbacksRef.current.handleGuestDrop,
-      onRemoveGuestFromSeat: callbacksRef.current.handleRemoveGuestFromSeat,
-      onDeleteTable: callbacksRef.current.handleDeleteTable,
-      onEditTable: callbacksRef.current.handleEditTable,
-    },
-  });
-
-  // Helper function to constrain table positions within venue bounds
-  const constrainTablePosition = useCallback(
-    (x: number, y: number, tableWidth: number, tableHeight: number) => {
-      // Allow unlimited movement - no constraints
-      return { x, y };
-    },
-    [],
-  );
-  // ✅ NEW: Dedicated handler for drag stop - tracks position changes reliably
-  const handleNodeDragStop = useCallback(
-    (event: React.MouseEvent, node: any) => {
-      console.log("🎯 Node drag stopped:", node.id, node.position);
-
-      // Get the latest node data from state
-      const currentNode = nodes.find((n) => n.id === node.id);
-
-      if (!currentNode) return;
-
-      // Constrain position if needed
-      const constrainedPosition = constrainTablePosition(
-        node.position.x,
-        node.position.y,
-        currentNode.data.width,
-        currentNode.data.height,
-      );
-
-      // Create updated node with new position
-      const updatedNode = {
-        ...currentNode,
-        position: constrainedPosition,
-      };
-
-      // ✅ Track based on node type
-      if (currentNode.type === "chairNode") {
-        const nodeForDB = {
-          ...updatedNode,
-          data: {
-            ...updatedNode.data,
-            seats: updatedNode.data.chairs || updatedNode.data.seats || [],
-            numSeats:
-              updatedNode.data.numChairs || updatedNode.data.numSeats || 0,
-            chairs: undefined,
-            numChairs: undefined,
-          },
-        };
-        trackChange(node.id, "node", "updated", nodeForDB);
-        console.log("✅ Chair position tracked:", node.id);
-      } else if (currentNode.type === "tableNode") {
-        trackChange(node.id, "node", "updated", updatedNode);
-        console.log("✅ Table position tracked:", node.id);
-      } else if (currentNode.type === "decorativeNode") {
-        trackDecorativeChange(node.id, "updated", updatedNode);
-        console.log("✅ Decorative item position tracked:", node.id);
-      }
-
-      // ✅ Update the node in React Flow state with constrained position
-      setNodes((nds) =>
-        nds.map((n) =>
-          n.id === node.id ? { ...n, position: constrainedPosition } : n,
-        ),
-      );
-    },
-    [
-      nodes,
-      trackChange,
-      trackDecorativeChange,
-      constrainTablePosition,
-      setNodes,
-    ],
-  );
-
-  const handleConfirmAddTable = () => {
-    if (!newTableType || !newTableLabel.trim()) {
-      toast.error("Please provide a table name.");
-      return;
-    }
-
-    // ✅ HANDLE LINE CREATION
-    if (
-      newTableType === "line-horizontal" ||
-      newTableType === "line-vertical"
-    ) {
-      const lineThickness = tWidth || 5; // Thickness
-      const lineLength = tHeight || 100; // Length
-
-      const width =
-        newTableType === "line-horizontal" ? lineLength : lineThickness;
-      const height =
-        newTableType === "line-vertical" ? lineLength : lineThickness;
-
-      const newNodeId = uuidv4();
-      const margin = 20;
-      const randomX =
-        Math.random() * (venueWidthPx - width - margin * 2) + margin;
-      const randomY =
-        Math.random() * (venueHeightPx - height - margin * 2) + margin;
-
-      const newLineNode = {
-        id: newNodeId,
-        type: "decorativeNode",
-        event_id: pathName.split("/").pop() as string,
-        position: { x: randomX, y: randomY },
-        data: {
-          event_id: pathName.split("/").pop() as string,
-          label: newTableLabel,
-          imageUrl: "",
-          width: width,
-          height: height,
-          category: newTableType, // "line-horizontal" or "line-vertical"
-          onDeleteDecorative: handleDeleteDecorative,
-          onEditDecorative: handleEditDecorative,
-          onDecorativeResize: handleDecorativeResize,
-        },
-        style: { width: `${width}px`, height: `${height}px` },
-      };
-
-      setNodes((nds) => nds.concat(newLineNode));
-      PostNewDecorator(newLineNode);
-      trackDecorativeChange(newNodeId, "created", newLineNode);
-
-      setTimeout(() => zoomToNewTable({ x: randomX, y: randomY }), 300);
-      setIsAddTableDialogOpen(false);
-      setTWidth(0);
-      setTHeight(0);
-      toast.success(`${newTableLabel} line added successfully!`);
-      return;
-    }
-
-    if (newTableType === "chair-row" || newTableType === "chair-column") {
-      const chairs = Array.from({ length: newTableNumSeats }, () => ({
-        id: uuidv4(),
-        occupiedBy: null,
-        occupiedByName: null,
-      }));
-
-      const chairWidth = 40;
-      const chairHeight = 40;
-      const chairSpacing = 10;
-
-      const width =
-        newTableType === "chair-row"
-          ? newTableNumSeats * (chairWidth + chairSpacing) + 20
-          : chairWidth + 20;
-
-      const height =
-        newTableType === "chair-column"
-          ? newTableNumSeats * (chairHeight + chairSpacing) + 40
-          : chairHeight + 40;
-
-      const newNodeId = uuidv4();
-      const margin = 20;
-      const randomX =
-        Math.random() * (venueWidthPx - width - margin * 2) + margin;
-      const randomY =
-        Math.random() * (venueHeightPx - height - margin * 2) + margin;
-
-      // ✅ For React Flow - use 'chairs'
-      const newNodeData = {
-        id: newNodeId,
-        type: "chairNode",
-        event_id: pathName.split("/").pop() as string,
-        position: { x: randomX, y: randomY },
-        data: {
-          event_id: pathName.split("/").pop() as string,
-          label: newTableLabel,
-          type: newTableType,
-          chairs: chairs,
-          numChairs: newTableNumSeats,
-          width: width,
-          height: height,
-          onGuestDrop: callbacksRef.current.handleGuestDrop,
-          onRemoveGuestFromChair:
-            callbacksRef.current.handleRemoveGuestFromSeat,
-          onDeleteChair: callbacksRef.current.handleDeleteTable,
-          onEditChair: callbacksRef.current.handleEditTable,
-        },
-        style: { width: `${width}px`, height: `${height}px` },
-      };
-
-      // ✅ For Database - convert 'chairs' to 'seats'
-      const nodeDataForDB = {
-        id: newNodeId,
-        type: "chairNode",
-        event_id: pathName.split("/").pop() as string,
-        position: { x: randomX, y: randomY },
-        data: {
-          event_id: pathName.split("/").pop() as string,
-          label: newTableLabel,
-          type: newTableType,
-          seats: chairs,
-          numSeats: newTableNumSeats,
-          width: width,
-          height: height,
-        },
-        style: { width: `${width}px`, height: `${height}px` },
-      };
-
-      const newNode = newNodeData;
-
-      SeatPlan(nodeDataForDB);
-      setNodes((nds) => nds.concat(newNode));
-      trackChange(newNodeId, "node", "created", nodeDataForDB);
-      setTimeout(() => zoomToNewTable({ x: randomX, y: randomY }), 300);
-      setIsAddTableDialogOpen(false);
-      toast.success(`${newTableLabel} added successfully!`);
-      return;
-    }
-
-    const seats = Array.from({ length: newTableNumSeats }, (_, i) => ({
-      id: uuidv4(),
-      occupiedBy: null,
-      occupiedByName: null,
-    }));
-
-    const { width, height } = calculateTableDimensions(
-      newTableType,
-      newTableNumSeats,
-    );
-
-    const newNodeId = uuidv4();
-
-    // Position new tables within venue bounds with better constraints
-    const margin = 20;
-    const maxX = Math.max(margin, venueWidthPx - width - margin);
-    const maxY = Math.max(margin, venueHeightPx - height - margin);
-
-    const randomX = Math.random() * (maxX - margin) + margin;
-    const randomY = Math.random() * (maxY - margin) + margin;
-
-    const constrainedPosition = constrainTablePosition(
-      randomX,
-      randomY,
-      width,
-      height,
-    );
-
-    const newNodeData = {
-      id: newNodeId,
-      type: "tableNode",
-      event_id: pathName.split("/").pop() as string,
-      position: constrainedPosition,
-      data: {
-        event_id: pathName.split("/").pop() as string,
-        label: newTableLabel,
-        type: newTableType,
-        seats,
-        width,
-        height,
-        numSeats: newTableNumSeats,
-        measurementType: mType,
-        widthTable: tWidth,
-        heightTable: tHeight,
-      },
-      style: { width: `${width}px`, height: `${height}px` },
-    };
-
-    const newNode = createNodeWithCallbacks(newNodeData);
-
-    SeatPlan(newNode);
-    setNodes((nds) => nds.concat(newNode));
-    trackChange(newNodeId, "node", "created", newNode);
-    setTimeout(() => {
-      zoomToNewTable(constrainedPosition);
-    }, 300);
-    setIsAddTableDialogOpen(false);
-    toast.success(`Table "${newTableLabel}" added successfully!`);
-  };
-
-  const query = useQueryClient();
-  const handleAddGuest = (guestName: string) => {
-    console.log("guestName->", guestName);
-  };
-
-  const { mutate, isPending: IsDeletePending } = useMutation({
-    mutationKey: ["deleteGuest"],
-    mutationFn: (id: string) => deleteGuest(id),
-    onSuccess: (data) => {
-      if (data?.error) {
-        return toast.error(data.error.message);
-      }
-      query.refetchQueries({ queryKey: ["get-all-guest"], exact: false });
-      return toast.success("Guest deleted successfully");
-    },
-    onError: (error) => {
-      return toast.error(error?.message);
-    },
-  });
-
-  const handleRemoveGuest = useCallback(
-    (guestId: string) => {
-      const guestToRemove = guests.find((g) => g._id === guestId);
-      if (guestToRemove) {
-        trackChange(guestId, "guest", "deleted", guestToRemove);
-      }
-
-      setNodes((nds) =>
-        nds.map((node) => {
-          const updatedSeats = node.data.seats.map((seat) => {
-            if (seat.occupiedBy === guestId) {
-              return { ...seat, occupiedBy: null, occupiedByName: null };
-            }
-            return seat;
-          });
-
-          const hasChanges = node.data.seats.some(
-            (seat) => seat.occupiedBy === guestId,
-          );
-          if (hasChanges) {
-            const updatedNode = {
-              ...node,
-              data: { ...node.data, seats: updatedSeats },
-            };
-            trackChange(node.id, "node", "updated", updatedNode);
-          }
-
-          return { ...node, data: { ...node.data, seats: updatedSeats } };
-        }),
-      );
-      mutate(guestId);
-      setGuests((prevGuests) =>
-        prevGuests.filter((guest) => guest._id !== guestId),
-      );
-    },
-    [setNodes, setGuests, trackChange, guests, mutate],
-  );
-
-  const handleDeleteDecorative = useCallback(
-    (nodeId: string) => {
-      const nodeToDelete = nodes.find((n) => n.id === nodeId);
-      if (nodeToDelete) {
-        trackDecorativeChange(nodeId, "deleted", nodeToDelete);
-      }
-
-      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-
-      toast.info("Decorative item removed.");
-      DeleteDeco(nodeId);
-    },
-    [nodes, trackDecorativeChange],
-  );
-
-  // ✅ ADD THIS NEW FUNCTION - Handle line/decorative item resize
-  const handleDecorativeResize = useCallback(
-    (nodeId: string, newWidth: number, newHeight: number) => {
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === nodeId && node.type === "decorativeNode") {
-            const updatedNode = {
-              ...node,
-              data: {
-                ...node.data,
-                width: newWidth,
-                height: newHeight,
-              },
-              style: {
-                ...node.style,
-                width: `${newWidth}px`,
-                height: `${newHeight}px`,
-              },
-            };
-
-            // Track the change for database update
-            trackDecorativeChange(nodeId, "updated", updatedNode);
-
-            return updatedNode;
-          }
-          return node;
-        }),
-      );
-    },
-    [setNodes, trackDecorativeChange],
-  );
-  const handleEditDecorative = useCallback(
-    (nodeId: string, newLabel: string) => {
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === nodeId && node.type === "decorativeNode") {
-            const updatedNode = {
-              ...node,
-              data: { ...node.data, label: newLabel },
-            };
-
-            // Track the change
-            trackDecorativeChange(nodeId, "updated", updatedNode);
-
-            // Add API call here to update in your decorative items schema
-            // updateDecorativeItem(nodeId, updatedNode);
-
-            return updatedNode;
-          }
-          return node;
-        }),
-      );
-      toast.success("Decorative item updated.");
-    },
-    [trackDecorativeChange],
-  );
-
-  const handleDecorativeDrop = useCallback(
-    (event: React.DragEvent) => {
-      const decorativeItemId = event.dataTransfer.getData("decorativeItemId");
-      const decorativeItemLabel = event.dataTransfer.getData(
-        "decorativeItemLabel",
-      );
-      const decorativeItemImage = event.dataTransfer.getData(
-        "decorativeItemImage",
-      );
-      const decorativeItemWidth = parseInt(
-        event.dataTransfer.getData("decorativeItemWidth"),
-      );
-      const decorativeItemHeight = parseInt(
-        event.dataTransfer.getData("decorativeItemHeight"),
-      );
-
-      if (!decorativeItemId) return;
-
-      const position = screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-
-      const newDecorativeId = uuidv4();
-      const newDecorativeNode = {
-        id: newDecorativeId,
-        type: "decorativeNode",
-        position: constrainTablePosition(
-          position.x,
-          position.y,
-          decorativeItemWidth,
-          decorativeItemHeight,
-        ),
-        data: {
-          event_id: pathName.split("/").pop() as string,
-          label: decorativeItemLabel,
-          imageUrl: "",
-          width: decorativeItemWidth,
-          height: decorativeItemHeight,
-          category: decorativeItemId,
-          onDeleteDecorative: handleDeleteDecorative,
-          onEditDecorative: handleEditDecorative,
-          onDecorativeResize: handleDecorativeResize,
-        },
-      };
-
-      console.log("newDecorativeNode->", newDecorativeNode);
-
-      setNodes((nds) => nds.concat(newDecorativeNode));
-      PostNewDecorator(newDecorativeNode);
-      // Track the new decorative item
-      trackDecorativeChange(newDecorativeId, "created", newDecorativeNode);
-
-      // Add API call here to save decorative item to your separate schema
-      // saveDecorativeItem(newDecorativeNode);
-
-      /*  toast.success(`${decorativeItemLabel} added successfully!`); */
-    },
-    [
-      screenToFlowPosition,
-      constrainTablePosition,
-      pathName,
-      handleDeleteDecorative,
-      handleEditDecorative,
-      setNodes,
-      PostNewDecorator,
-      trackDecorativeChange,
-      handleDecorativeResize,
-    ],
-  );
-
-  const handleNodesChange = useCallback(
-    (changes: any[]) => {
-      changes.forEach((change) => {
-        if (
-          change.type === "position" &&
-          change.position &&
-          change.dragging === false
-        ) {
-          const node = nodes.find((n) => n.id === change.id);
-          if (node) {
-            // Constrain table position within venue bounds
-            const constrainedPosition = constrainTablePosition(
-              change.position.x,
-              change.position.y,
-              node.data.width,
-              node.data.height,
-            );
-
-            const updatedNode = {
-              ...node,
-              position: constrainedPosition,
-            };
-            console.log("node-types-<->", node.type);
-            // Update the change object with constrained position
-            change.position = constrainedPosition;
-
-            if (node.type === "chairNode") {
-              const nodeForDB = {
-                ...updatedNode,
-                data: {
-                  ...updatedNode.data,
-                  seats:
-                    updatedNode.data.chairs || updatedNode.data.seats || [],
-                  numSeats:
-                    updatedNode.data.numChairs ||
-                    updatedNode.data.numSeats ||
-                    0,
-                  chairs: undefined,
-                  numChairs: undefined,
-                },
-              };
-              trackChange(change.id, "node", "updated", nodeForDB);
-            } else if (node.type === "tableNode") {
-              trackChange(change.id, "node", "updated", updatedNode);
-            } else if (node.type === "decorativeNode") {
-              trackDecorativeChange(change.id, "updated", updatedNode);
-            }
-          }
-        }
-      });
-      onNodesChange(changes);
-    },
-    [
-      onNodesChange,
-      nodes,
-      trackChange,
-      constrainTablePosition,
-      trackDecorativeChange,
-    ],
-  );
-
-  const handleSaveChanges = useCallback(() => {
-    const totalChanges =
+  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [panState, setPanState] = useState<{
+    startClientX: number;
+    startClientY: number;
+    startViewportX: number;
+    startViewportY: number;
+  } | null>(null);
+
+  const viewportRef = useRef(viewport);
+  const nodesRef = useRef(nodes);
+  const guestsRef = useRef(guests);
+  const stageRef = useRef<Konva.Stage | null>(null);
+  const plannerViewportRef = useRef<HTMLDivElement>(null);
+  const plannerSurfaceRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    viewportRef.current = viewport;
+  }, [viewport]);
+
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
+
+  useEffect(() => {
+    guestsRef.current = guests;
+  }, [guests]);
+
+  useEffect(() => {
+    const total =
       changedObjects.guest.length +
       changedObjects.node.length +
       changedObjects.decorativeItems.length;
-    if (totalChanges === 0) {
-      toast.info("No changes to save.");
+    setDirtyCount(total);
+  }, [changedObjects, setDirtyCount]);
+
+  useEffect(() => {
+    const element = plannerViewportRef.current;
+
+    if (!element) {
       return;
     }
-    if (changedObjects?.node?.length > 0) {
-      updateSeatAll(changedObjects.node);
-    }
-    if (changedObjects?.guest?.length > 0) {
-      updateAllguest(changedObjects.guest);
-    }
 
-    if (changedObjects?.decorativeItems?.length > 0) {
-      // Add API call to save decorative items
-      // updateDecorativeItems(changedObjects.decorativeItems);
-      console.log("Decorative items to save:", changedObjects.decorativeItems);
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
 
-      UpdateDecorator(changedObjects.decorativeItems);
-    }
-  }, [changedObjects, updateSeatAll, updateAllguest]);
+      if (!entry) {
+        return;
+      }
 
-  useEffect(() => {
-    if (data?.data) {
-      setGuests(data.data);
-    }
-  }, [data]);
+      setStageSize({
+        width: Math.round(entry.contentRect.width),
+        height: Math.round(entry.contentRect.height),
+      });
+    });
 
-  // uncomment this after db setup
-  const createDecorativeNodeWithCallbacks = (nodeData: any) => ({
-    ...nodeData,
-    data: {
-      ...nodeData.data,
-      onDeleteDecorative: handleDeleteDecorative,
-      onEditDecorative: handleEditDecorative,
-      onDecorativeResize: handleDecorativeResize,
-    },
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
+
+  const { data: guestResponse } = useQuery({
+    queryKey: ["get-all-guest", eventId],
+    queryFn: () => getAllGuest(eventId),
   });
 
-  // Updated useEffect to load both table nodes and decorative items
-  useEffect(() => {
-    const allNodes: any[] = [];
+  const { data: seatPlanResponse } = useQuery({
+    queryKey: ["seat-plan", eventId],
+    queryFn: () => getAllSeatPlan(eventId),
+  });
 
-    console.log("setplan data", seatPlandata);
+  const { data: decoratorResponse } = useQuery({
+    queryKey: ["seat-plan-decorator", eventId],
+    queryFn: () => getDecorator(eventId),
+  });
 
-    // Load table nodes
-    if (seatPlandata?.data && seatPlandata.data.length > 0) {
-      const tableNodesWithCallbacks = seatPlandata.data.map((nodeData: any) => {
-        // Constrain existing tables within venue bounds
-        const constrainedPosition = constrainTablePosition(
-          nodeData.position.x,
-          nodeData.position.y,
-          nodeData.data.width || 100,
-          nodeData.data.height || 100,
-        );
-
-        const constrainedNode = {
-          ...nodeData,
-          position: constrainedPosition,
-        };
-        if (nodeData.type === "chairNode") {
-          return {
-            ...constrainedNode,
-            data: {
-              ...constrainedNode.data,
-              chairs: constrainedNode.data.seats || [], // ✅ Convert seats → chairs
-              numChairs: constrainedNode.data.numSeats || 0, // ✅ Convert numSeats → numChairs
-              onGuestDrop: callbacksRef.current.handleGuestDrop,
-              onRemoveGuestFromChair:
-                callbacksRef.current.handleRemoveGuestFromSeat,
-              onDeleteChair: callbacksRef.current.handleDeleteTable,
-              onEditChair: callbacksRef.current.handleEditTable,
-            },
-          };
-        }
-        return createNodeWithCallbacks(constrainedNode);
-      });
-
-      allNodes.push(...tableNodesWithCallbacks);
-    }
-
-    // Load decorative items
-    if (DecoratorData?.data && DecoratorData.data.length > 0) {
-      const decorativeNodesWithCallbacks = DecoratorData.data.map(
-        (nodeData: any) => {
-          // Constrain existing decorative items within venue bounds
-          const constrainedPosition = constrainTablePosition(
-            nodeData.position.x,
-            nodeData.position.y,
-            nodeData.data.width || 80,
-            nodeData.data.height || 80,
-          );
-
-          const constrainedNode = {
-            ...nodeData,
-            position: constrainedPosition,
-            type: "decorativeNode", // Ensure correct type
-          };
-          return createDecorativeNodeWithCallbacks(constrainedNode);
-        },
-      );
-
-      allNodes.push(...decorativeNodesWithCallbacks);
-    }
-
-    // Set all nodes at once
-    setNodes(allNodes);
-
-    // Set initial centered viewport after a small delay
-    setTimeout(() => {
-      const initialViewport = getInitialViewport();
-      setViewport(initialViewport, { duration: 800 });
-    }, 200);
-  }, [
-    seatPlandata?.data,
-    DecoratorData?.data, // Add this dependency
-    constrainTablePosition,
-    getInitialViewport,
-    setViewport,
-  ]);
-
-  const HEADER_H = 100;
-  const MARGIN = 10;
-
-  function loadImage(src: string) {
-    return new Promise<HTMLImageElement>((resolve, reject) => {
-      const im = new Image();
-      im.crossOrigin = "anonymous";
-      im.onload = () => resolve(im);
-      im.onerror = reject;
-      im.src = src;
-    });
-  }
-  const { data: ComInfo } = useQuery({
+  const { data: companyInfo } = useQuery({
     queryKey: ["header"],
     queryFn: () => getHeader(),
     gcTime: 1000 * 60 * 60,
   });
 
-  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
+  const clearTrackedNode = useCallback((nodeId: string) => {
+    setChangedObjects((previous) => ({
+      ...previous,
+      node: previous.node.filter((item) => item.id !== nodeId),
+    }));
+  }, []);
 
-  const handleDownloadPdf = useCallback(() => {
-    setIsPdfDownloading(true);
-    const eventName = ComInfo?.data?.title || "Wedding Planner";
-    const eventLogo = ComInfo?.data?.imageUrl || "";
+  const clearTrackedGuest = useCallback((guestId: string) => {
+    setChangedObjects((previous) => ({
+      ...previous,
+      guest: previous.guest.filter((guest) => guest._id !== guestId),
+    }));
+  }, []);
 
-    if (!reactFlowWrapper.current) {
-      toast.error("React Flow container not found for PDF capture.");
-      return;
-    }
+  const clearTrackedDecorative = useCallback((nodeId: string) => {
+    setChangedObjects((previous) => ({
+      ...previous,
+      decorativeItems: previous.decorativeItems.filter(
+        (item) => item.id !== nodeId,
+      ),
+    }));
+  }, []);
 
-    const reactFlowPane =
-      reactFlowWrapper.current.querySelector(".react-flow__pane");
-    const reactFlowControls = reactFlowWrapper.current.querySelector(
-      ".react-flow__controls",
-    ) as HTMLElement;
-    const reactFlowMiniMap = reactFlowWrapper.current.querySelector(
-      ".react-flow__minimap",
-    ) as HTMLElement;
+  const trackGuestChange = useCallback((guest: Guest) => {
+    setChangedObjects((previous) => ({
+      ...previous,
+      guest: [
+        ...previous.guest.filter((item) => item._id !== guest._id),
+        guest,
+      ],
+    }));
+  }, []);
 
-    if (!reactFlowPane) {
-      toast.error("React Flow pane not found for PDF capture.");
-      return;
-    }
+  const trackSeatPlanChange = useCallback((node: SeatingPlannerNode) => {
+    const serialized = serializeSeatPlanNode(node);
 
-    const initialViewport = getViewport();
-    if (reactFlowControls) reactFlowControls.style.display = "none";
-    if (reactFlowMiniMap) reactFlowMiniMap.style.display = "none";
+    setChangedObjects((previous) => ({
+      ...previous,
+      node: [
+        ...previous.node.filter((item) => item.id !== node.id),
+        serialized,
+      ],
+    }));
+  }, []);
 
-    fitView({ padding: 0.1, includeHiddenNodes: true });
+  const trackDecorativeChange = useCallback((node: DecorativePlannerNode) => {
+    const serialized = serializeDecorativeNode(node);
 
-    setTimeout(async () => {
-      try {
-        // Back to the 10x scaling that worked well
-        const MAX_SCALE = 10;
-        const originalRect = reactFlowPane.getBoundingClientRect();
+    setChangedObjects((previous) => ({
+      ...previous,
+      decorativeItems: [
+        ...previous.decorativeItems.filter((item) => item.id !== node.id),
+        serialized,
+      ],
+    }));
+  }, []);
 
-        const dataUrl = await toSvg(reactFlowPane, {
-          quality: 2.0,
-          pixelRatio: 2.5,
-          backgroundColor: "#ffffff",
-          width: originalRect.width * MAX_SCALE,
-          height: originalRect.height * MAX_SCALE,
-          canvasWidth: originalRect.width * MAX_SCALE,
-          canvasHeight: originalRect.height * MAX_SCALE,
-          skipAutoScale: true,
-          style: {
-            transform: `scale(${MAX_SCALE})`,
-            transformOrigin: "top left",
-            width: originalRect.width + "px",
-            height: originalRect.height + "px",
-            imageRendering: "pixelated",
-            WebkitImageRendering: "pixelated",
-          },
-        });
-
-        const img = await loadImage(dataUrl);
-
-        // Convert to high-quality JPEG to avoid memory issues with large PNG
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-
-        // Very high quality JPEG
-        const jpegDataUrl = canvas.toDataURL("image/jpeg", 0.98);
-        const finalImg = await loadImage(jpegDataUrl);
-
-        // Calculate PDF dimensions
-        const imgWidthMM = (finalImg.width / MAX_SCALE) * 0.264583;
-        const imgHeightMM = (finalImg.height / MAX_SCALE) * 0.264583;
-
-        const HEADER_HEIGHT = 35;
-        const MARGIN = 20;
-        const pageWidth = Math.max(imgWidthMM + MARGIN * 2, 210);
-        const pageHeight = HEADER_HEIGHT + imgHeightMM + MARGIN * 2;
-
-        const pdf = new jsPDF({
-          orientation: imgWidthMM > imgHeightMM ? "landscape" : "portrait",
-          unit: "mm",
-          format: [pageWidth, pageHeight],
-          compress: false, // No compression for better quality
-          precision: 16, // High precision like before
-        });
-
-        const pdfPageWidth = pdf.internal.pageSize.getWidth();
-        const pdfPageHeight = pdf.internal.pageSize.getHeight();
-
-        // Add logo
-        let logoHeight = 0;
-        if (eventLogo) {
-          try {
-            const logoImg = await loadImage(eventLogo);
-            const logoSize = 25;
-            const logoX = (pdfPageWidth - logoSize) / 2;
-            const logoY = MARGIN;
-            pdf.addImage(logoImg, "PNG", logoX, logoY, logoSize, logoSize);
-            logoHeight = logoSize + 10;
-          } catch {
-            console.warn("Failed to load logo image");
-          }
-        }
-
-        // Title
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(24);
-        pdf.setTextColor(40, 40, 40);
-        const titleY = logoHeight > 0 ? MARGIN + logoHeight : MARGIN + 20;
-        pdf.text(eventName || "", pdfPageWidth / 2, titleY, {
-          align: "center",
-        });
-
-        // Add high-quality image with no compression
-        const diagramY = titleY + 20;
-        const diagramX = (pdfPageWidth - imgWidthMM) / 2;
-
-        pdf.addImage(
-          finalImg,
-          "JPEG",
-          diagramX,
-          diagramY,
-          imgWidthMM,
-          imgHeightMM,
-          undefined,
-          "NONE",
-        ); // No compression
-
-        // Footer
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(10);
-        pdf.setTextColor(120, 120, 120);
-        const currentDate = new Date().toLocaleDateString();
-        const footerText = `Generated on ${currentDate} - High Quality (10x)`;
-        pdf.text(footerText, pdfPageWidth - MARGIN, pdfPageHeight - 10, {
-          align: "right",
-        });
-
-        pdf.save(
-          `${eventName
-            .replace(/[^a-z0-9]/gi, "_")
-            .toLowerCase()}-high-quality-layout.pdf`,
-        );
-        toast.success("High-quality layout downloaded!");
-        setIsPdfDownloading(false);
-      } catch (error) {
-        console.error("PDF generation error:", error);
-        toast.error("Failed to download PDF.");
-        setIsPdfDownloading(false);
-      } finally {
-        setViewport(initialViewport);
-        if (reactFlowControls) reactFlowControls.style.display = "";
-        if (reactFlowMiniMap) reactFlowMiniMap.style.display = "";
-        setIsPdfDownloading(false);
+  const { mutate: createSeatPlanNode } = useMutation({
+    mutationKey: ["added-new-seat-plan"],
+    mutationFn: (payload: PersistedSeatPlanNode) =>
+      postSeatPlan(payload as unknown as Record<string, unknown>),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
       }
-    }, 300);
-  }, [fitView, getViewport, setViewport]);
+    },
+  });
 
-  const handleOnIdle = () => {
-    if (changedObjects.guest.length > 0) {
-      updateAllguest(changedObjects.guest);
+  const { mutate: updateSeatPlanNodes } = useMutation({
+    mutationKey: ["update-seat-plan"],
+    mutationFn: (payload: PersistedSeatPlanNode[]) =>
+      updateSeatPlan(payload as unknown as Record<string, unknown>),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+        return;
+      }
+
+      toast.success("Guest sit plan updated successfully");
+      setChangedObjects((previous) => ({ ...previous, node: [] }));
+    },
+  });
+
+  const { mutate: deleteSeatPlanNode } = useMutation({
+    mutationKey: ["delete-seat-plan"],
+    mutationFn: (nodeId: string) => deleteSeatPlan(nodeId),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+      }
+    },
+  });
+
+  const { mutate: createDecorativeNode } = useMutation({
+    mutationKey: ["create-decorative-node"],
+    mutationFn: (payload: PersistedDecorativeNode) =>
+      postDecorator(payload as unknown as Record<string, unknown>),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+      }
+    },
+  });
+
+  const { mutate: updateDecorativeNodes } = useMutation({
+    mutationKey: ["update-decorative-nodes"],
+    mutationFn: (payload: PersistedDecorativeNode[]) =>
+      updateDecorator(payload as unknown as Record<string, unknown>[]),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+        return;
+      }
+
+      setChangedObjects((previous) => ({ ...previous, decorativeItems: [] }));
+    },
+  });
+
+  const { mutate: deleteDecorativeNodeMutation } = useMutation({
+    mutationKey: ["delete-decorative-node"],
+    mutationFn: (nodeId: string) => deleteDecorator(nodeId),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+      }
+    },
+  });
+
+  const { mutate: updateAllGuests } = useMutation({
+    mutationKey: ["update-all-guests"],
+    mutationFn: (payload: Guest[]) => updateBulkGuest(payload),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+        return;
+      }
+
+      toast.success("Guest updated successfully");
+      setChangedObjects((previous) => ({ ...previous, guest: [] }));
+    },
+  });
+
+  const { mutate: deleteGuestMutation } = useMutation({
+    mutationKey: ["delete-guest"],
+    mutationFn: (guestId: string) => deleteGuest(guestId),
+    onSuccess: (data) => {
+      if (data?.error) {
+        toast.error(data.error.message);
+        return;
+      }
+
+      queryClient.refetchQueries({
+        queryKey: ["get-all-guest"],
+        exact: false,
+      });
+      toast.success("Guest deleted successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const getViewportForBounds = useCallback(
+    (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => {
+      const width = Math.max(1, bounds.maxX - bounds.minX);
+      const height = Math.max(1, bounds.maxY - bounds.minY);
+      const padding = 80;
+
+      const effectiveWidth = Math.max(1, stageSize.width - padding);
+      const effectiveHeight = Math.max(1, stageSize.height - padding);
+      const zoom = clamp(
+        Math.min(effectiveWidth / width, effectiveHeight / height, 1),
+        MIN_ZOOM,
+        MAX_ZOOM,
+      );
+
+      return {
+        x: (stageSize.width - width * zoom) / 2 - bounds.minX * zoom,
+        y: (stageSize.height - height * zoom) / 2 - bounds.minY * zoom,
+        zoom,
+      };
+    },
+    [stageSize.height, stageSize.width],
+  );
+
+  const getContentBounds = useCallback(
+    (items: PlannerNode[]) =>
+      items.reduce(
+        (bounds, node) => ({
+          minX: Math.min(bounds.minX, node.position.x - 60),
+          minY: Math.min(bounds.minY, node.position.y - 60),
+          maxX: Math.max(bounds.maxX, node.position.x + getNodeWidth(node) + 60),
+          maxY: Math.max(bounds.maxY, node.position.y + getNodeHeight(node) + 60),
+        }),
+        {
+          minX: -40,
+          minY: -40,
+          maxX: venueWidthPx + 40,
+          maxY: venueHeightPx + 40,
+        },
+      ),
+    [venueHeightPx, venueWidthPx],
+  );
+
+  const fitToContent = useCallback(() => {
+    const nextViewport = getViewportForBounds(getContentBounds(nodesRef.current));
+    setViewport(nextViewport);
+  }, [getContentBounds, getViewportForBounds]);
+
+  const getInitialViewport = useCallback(
+    () =>
+      getViewportForBounds({
+        minX: 0,
+        minY: 0,
+        maxX: venueWidthPx,
+        maxY: venueHeightPx,
+      }),
+    [getViewportForBounds, venueHeightPx, venueWidthPx],
+  );
+
+  const zoomToNode = useCallback(
+    (position: Point) => {
+      const targetZoom = FOCUS_ZOOM;
+      setViewport({
+        x: stageSize.width / 2 - position.x * targetZoom,
+        y: stageSize.height / 2 - position.y * targetZoom,
+        zoom: targetZoom,
+      });
+    },
+    [stageSize.height, stageSize.width],
+  );
+
+  const worldToScreen = useCallback(
+    (point: Point) => ({
+      x: point.x * viewport.zoom + viewport.x,
+      y: point.y * viewport.zoom + viewport.y,
+    }),
+    [viewport],
+  );
+
+  const clientToWorld = useCallback((clientX: number, clientY: number) => {
+    const rect = plannerViewportRef.current?.getBoundingClientRect();
+
+    if (!rect) {
+      return null;
     }
+
+    return {
+      x: (clientX - rect.left - viewportRef.current.x) / viewportRef.current.zoom,
+      y: (clientY - rect.top - viewportRef.current.y) / viewportRef.current.zoom,
+    };
+  }, []);
+
+  useEffect(() => {
+    if (guestResponse?.data) {
+      setGuests(guestResponse.data as Guest[]);
+    }
+  }, [guestResponse?.data]);
+
+  useEffect(() => {
+    if (!stageSize.width || !stageSize.height) {
+      return;
+    }
+
+    const hydratedNodes: PlannerNode[] = [];
+
+    if (Array.isArray(seatPlanResponse?.data)) {
+      hydratedNodes.push(...seatPlanResponse.data.map(hydrateSeatPlanNode));
+    }
+
+    if (Array.isArray(decoratorResponse?.data)) {
+      hydratedNodes.push(...decoratorResponse.data.map(hydrateDecorativeNode));
+    }
+
+    setNodes(hydratedNodes);
+    setSelectedNodeId(null);
+    setViewport(getInitialViewport());
+  }, [
+    decoratorResponse?.data,
+    getInitialViewport,
+    seatPlanResponse?.data,
+    stageSize.height,
+    stageSize.width,
+  ]);
+
+  const selectedNode = useMemo(
+    () => nodes.find((node) => node.id === selectedNodeId) ?? null,
+    [nodes, selectedNodeId],
+  );
+
+  const selectedNodeActionStyle = useMemo(() => {
+    if (!selectedNode) {
+      return null;
+    }
+
+    const anchor =
+      selectedNode.type === "decorativeNode"
+        ? {
+            x: selectedNode.position.x + selectedNode.data.width / 2,
+            y: selectedNode.position.y - 20,
+          }
+        : {
+            x: selectedNode.position.x + selectedNode.data.width / 2,
+            y: selectedNode.position.y + selectedNode.data.height + 20,
+          };
+
+    const screen = worldToScreen(anchor);
+
+    return {
+      left: screen.x,
+      top: screen.y,
+      transform: "translate(-50%, -50%)",
+    } as const;
+  }, [selectedNode, worldToScreen]);
+
+  const findSeatTarget = useCallback((point: Point): SeatHitTarget | null => {
+    const seatingNodes = nodesRef.current.filter(
+      (node): node is SeatingPlannerNode => node.type !== "decorativeNode",
+    );
+
+    for (let nodeIndex = seatingNodes.length - 1; nodeIndex >= 0; nodeIndex -= 1) {
+      const node = seatingNodes[nodeIndex];
+      const seatGeometries = getSeatGeometries(node);
+
+      for (let seatIndex = seatGeometries.length - 1; seatIndex >= 0; seatIndex -= 1) {
+        const seatGeometry = seatGeometries[seatIndex];
+
+        if (
+          point.x >= seatGeometry.x &&
+          point.x <= seatGeometry.x + seatGeometry.width &&
+          point.y >= seatGeometry.y &&
+          point.y <= seatGeometry.y + seatGeometry.height
+        ) {
+          return { nodeId: node.id, seatId: seatGeometry.seat.id };
+        }
+      }
+    }
+
+    return null;
+  }, []);
+
+  const {
+    handleAddTableClick,
+    handleConfirmAddTable,
+    handleDeleteDecorative,
+    handleDeleteSeatPlanNode,
+    handleDrop,
+    handleEditConfirm,
+    handleGuestHandleDown,
+    handleLineResizeStart,
+    handleNodeDragEnd,
+    handleNodeDragMove,
+    handleRemoveGuest,
+    handleRemoveGuestFromSeat,
+    openEditDialog,
+  } = usePlannerActions({
+    clientToWorld,
+    clearTrackedDecorative,
+    clearTrackedGuest,
+    clearTrackedNode,
+    createDecorativeNode,
+    createSeatPlanNode,
+    deleteDecorativeNodeMutation,
+    deleteGuestMutation,
+    deleteSeatPlanNode,
+    editDialogState,
+    eventId,
+    findSeatTarget,
+    guestsRef,
+    guestDragState,
+    lineResizeState,
+    measurementType,
+    newTableLabel,
+    newTableNumSeats,
+    newTableType,
+    nodesRef,
+    setEditDialogState,
+    setGuests,
+    setGuestDragState,
+    setIsAddTableDialogOpen,
+    setLineResizeState,
+    setMeasurementType,
+    setNewTableLabel,
+    setNewTableNumSeats,
+    setNewTableType,
+    setNodes,
+    setSelectedNodeId,
+    setTableHeightInput,
+    setTableWidthInput,
+    stageRef,
+    tableHeightInput,
+    tableWidthInput,
+    trackDecorativeChange,
+    trackGuestChange,
+    trackSeatPlanChange,
+    venueHeightPx,
+    venueWidthPx,
+    viewportRef,
+    zoomToNode,
+  });
+
+  const handleWheel = useCallback((event: Konva.KonvaEventObject<WheelEvent>) => {
+    event.evt.preventDefault();
+
+    const pointer = stageRef.current?.getPointerPosition();
+
+    if (!pointer) {
+      return;
+    }
+
+    const oldZoom = viewportRef.current.zoom;
+    const direction = event.evt.deltaY > 0 ? -1 : 1;
+    const scaleFactor = direction > 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+    const nextZoom = clamp(oldZoom * scaleFactor, MIN_ZOOM, MAX_ZOOM);
+
+    const worldX = (pointer.x - viewportRef.current.x) / oldZoom;
+    const worldY = (pointer.y - viewportRef.current.y) / oldZoom;
+
+    setViewport({
+      zoom: nextZoom,
+      x: pointer.x - worldX * nextZoom,
+      y: pointer.y - worldY * nextZoom,
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!panState) {
+      return;
+    }
+
+    const handleMouseMove = (event: MouseEvent) => {
+      setViewport((previous) => ({
+        ...previous,
+        x: panState.startViewportX + (event.clientX - panState.startClientX),
+        y: panState.startViewportY + (event.clientY - panState.startClientY),
+      }));
+    };
+
+    const handleMouseUp = () => setPanState(null);
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [panState]);
+
+  const handleStageMouseDown = useCallback(
+    (event: Konva.KonvaEventObject<MouseEvent>) => {
+      const targetName = event.target?.name?.() ?? "";
+      const clickedEmpty =
+        event.target === event.target.getStage() ||
+        targetName === "planner-background";
+
+      if (!clickedEmpty || guestDragState || lineResizeState) {
+        return;
+      }
+
+      setSelectedNodeId(null);
+      setPanState({
+        startClientX: event.evt.clientX,
+        startClientY: event.evt.clientY,
+        startViewportX: viewportRef.current.x,
+        startViewportY: viewportRef.current.y,
+      });
+    },
+    [guestDragState, lineResizeState],
+  );
+
+  const visibleWorldBounds = useMemo(() => {
+    const left = -viewport.x / viewport.zoom;
+    const top = -viewport.y / viewport.zoom;
+    const right = left + stageSize.width / viewport.zoom;
+    const bottom = top + stageSize.height / viewport.zoom;
+
+    return { left, top, right, bottom };
+  }, [stageSize.height, stageSize.width, viewport]);
+
+  const gridLines = useMemo(() => {
+    const lines: Array<{ points: number[] }> = [];
+
+    const startX =
+      Math.floor((visibleWorldBounds.left - GRID_GAP * 4) / GRID_GAP) * GRID_GAP;
+    const endX = visibleWorldBounds.right + GRID_GAP * 4;
+    const startY =
+      Math.floor((visibleWorldBounds.top - GRID_GAP * 4) / GRID_GAP) * GRID_GAP;
+    const endY = visibleWorldBounds.bottom + GRID_GAP * 4;
+
+    for (let x = startX; x <= endX; x += GRID_GAP) {
+      lines.push({ points: [x, startY, x, endY] });
+    }
+
+    for (let y = startY; y <= endY; y += GRID_GAP) {
+      lines.push({ points: [startX, y, endX, y] });
+    }
+
+    return lines;
+  }, [visibleWorldBounds]);
+
+  const handleSaveChanges = useCallback(() => {
+    const total =
+      changedObjects.guest.length +
+      changedObjects.node.length +
+      changedObjects.decorativeItems.length;
+
+    if (total === 0) {
+      return;
+    }
+
     if (changedObjects.node.length > 0) {
-      updateSeatAll(changedObjects.node);
+      updateSeatPlanNodes(changedObjects.node);
     }
+
+    if (changedObjects.guest.length > 0) {
+      updateAllGuests(changedObjects.guest);
+    }
+
     if (changedObjects.decorativeItems.length > 0) {
-      UpdateDecorator(changedObjects.decorativeItems);
+      updateDecorativeNodes(changedObjects.decorativeItems);
     }
-  };
+  }, [changedObjects, updateAllGuests, updateDecorativeNodes, updateSeatPlanNodes]);
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (!plannerSurfaceRef.current) {
+      toast.error("Planner surface not found.");
+      return;
+    }
+
+    setIsPdfDownloading(true);
+    setIsExporting(true);
+    setSelectedNodeId(null);
+
+    const previousViewport = viewportRef.current;
+    const exportViewport = getViewportForBounds(getContentBounds(nodesRef.current));
+    setViewport(exportViewport);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      const dataUrl = await toPng(plannerSurfaceRef.current, {
+        backgroundColor: "#ffffff",
+        pixelRatio: 2.5,
+        cacheBust: true,
+      });
+
+      const image = await loadImageElement(dataUrl);
+      const canvasWidthMm = image.width * 0.264583;
+      const canvasHeightMm = image.height * 0.264583;
+      const pageWidth = Math.max(canvasWidthMm + 40, 210);
+      const pageHeight = canvasHeightMm + 75;
+
+      const pdf = new jsPDF({
+        orientation: canvasWidthMm > canvasHeightMm ? "landscape" : "portrait",
+        unit: "mm",
+        format: [pageWidth, pageHeight],
+        compress: false,
+      });
+
+      const title = companyInfo?.data?.title || "Wedding Planner";
+      const logoUrl = companyInfo?.data?.imageUrl || "";
+
+      if (logoUrl) {
+        try {
+          const logo = await loadImageElement(logoUrl);
+          const logoSize = 24;
+          pdf.addImage(
+            logo,
+            "PNG",
+            (pageWidth - logoSize) / 2,
+            12,
+            logoSize,
+            logoSize,
+          );
+        } catch {
+          // Ignore logo rendering failure.
+        }
+      }
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(22);
+      pdf.text(title, pageWidth / 2, 44, { align: "center" });
+
+      pdf.addImage(
+        image,
+        "PNG",
+        (pageWidth - canvasWidthMm) / 2,
+        55,
+        canvasWidthMm,
+        canvasHeightMm,
+      );
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.text(
+        `Generated on ${new Date().toLocaleDateString()}`,
+        pageWidth - 20,
+        pageHeight - 10,
+        { align: "right" },
+      );
+
+      pdf.save(
+        `${title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}-layout.pdf`,
+      );
+      toast.success("Layout downloaded.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download PDF.");
+    } finally {
+      setViewport(previousViewport);
+      setIsExporting(false);
+      setIsPdfDownloading(false);
+    }
+  }, [companyInfo?.data?.imageUrl, companyInfo?.data?.title, getContentBounds, getViewportForBounds]);
+
+  const pendingChangesCount =
+    changedObjects.guest.length +
+    changedObjects.node.length +
+    changedObjects.decorativeItems.length;
+  const unassignedGuestCount = guests.filter((guest) => !guest.isAssigned).length;
+  const canInteractWithNodes = !guestDragState && !lineResizeState;
+  const handleSelectNode = (nodeId: string) => setSelectedNodeId(nodeId);
+  const handleSeatHover = (seatKey: string) => setHoveredSeatKey(seatKey);
+  const handleSeatLeave = () => setHoveredSeatKey(null);
+  const handleZoomIn = () =>
+    setViewport((previous) => ({
+      ...previous,
+      zoom: clamp(previous.zoom * ZOOM_STEP, MIN_ZOOM, MAX_ZOOM),
+    }));
+  const handleZoomOut = () =>
+    setViewport((previous) => ({
+      ...previous,
+      zoom: clamp(previous.zoom / ZOOM_STEP, MIN_ZOOM, MAX_ZOOM),
+    }));
 
   useIdleTimer({
     timeout: 1000 * 5,
-    onIdle: handleOnIdle,
+    onIdle: handleSaveChanges,
     debounce: 800,
   });
 
   return (
-    <div className="flex h-screen w-full overflow-hidden main-planner-container">
+    <div className="flex h-[100dvh] min-h-[100dvh] w-full overflow-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#eef6f2_100%)]">
       <Sidebar
         onAddTableClick={handleAddTableClick}
         guests={guests}
-        onAddGuest={handleAddGuest}
         onRemoveGuest={handleRemoveGuest}
         showSidebar={showSidebar}
         setShowSidebar={setShowSidebar}
       />
-      {/* <DecorativeSidebar onAddDecorativeItem={() => {}} /> */}
-      <div className=" flex-1 h-full relative" ref={reactFlowWrapper}>
-        {/* Zoom-Responsive Venue Boundary */}
-        {/*  <ZoomResponsiveBoundary
-          venueWidth={venueWidth}
-          venueHeight={venueHeight}
-          SCALE_FACTOR={SCALE_FACTOR}
-        /> */}
-        <ZoomResponsiveBoundary
-          venueWidth={venueWidth}
-          venueHeight={venueHeight}
-          SCALE_FACTOR={SCALE_FACTOR}
-          venu_id={pathName.split("/").pop() as string}
-        />
+
+      <div
+        ref={plannerViewportRef}
+        className="relative h-full flex-1 overflow-hidden"
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={handleDrop}
+      >
+        <div
+          ref={plannerSurfaceRef}
+          className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_top,#ffffff,#f8fafc_55%,#eef2f7)]"
+        >
+          <ZoomResponsiveBoundary
+            venueWidth={venueWidth}
+            venueHeight={venueHeight}
+            SCALE_FACTOR={SCALE_FACTOR}
+            venu_id={eventId}
+            viewport={viewport}
+          />
+
+          <Stage
+            ref={stageRef}
+            width={stageSize.width}
+            height={stageSize.height}
+            className="absolute inset-0"
+            onMouseDown={handleStageMouseDown}
+            onWheel={handleWheel}
+          >
+            <Layer>
+              <Group
+                x={viewport.x}
+                y={viewport.y}
+                scaleX={viewport.zoom}
+                scaleY={viewport.zoom}
+              >
+                <Rect
+                  name="planner-background"
+                  x={-LARGE_CANVAS_SIZE / 2}
+                  y={-LARGE_CANVAS_SIZE / 2}
+                  width={LARGE_CANVAS_SIZE}
+                  height={LARGE_CANVAS_SIZE}
+                  fill="#ffffff"
+                />
+
+                {gridLines.map((line, index) => (
+                  <Line
+                    key={`${line.points.join("-")}-${index}`}
+                    points={line.points}
+                    stroke="#edf2f7"
+                    strokeWidth={1}
+                    listening={false}
+                  />
+                ))}
+
+                <Rect
+                  x={0}
+                  y={0}
+                  width={venueWidthPx}
+                  height={venueHeightPx}
+                  fill="rgba(248,250,252,0.35)"
+                  listening={false}
+                />
+
+                {nodes.map((node) => {
+                  const isSelected = selectedNodeId === node.id;
+
+                  if (isTableNode(node)) {
+                    return (
+                      <TableCanvasNode
+                        key={node.id}
+                        node={node}
+                        isSelected={isSelected}
+                        hoveredSeatKey={
+                          hoveredSeatKey?.startsWith(`${node.id}:`)
+                            ? hoveredSeatKey
+                            : null
+                        }
+                        canInteract={canInteractWithNodes}
+                        onSelect={handleSelectNode}
+                        onDragMove={handleNodeDragMove}
+                        onDragEnd={handleNodeDragEnd}
+                        onSeatHover={handleSeatHover}
+                        onSeatLeave={handleSeatLeave}
+                        onGuestHandleDown={handleGuestHandleDown}
+                        onRemoveGuest={handleRemoveGuestFromSeat}
+                      />
+                    );
+                  }
+
+                  if (isChairNode(node)) {
+                    return (
+                      <ChairCanvasNode
+                        key={node.id}
+                        node={node}
+                        isSelected={isSelected}
+                        hoveredSeatKey={
+                          hoveredSeatKey?.startsWith(`${node.id}:`)
+                            ? hoveredSeatKey
+                            : null
+                        }
+                        canInteract={canInteractWithNodes}
+                        onSelect={handleSelectNode}
+                        onDragMove={handleNodeDragMove}
+                        onDragEnd={handleNodeDragEnd}
+                        onSeatHover={handleSeatHover}
+                        onSeatLeave={handleSeatLeave}
+                        onGuestHandleDown={handleGuestHandleDown}
+                        onRemoveGuest={handleRemoveGuestFromSeat}
+                      />
+                    );
+                  }
+
+                  return (
+                    <DecorativeCanvasNode
+                      key={node.id}
+                      node={node}
+                      isSelected={isSelected}
+                      canInteract={canInteractWithNodes}
+                      onSelect={handleSelectNode}
+                      onDragMove={handleNodeDragMove}
+                      onDragEnd={handleNodeDragEnd}
+                      onLineResizeStart={handleLineResizeStart}
+                    />
+                  );
+                })}
+              </Group>
+            </Layer>
+          </Stage>
+        </div>
+
+        {!isExporting && nodes.length === 0 ? <PlannerEmptyState /> : null}
 
         <Button
           variant="outline"
           size="icon"
-          className=" absolute top-4 left-4 z-20 bg-transparent"
-          onClick={() => setShowSidebar(!showSidebar)}
+          className="absolute left-4 top-4 z-20 rounded-2xl border-white/70 bg-white/90 shadow-lg backdrop-blur hover:bg-white"
+          onClick={() => setShowSidebar((previous) => !previous)}
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle Sidebar</span>
         </Button>
 
-        {/* Enhanced Venue Info Panel */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-lg hidden p-4 shadow-lg border">
-          <h3 className="text-sm font-semibold text-slate-700 mb-2 text-center">
-            Venue Information
-          </h3>
-          <div className="flex gap-4 text-xs text-slate-600">
-            <div>
-              <strong>Size:</strong> {venueWidth}m × {venueHeight}m
-            </div>
-            <div>
-              <strong>Area:</strong> {(venueWidth * venueHeight).toFixed(1)}m²
-            </div>
-            <div>
-              <strong>Scale:</strong> 1m = {SCALE_FACTOR}px
-            </div>
-            <div className="text-blue-600">
-              <strong>Capacity:</strong> ~{estimatedCapacity} tables
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute top-4 right-4 z-20 flex gap-2 top-right-buttons">
-          <Button
-            onClick={handleSaveChanges}
-            variant="secondary"
-            disabled={
-              changedObjects.guest.length +
-                changedObjects.node.length +
-                changedObjects.decorativeItems.length ===
-              0
+        {!isExporting && selectedNode && selectedNodeActionStyle && (
+          <PlannerSelectionActions
+            label={selectedNode.data.label}
+            style={selectedNodeActionStyle}
+            canEdit={
+              selectedNode.type !== "decorativeNode" ||
+              (selectedNode.data.category !== "line-horizontal" &&
+                selectedNode.data.category !== "line-vertical")
             }
-          >
-            <Database className="w-4 h-4 mr-2" />
-            Save Changes (
-            {changedObjects.guest.length +
-              changedObjects.node.length +
-              changedObjects.decorativeItems.length}
-            )
-          </Button>
-          <Button
-            onClick={handleDownloadPdf}
-            disabled={isPdfDownloading}
-            variant="outline"
-          >
-            {isPdfDownloading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <FileText className="w-4 h-4 mr-2" />
-            )}{" "}
-            Download PDF
-          </Button>
-        </div>
+            onEdit={() => openEditDialog(selectedNode)}
+            onDelete={() =>
+              selectedNode.type === "decorativeNode"
+                ? handleDeleteDecorative(selectedNode.id)
+                : handleDeleteSeatPlanNode(selectedNode.id)
+            }
+          />
+        )}
 
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={handleNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          snapToGrid={true}
-          snapGrid={snapGrid}
-          className="bg-transparent"
-          onNodeDragStop={handleNodeDragStop}
-          /*      onMoveEnd={onMoveEnd} */
-          minZoom={0.09}
-          maxZoom={1}
-          onDrop={handleDecorativeDrop}
-          onDragOver={(event) => event.preventDefault()}
-          // REMOVED defaultViewport - using programmatic setViewport instead
-        >
-          <Controls />
-          <MiniMap />
-          <Background variant={BackgroundVariant.Lines} gap={40} />
-        </ReactFlow>
+        {!isExporting && guestDragState && (
+          <div
+            className="pointer-events-none absolute z-40 rounded-2xl bg-slate-900 px-3 py-2 text-sm text-white shadow-lg"
+            style={{
+              left: guestDragState.clientX,
+              top: guestDragState.clientY,
+              transform: "translate(12px, 12px)",
+            }}
+          >
+            {guestDragState.guestName}
+          </div>
+        )}
+
+        {!isExporting ? (
+          <PlannerActionBar
+            pendingChanges={pendingChangesCount}
+            guestCount={guests.length}
+            unassignedGuestCount={unassignedGuestCount}
+            isPdfDownloading={isPdfDownloading}
+            onSave={handleSaveChanges}
+            onDownloadPdf={handleDownloadPdf}
+          />
+        ) : null}
+
+        {!isExporting && (
+          <>
+            <PlannerViewportControls
+              zoom={viewport.zoom}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              onFit={fitToContent}
+            />
+
+            <PlannerMiniMap
+              nodes={nodes}
+              viewport={viewport}
+              stageSize={stageSize}
+              venueWidthPx={venueWidthPx}
+              venueHeightPx={venueHeightPx}
+              className="absolute bottom-4 right-4 z-20 hidden rounded-3xl border border-white/70 bg-white/92 p-2 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.4)] backdrop-blur md:block"
+            />
+          </>
+        )}
       </div>
 
-      <Dialog
+      <PlannerAddItemDialog
         open={isAddTableDialogOpen}
         onOpenChange={setIsAddTableDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>
-              Add New{" "}
-              {newTableType?.includes("line")
-                ? "Line"
-                : newTableType
-                  ? newTableType.charAt(0).toUpperCase() + newTableType.slice(1)
-                  : ""}{" "}
-              {!newTableType?.includes("line") && "Table"}
-            </DialogTitle>
-            <DialogDescription>
-              {newTableType?.includes("line")
-                ? "Configure the line thickness and initial length. You can drag to adjust length after creation."
-                : `Configure the details for your new table/chair. Tables will be placed within the venue area (${venueWidth}m × ${venueHeight}m). Estimated capacity: ~${estimatedCapacity} tables total.`}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 items-center gap-4">
-              <Label htmlFor="tableName" className="text-right">
-                {newTableType?.includes("line") ? "Line" : "Table/Chair"} Name :
-              </Label>
-              <Input
-                id="tableName"
-                value={newTableLabel}
-                onChange={(e) => setNewTableLabel(e.target.value)}
-                className="col-span-3"
-                placeholder={
-                  newTableType?.includes("line")
-                    ? "e.g., Wall, Divider"
-                    : "e.g., Wedding Table, Fancy Table"
+        newTableType={newTableType}
+        venueWidth={venueWidth}
+        venueHeight={venueHeight}
+        estimatedCapacity={estimatedCapacity}
+        newTableLabel={newTableLabel}
+        onLabelChange={setNewTableLabel}
+        newTableNumSeats={newTableNumSeats}
+        onNumSeatsChange={setNewTableNumSeats}
+        measurementType={measurementType}
+        onMeasurementTypeChange={setMeasurementType}
+        tableWidthInput={tableWidthInput}
+        onTableWidthChange={setTableWidthInput}
+        tableHeightInput={tableHeightInput}
+        onTableHeightChange={setTableHeightInput}
+        onConfirm={handleConfirmAddTable}
+      />
+
+      <PlannerEditDialog
+        open={Boolean(editDialogState)}
+        editDialogState={editDialogState}
+        hideCountField={
+          editDialogState?.kind === "decorativeNode" ||
+          Boolean(
+            selectedNode &&
+              selectedNode.type === "tableNode" &&
+              selectedNode.data.type === "circular-single-seat",
+          )
+        }
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditDialogState(null);
+          }
+        }}
+        onLabelChange={(value) =>
+          setEditDialogState((previous) =>
+            previous
+              ? {
+                  ...previous,
+                  label: value,
                 }
-              />
-            </div>
-
-            {/* ✅ LINE-SPECIFIC INPUTS */}
-            {newTableType?.includes("line") && (
-              <>
-                <div className="grid grid-cols-2 items-center gap-4">
-                  <Label htmlFor="lineThickness" className="text-right">
-                    Thickness (px):
-                  </Label>
-                  <Input
-                    id="lineThickness"
-                    type="number"
-                    value={tWidth > 0 ? tWidth : ""}
-                    onChange={(e) => setTWidth(Number(e.target.value))}
-                    className="col-span-3"
-                    placeholder="e.g., 5"
-                    min={1}
-                    max={50}
-                  />
-                </div>
-                <div className="grid grid-cols-2 items-center gap-4">
-                  <Label htmlFor="lineLength" className="text-right">
-                    Initial Length (px):
-                  </Label>
-                  <Input
-                    id="lineLength"
-                    type="number"
-                    value={tHeight > 0 ? tHeight : ""}
-                    onChange={(e) => setTHeight(Number(e.target.value))}
-                    className="col-span-3"
-                    placeholder="e.g., 200"
-                    min={10}
-                    max={2000}
-                  />
-                </div>
-              </>
-            )}
-
-            {/* TABLE/CHAIR SEAT COUNT - HIDE FOR LINES */}
-            {!newTableType?.includes("line") &&
-              newTableType !== "circular-single-seat" && (
-                <div className="grid grid-cols-2 items-center gap-4">
-                  <Label htmlFor="numSeats" className="text-right">
-                    Number of Seats :
-                  </Label>
-                  <div className="col-span-3 flex items-center gap-2">
-                    <Slider
-                      id="numSeats"
-                      min={2}
-                      max={20}
-                      step={1}
-                      value={[newTableNumSeats]}
-                      onValueChange={(val) => setNewTableNumSeats(val[0])}
-                      className="w-[calc(100%-40px)]"
-                    />
-                    <span className="w-10 text-right">{newTableNumSeats}</span>
-                  </div>
-                </div>
-              )}
-
-            {/* TABLE MEASUREMENT INPUTS - HIDE FOR LINES */}
-            {!newTableType?.includes("line") && (
-              <>
-                <div className="grid grid-cols-2 items-center gap-4">
-                  <Label htmlFor="tableName" className="text-right">
-                    Measurement Type:
-                  </Label>
-                  <Select value={mType} onValueChange={setMtype}>
-                    <SelectTrigger className="w-[190px]">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ft">ft</SelectItem>
-                      <SelectItem value="m">meter</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 items-center gap-4">
-                  <Label htmlFor="tableName" className="text-right">
-                    Table/chair width :
-                  </Label>
-                  <Input
-                    id="tableName"
-                    value={tWidth > 0 ? tWidth : ""}
-                    onChange={(e) => setTWidth(Number(e.target.value))}
-                    className="col-span-3"
-                    placeholder="e.g., 2.5"
-                  />
-                </div>
-                <div className="grid grid-cols-2 items-center gap-4">
-                  <Label htmlFor="tableName" className="text-right">
-                    Table/chair height :
-                  </Label>
-                  <Input
-                    id="tableName"
-                    value={tHeight > 0 ? tHeight : ""}
-                    onChange={(e) => setTHeight(Number(e.target.value))}
-                    className="col-span-3"
-                    placeholder="e.g., 1.5"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button onClick={handleConfirmAddTable}>
-              Add {newTableType?.includes("line") ? "Line" : "Table"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              : previous,
+          )
+        }
+        onCountChange={(value) =>
+          setEditDialogState((previous) =>
+            previous
+              ? {
+                  ...previous,
+                  seatsOrChairs: value,
+                }
+              : previous,
+          )
+        }
+        onConfirm={handleEditConfirm}
+      />
     </div>
   );
 }
 
-export default function WeddingPlannerWrapper() {
-  return (
-    <ReactFlowProvider>
-      <WeddingPlanner />
-    </ReactFlowProvider>
-  );
+export function WeddingPlannerWrapper() {
+  return <WeddingPlanner />;
 }
-function transformSelector(state: StoreState): unknown {
-  throw new Error("Function not implemented.");
-}
+
+export default WeddingPlannerWrapper;

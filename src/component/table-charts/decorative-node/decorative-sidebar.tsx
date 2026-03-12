@@ -17,10 +17,6 @@ import {
 import {
   GripVertical,
   Palette,
-  TreePine,
-  Utensils,
-  DoorClosed as Door,
-  Volume2,
   Search,
 } from "lucide-react";
 import { decorativeCategories, decorativeItems } from "@/lib/DecoratorData";
@@ -34,11 +30,12 @@ interface DecorativeDrawerProps {
 export function DecorativeDrawer({
   onAddDecorativeItem,
 }: DecorativeDrawerProps) {
+  type DecorativeItem = (typeof decorativeItems)[number];
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("decor");
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleDragStart = (event: React.DragEvent, item: any) => {
+  const handleDragStart = (event: React.DragEvent, item: DecorativeItem) => {
     event.dataTransfer.setData("decorativeItemId", item.id);
     event.dataTransfer.setData("decorativeItemLabel", item.label);
     event.dataTransfer.setData("decorativeItemImage", item.imageUrl);
@@ -71,10 +68,10 @@ export function DecorativeDrawer({
         <Button
           variant="outline"
           size="sm"
-          className="w-full mb-2 flex items-center gap-2 shadow-none"
+          className="mb-2 flex w-full items-center gap-2 overflow-hidden shadow-none"
         >
-          <Palette className="h-4 w-4" />
-          Add Decorations
+          <Palette className="h-4 w-4 shrink-0" />
+          <span className="truncate">Add Decorations</span>
         </Button>
       </DrawerTrigger>
 
@@ -112,10 +109,10 @@ export function DecorativeDrawer({
                   variant={selectedCategory === key ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedCategory(key)}
-                  className="flex items-center gap-2 whitespace-nowrap"
+                  className="flex items-center gap-2 overflow-hidden whitespace-nowrap"
                 >
-                  <Icon className="h-4 w-4" />
-                  {category.label}
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{category.label}</span>
                 </Button>
               );
             })}
@@ -127,12 +124,12 @@ export function DecorativeDrawer({
               {filteredItems.map((item) => (
                 <Card
                   key={item.id}
-                  className="p-3 cursor-grab shadow-none hover:shadow-sm transition-all border-gray-100  active:scale-95"
+                  className="cursor-grab border-gray-100 p-3 shadow-none transition-all hover:shadow-sm active:scale-95"
                   draggable={true}
                   onDragStart={(e) => handleDragStart(e, item)}
                   onDragEnd={handleDragEnd}
                 >
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex min-w-0 flex-col items-center gap-2">
                     <div className="w-12 h-12  rounded-lg flex items-center justify-center overflow-hidden ">
                       <Image
                         src={
@@ -147,7 +144,7 @@ export function DecorativeDrawer({
                         height={item.height}
                       />
                     </div>
-                    <div className="text-xs text-center font-medium leading-tight text-gray-700">
+                    <div className="w-full truncate text-center text-xs font-medium leading-tight text-gray-700">
                       {item.label}
                     </div>
                     <GripVertical className="w-3 h-3 text-gray-400" />
