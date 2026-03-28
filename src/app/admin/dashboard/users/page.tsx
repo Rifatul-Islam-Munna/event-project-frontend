@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Users,
   Plus,
@@ -47,6 +48,10 @@ import {
   UserCircle,
   TrendingUp,
   Clock,
+  CreditCard,
+  Mail,
+  MessageSquare,
+  Phone,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -56,12 +61,72 @@ import {
   getAllUser,
   postAdminSub,
 } from "@/actions/fetch-action";
+import { getAllAddOns } from "@/actions/vendor-category-actions";
 import { toast } from "sonner";
+
+const addOnTypeMeta = {
+  message: {
+    label: "Message",
+    icon: MessageSquare,
+    iconClassName: "bg-blue-100 text-blue-600",
+  },
+  whatsapp: {
+    label: "WhatsApp",
+    icon: Phone,
+    iconClassName: "bg-green-100 text-green-600",
+  },
+  email: {
+    label: "Email",
+    icon: Mail,
+    iconClassName: "bg-purple-100 text-purple-600",
+  },
+  flushCard: {
+    label: "Flush Card",
+    icon: CreditCard,
+    iconClassName: "bg-orange-100 text-orange-600",
+  },
+} as const;
+
+type AddOnType = keyof typeof addOnTypeMeta;
+
+interface AddOn {
+  _id: string;
+  type: AddOnType;
+  numberMessage?: number;
+  message?: string;
+  flushCardCoupon?: string;
+  price?: number;
+}
+
+interface AdminUser {
+  _id: string;
+  name: string;
+  email: string;
+  plan?: string;
+  createdAt?: string;
+}
+
+const getAddOnDescription = (addOn: AddOn) => {
+  if (addOn.type === "flushCard") {
+    const coupon = addOn.flushCardCoupon?.trim();
+    return coupon ? `Coupon: ${coupon}` : "Flush card access";
+  }
+
+  const quantity = Number(addOn.numberMessage ?? 0);
+  const label = addOnTypeMeta[addOn.type].label.toLowerCase();
+  const summary = `${quantity} ${label} credit${quantity === 1 ? "" : "s"}`;
+
+  if (addOn.message?.trim()) {
+    return `${summary} - ${addOn.message.trim()}`;
+  }
+
+  return summary;
+};
 
 // Pagination Component
 const Pagination = ({ currentPage, totalPages, onPageChange, isLoading }) => {
   const getPageNumbers = () => {
-    const pages = [];
+    const pages: number[] = [];
     const showPages = 5;
 
     let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
@@ -148,13 +213,20 @@ export default function UserManagementDashboard() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [subscriptionType, setSubscriptionType] = useState("");
-  const [endDate, setEndDate] = useState();
+  const [selectedAddOnIds, setSelectedAddOnIds] = useState<string[]>([]);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   const { data: subscriptionTypes } = useQuery({
     queryKey: ["plans"],
     queryFn: () => getAllThePlans(),
+  });
+
+  const { data: addOnsData, isLoading: isAddOnsLoading } = useQuery({
+    queryKey: ["add-ons"],
+    queryFn: () => getAllAddOns(),
+    staleTime: 5 * 60 * 1000,
   });
 
   const {
@@ -175,7 +247,7 @@ export default function UserManagementDashboard() {
       toast.success("Subscription added successfully!");
       setSubscriptionModal(false);
       resetForm();
-      queryClient.invalidateQueries(["users"]);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to add subscription");
@@ -186,7 +258,7 @@ export default function UserManagementDashboard() {
     mutationFn: (userId: string) => deleteUSer(userId),
     onSuccess: (data) => {
       if (data?.data) {
-        queryClient.invalidateQueries(["users"]);
+        queryClient.invalidateQueries({ queryKey: ["users"] });
         return toast.success("User deleted successfully");
       }
       return toast.error("User deletion failed");
@@ -214,12 +286,13 @@ export default function UserManagementDashboard() {
       subscriptionType: subscriptionType,
       startedDate: new Date().toISOString().split("T")[0],
       endDate: format(endDate, "yyyy-MM-dd"),
+      ...(selectedAddOnIds.length > 0 ? { addons: selectedAddOnIds } : {}),
     };
 
     addSubscriptionMutation.mutate(subscriptionData);
   };
 
-  const handleDeleteUser = async (userId, userName) => {
+  const handleDeleteUser = async (userId: string, userName: string) => {
     if (
       !confirm(
         `Are you sure you want to delete user "${userName}"? This action cannot be undone.`,
@@ -230,30 +303,59 @@ export default function UserManagementDashboard() {
     deleteUserMutation.mutate(userId);
   };
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
+  };
+
+  const handleSubscriptionModalChange = (open: boolean) => {
+    setSubscriptionModal(open);
+
+    if (!open) {
+      resetForm();
+    }
+  };
+
+  const openSubscriptionModal = (user: AdminUser) => {
+    setSelectedUser(user);
+    setSubscriptionType("");
+    setSelectedAddOnIds([]);
+    setEndDate(undefined);
+    setSubscriptionModal(true);
+  };
+
+  const toggleAddOnSelection = (addOnId: string, checked: boolean) => {
+    setSelectedAddOnIds((current) => {
+      if (checked) {
+        return current.includes(addOnId) ? current : [...current, addOnId];
+      }
+
+      return current.filter((id) => id !== addOnId);
+    });
   };
 
   const resetForm = () => {
     setSelectedUser(null);
     setSubscriptionType("");
+    setSelectedAddOnIds([]);
     setEndDate(undefined);
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
   };
 
-  const getSubscriptionTypeName = (typeId) => {
+  const getSubscriptionTypeName = (typeId: string) => {
     const type = subscriptionTypes?.data?.find((t) => t._id === typeId);
     return type ? type.title : "Unknown Plan";
   };
 
-  const users = usersData?.data?.data || [];
+  const users: AdminUser[] = usersData?.data?.data || [];
   const totalPages = usersData?.data?.totalPages || 1;
   const totalDocs = usersData?.data?.totalDocs || 0;
   const activeSubscriptions = users.filter((u) => u.plan).length;
+  const addOns: AddOn[] = addOnsData?.data ?? [];
+  const addOnsErrorMessage = addOnsData?.error?.message;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/50">
@@ -466,10 +568,7 @@ export default function UserManagementDashboard() {
                           <TableCell className="py-4">
                             <div className="flex items-center justify-center gap-2">
                               <Button
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setSubscriptionModal(true);
-                                }}
+                                onClick={() => openSubscriptionModal(user)}
                                 size="sm"
                                 className="bg-lime-600 hover:bg-lime-700 text-white h-9"
                               >
@@ -509,8 +608,11 @@ export default function UserManagementDashboard() {
       </div>
 
       {/* Add Subscription Modal */}
-      <Dialog open={subscriptionModal} onOpenChange={setSubscriptionModal}>
-        <DialogContent className="sm:max-w-[540px] border-slate-200">
+      <Dialog
+        open={subscriptionModal}
+        onOpenChange={handleSubscriptionModalChange}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto border-slate-200 sm:max-w-[540px]">
           <DialogHeader className="border-b border-slate-100 pb-4">
             <div className="flex items-center gap-3 mb-2">
               <div className="h-10 w-10 rounded-lg bg-lime-100 flex items-center justify-center">
@@ -521,7 +623,8 @@ export default function UserManagementDashboard() {
                   Add Subscription
                 </DialogTitle>
                 <DialogDescription className="text-slate-600">
-                  Assign a subscription plan to {selectedUser?.name}
+                  Assign a subscription plan and optional add-ons to{" "}
+                  {selectedUser?.name}
                 </DialogDescription>
               </div>
             </div>
@@ -570,6 +673,95 @@ export default function UserManagementDashboard() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium text-slate-900">
+                  Add-ons
+                </Label>
+                <Badge
+                  variant="secondary"
+                  className="bg-slate-100 text-slate-600 hover:bg-slate-200"
+                >
+                  {selectedAddOnIds.length} selected
+                </Badge>
+              </div>
+
+              <div className="max-h-64 space-y-3 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                {isAddOnsLoading && (
+                  <p className="text-sm text-slate-500">Loading add-ons...</p>
+                )}
+
+                {!isAddOnsLoading && addOnsErrorMessage && (
+                  <p className="text-sm text-red-500">{addOnsErrorMessage}</p>
+                )}
+
+                {!isAddOnsLoading && !addOnsErrorMessage && addOns.length === 0 && (
+                  <p className="text-sm text-slate-500">
+                    No add-ons available right now.
+                  </p>
+                )}
+
+                {!isAddOnsLoading &&
+                  !addOnsErrorMessage &&
+                  addOns.map((addOn) => {
+                    const meta = addOnTypeMeta[addOn.type] ?? addOnTypeMeta.message;
+                    const Icon = meta.icon;
+                    const isSelected = selectedAddOnIds.includes(addOn._id);
+                    const checkboxId = `user-addon-${addOn._id}`;
+
+                    return (
+                      <div
+                        key={addOn._id}
+                        className={cn(
+                          "rounded-lg border bg-white p-3 transition-colors",
+                          isSelected
+                            ? "border-lime-300 bg-lime-50/60"
+                            : "border-slate-200",
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            id={checkboxId}
+                            checked={isSelected}
+                            onCheckedChange={(checked) =>
+                              toggleAddOnSelection(addOn._id, checked === true)
+                            }
+                            className="mt-1 border-slate-400"
+                          />
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <Label
+                                htmlFor={checkboxId}
+                                className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-900"
+                              >
+                                <span
+                                  className={cn(
+                                    "flex h-8 w-8 items-center justify-center rounded-full",
+                                    meta.iconClassName,
+                                  )}
+                                >
+                                  <Icon className="h-4 w-4" />
+                                </span>
+                                {meta.label}
+                              </Label>
+
+                              <span className="shrink-0 text-sm font-semibold text-lime-700">
+                                EUR {Number(addOn.price ?? 0).toFixed(2)}
+                              </span>
+                            </div>
+
+                            <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                              {getAddOnDescription(addOn)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
             </div>
 
             {/* End Date */}
@@ -625,10 +817,7 @@ export default function UserManagementDashboard() {
           <DialogFooter className="gap-3 border-t border-slate-100 pt-4">
             <Button
               variant="outline"
-              onClick={() => {
-                setSubscriptionModal(false);
-                resetForm();
-              }}
+              onClick={() => handleSubscriptionModalChange(false)}
               className="border-slate-300 hover:bg-slate-100"
             >
               Cancel
