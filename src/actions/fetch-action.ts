@@ -4,8 +4,16 @@ import { EventItem, EventList, Vendor } from "@/@types/events-details";
 import { DeleteAxios, ForDownloadReq, GetRequestAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
 import * as XLSX from 'xlsx';
 import { Guest as Gu } from "@/@types/events-details";
-import { SubscriptionFilters, SubscriptionResponse, User } from "@/@types/admin";
+import {
+  SubscriptionFilters,
+  SubscriptionResponse,
+  User as AdminUser,
+} from "@/@types/admin";
 import { getToken, getUserInfo } from "./auth";
+import {
+  type InvoiceBillingDetails,
+  type PurchaseInvoiceRecord,
+} from "@/@types/invoice";
 import { PricingPlan } from "@/@types/pricing";
 import { cookies } from "next/headers";
 import { Header } from "@/@types/user-types";
@@ -64,6 +72,11 @@ export type Guest = {
 };
 
 type AnyRow = Record<string, unknown>;
+type RawRow = AnyRow;
+type Point = {
+  x: number;
+  y: number;
+};
 
 
 function findKey(row: AnyRow, candidates: string[]) {
@@ -117,7 +130,7 @@ export async function updateMultipleGuest(file: File, eventId: string) {
     const kPhone = findKey(r, ['phone', 'phone number', 'mobile', 'contact']);
     const kaduls = findKey(r, ['adults', 'ADULTS', 'adult', 'adult count']);
     const kchild = findKey(r, ['children', 'child', '', 'adult count']);
-    const type = findKey(r, ['type', 'Type']);
+    const typeKey = findKey(r, ['type', 'Type']);
 
     const name  = String(kName  ? r[kName]  : '').trim();
   
@@ -129,7 +142,15 @@ export async function updateMultipleGuest(file: File, eventId: string) {
     if (!name) continue;
     if (email && !looksLikeEmail(email)) continue;
 
-    result.push({ name, email, phone,adults,children,event_id: eventId,type:type });
+    result.push({
+      name,
+      email,
+      phone,
+      adults,
+      children,
+      event_id: eventId,
+      type: typeKey ? String(r[typeKey]) : undefined,
+    });
   }
 
  
@@ -277,38 +298,80 @@ export const deleteSubScribe = async (id:string) =>{
     return {data,error}
 }
 
-export const subScript = async (sub:string,coupon?:string | null)=>{
+interface CheckoutBreakdown {
+  planOriginal?: number | null;
+  planAfterCoupon?: number | null;
+  addOnsTotal?: number;
+  addOnsApplied?: Array<{
+    id: string;
+    type: string;
+    priceCents: number;
+  }>;
+}
+
+interface CheckoutIntentResponse {
+  key: string;
+  customerSessionSecret?: string;
+  id: string;
+  finalAmount: number;
+  success?: boolean;
+  breakdown?: CheckoutBreakdown;
+}
+
+export const subScript = async (
+  sub:string,
+  coupon?:string | null,
+  invoiceDetails?: InvoiceBillingDetails,
+)=>{
   const user  = await getUserInfo();
-  const payload = {userId:user?._id,subscriptionType:sub,coupon:coupon};
-   const [data,error] = await PostRequestAxios(`/subscription/create-sub`,payload);
+  const payload = {
+    userId:user?._id,
+    subscriptionType:sub,
+    coupon:coupon,
+    invoiceDetails,
+  };
+   const [data,error] = await PostRequestAxios<CheckoutIntentResponse>(`/subscription/create-sub`,payload);
     console.log("vendor-data->",data,"vendor-error->",error);
     return {data,error}
 }
-export const CreateSubWithAddOn = async (plan:string,coupon?:string | null,addons?:string[] | [])=>{
-  const user  = await getUserInfo();
-  const payload = {userId:user?._id,plan:plan,coupon:coupon,addons:addons};
-   const [data,error] = await PostRequestAxios(`/subscription/create-sub-with-add-ons`,payload);
+export const CreateSubWithAddOn = async (
+  plan:string | null,
+  coupon?:string | null,
+  addons?:string[] | [],
+  invoiceDetails?: InvoiceBillingDetails,
+)=>{
+  const payload = {
+    ...(plan ? { plan } : {}),
+    coupon,
+    addons,
+    invoiceDetails,
+  };
+   const [data,error] = await PostRequestAxios<CheckoutIntentResponse>(`/subscription/create-sub-with-add-ons`,payload);
     console.log("add-on-data->",data,"set-add-on-error->",error);
     return {data,error}
 }
-export const AddSubForAddOn = async (sub:string,coupon?:string | null)=>{
+export const AddSubForAddOn = async (
+  sub:string,
+  coupon?:string | null,
+  invoiceDetails?: InvoiceBillingDetails,
+)=>{
   const user  = await getUserInfo();
-  const payload = {userId:user?._id,addOnId:sub};
-   const [data,error] = await PostRequestAxios(`/add-ons/buy-add-on`,payload);
+  const payload = {userId:user?._id,addOnId:sub,invoiceDetails};
+   const [data,error] = await PostRequestAxios<CheckoutIntentResponse>(`/add-ons/buy-add-on`,payload);
     console.log("vendor-data->",data,"vendor-error->",error);
     return {data,error}
 }
  
 interface AuthResponse {
   success: boolean;
-  user: User;
-  access_token: string;
-  subToken: string;
+  user?: AdminUser;
+  access_token?: string;
+  subToken?: string;
 }
 
 export const getSubTokenFirst = async (sub:string)=>{
   const [data,error] = await GetRequestNormal<AuthResponse>(`/subscription/create-payment?paymentIntentId=${sub}`);
-   if(data?.success){
+   if(data?.success && data?.access_token && data?.user && data?.subToken){
      const coookies = await cookies();
        coookies.set("access_token",data?.access_token,{maxAge:60*60*24,path:'/',httpOnly:true});
       coookies.set("user_info",JSON.stringify(data?.user),{maxAge:60*60*24,path:'/',httpOnly:true})
@@ -319,14 +382,19 @@ export const getSubTokenFirst = async (sub:string)=>{
   return {r,error}
 
 }
-export const createFreePlan = async (plan:string,coupon?:string | null,addons?:string[] | [])=>{
-  const payload = {plan:plan,coupon:coupon,addons:addons};
-  const [data,error] = await PostRequestAxios(`/subscription/creates-free-plans`,payload);
-   if(data?.success){
+export const createFreePlan = async (
+  plan:string,
+  coupon?:string | null,
+  addons?:string[] | [],
+  invoiceDetails?: InvoiceBillingDetails,
+)=>{
+  const payload = {plan:plan,coupon:coupon,addons:addons,invoiceDetails};
+  const [data,error] = await PostRequestAxios<AuthResponse>(`/subscription/creates-free-plans`,payload);
+   if(data?.success && data?.access_token && data?.user && data?.subToken){
      const coookies = await cookies();
-       coookies.set("access_token",data?.access_token,{maxAge:60*60*24,path:'/',httpOnly:true});
+       coookies.set("access_token",data.access_token,{maxAge:60*60*24,path:'/',httpOnly:true});
       coookies.set("user_info",JSON.stringify(data?.user),{maxAge:60*60*24,path:'/',httpOnly:true})
-      coookies.set("sub_token",data?.subToken,{maxAge:60*60*24,path:'/',httpOnly:true})
+      coookies.set("sub_token",data.subToken,{maxAge:60*60*24,path:'/',httpOnly:true})
    }
    const r = {success:true}
   
@@ -345,6 +413,22 @@ export const getUserBuyToken = async (sub:string)=>{
 export const getAllThePlans = async (type?:string)=>{
   const query = type?`?type=${type}`:""
   const [data,error] = await GetRequestNormal<PricingPlan[]>(`/subscription/find-all-plans${query}`);
+  return {data,error}
+}
+
+export const getAdminPurchaseInvoices = async ()=>{
+  const [data,error] = await GetRequestNormal<PurchaseInvoiceRecord[]>(`/purchase-invoices/admin`);
+  return {data,error}
+}
+
+export const updatePurchaseInvoiceSent = async (
+  id:string,
+  invoiceSent:boolean,
+)=>{
+  const [data,error] = await PatchRequestAxios<PurchaseInvoiceRecord>(
+    `/purchase-invoices/admin/${id}/sent`,
+    { invoiceSent },
+  );
   return {data,error}
 }
 

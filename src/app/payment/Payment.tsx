@@ -244,7 +244,7 @@ export default function BillingPage() {
 
   const clientSecret = data?.data?.key;
   const customerSessionSecret = data?.data?.customerSessionSecret;
-  const finalAmount = data?.data?.finalAmount;
+  const finalAmount = data?.data?.finalAmount ?? 0;
   const isSuccess = data?.data?.success;
   console.log("data", data);
   if (isSuccess) {

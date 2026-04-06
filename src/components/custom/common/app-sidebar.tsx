@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Gift,
   PuzzleIcon,
+  ReceiptText,
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
@@ -39,6 +40,11 @@ const data = {
       title: "Plans",
       url: "/admin/dashboard/plans",
       icon: Layers3,
+    },
+    {
+      title: "Invoices",
+      url: "/admin/dashboard/invoices",
+      icon: ReceiptText,
     },
     {
       title: "Coupon",

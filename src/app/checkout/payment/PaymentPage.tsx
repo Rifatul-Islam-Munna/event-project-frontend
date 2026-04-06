@@ -9,6 +9,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { getInvoiceValidationErrors } from "@/@types/invoice";
 import { CreateSubWithAddOn } from "@/actions/fetch-action";
 import { useCheckoutStore } from "@/zustan-fn/checkout-store";
 import {
@@ -139,19 +140,41 @@ function CheckoutForm({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function PaymentPage() {
   const router = useRouter();
-  const { planId, addonIds, couponCode, clearCheckout } = useCheckoutStore();
+  const { planId, addonIds, couponCode, invoiceDetails } = useCheckoutStore();
+  const hasItems = !!planId || addonIds.length > 0;
+  const invoiceErrors = getInvoiceValidationErrors(invoiceDetails);
 
   // ── Guard: redirect if store is empty ─────────────────────────────────────
   useEffect(() => {
-    if (!planId) router.replace("/checkout");
-  }, [planId, router]);
+    if (!hasItems || invoiceErrors.length > 0) {
+      router.replace("/checkout");
+    }
+  }, [hasItems, invoiceErrors.length, router]);
 
   // ── Create payment intent from store values ────────────────────────────────
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["create-intent", planId, addonIds, couponCode],
-    queryFn: () => CreateSubWithAddOn(planId!, couponCode, addonIds),
+    queryKey: [
+      "create-intent",
+      planId ?? "add-ons-only",
+      addonIds,
+      couponCode,
+      invoiceDetails,
+    ],
+    queryFn: async () => {
+      const result = await CreateSubWithAddOn(
+        planId,
+        couponCode,
+        addonIds,
+        invoiceDetails,
+      );
 
-    enabled: !!planId,
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+
+      return result;
+    },
+    enabled: hasItems && invoiceErrors.length === 0,
     staleTime: 0,
     retry: false,
   });
@@ -159,10 +182,21 @@ export default function PaymentPage() {
   const clientSecret = data?.data?.key;
   const customerSessionSecret = data?.data?.customerSessionSecret;
   const finalAmount = data?.data?.finalAmount ?? 0;
-  const breakdown = data?.data?.breakdown;
+  const breakdown = {
+    planOriginal: data?.data?.breakdown?.planOriginal ?? 0,
+    planAfterCoupon: data?.data?.breakdown?.planAfterCoupon ?? 0,
+    addOnsApplied: (data?.data?.breakdown?.addOnsApplied ?? []) as Array<{
+      id: string;
+      type: string;
+      priceCents: number;
+    }>,
+  };
+  const addOnsApplied = breakdown?.addOnsApplied ?? [];
+  const planOriginal = breakdown?.planOriginal ?? null;
+  const planAfterCoupon = breakdown?.planAfterCoupon ?? null;
 
   // ── Loading ────────────────────────────────────────────────────────────────
-  if (isLoading || !planId) {
+  if (isLoading || !hasItems) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-lime-50 via-white to-lime-50/30 flex items-center justify-center p-4">
         <Card className="w-full max-w-md border-lime-200 shadow-xl">
@@ -295,7 +329,7 @@ export default function PaymentPage() {
 
                 <CardContent className="p-5 space-y-4">
                   {/* Plan row */}
-                  {breakdown?.planOriginal != null && (
+                  {planOriginal != null && (
                     <div className="flex items-center gap-3 p-3 bg-lime-50 border border-lime-200 rounded-xl">
                       <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shrink-0">
                         <Zap className="h-4 w-4 text-white" />
@@ -361,8 +395,9 @@ export default function PaymentPage() {
                   )}
 
                   {/* Discount */}
-                  {breakdown?.planOriginal != null &&
-                    breakdown.planAfterCoupon < breakdown.planOriginal && (
+                  {planOriginal != null &&
+                    planAfterCoupon != null &&
+                    planAfterCoupon < planOriginal && (
                       <div className="flex items-center justify-between text-sm text-green-600">
                         <span className="flex items-center gap-1">
                           <Sparkles className="h-3.5 w-3.5" />
@@ -371,8 +406,8 @@ export default function PaymentPage() {
                         <span className="font-semibold">
                           - €{" "}
                           {(
-                            (breakdown.planOriginal -
-                              breakdown.planAfterCoupon) /
+                            (planOriginal -
+                              planAfterCoupon) /
                             100
                           ).toFixed(2)}
                         </span>

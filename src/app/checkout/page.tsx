@@ -4,8 +4,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { m, LazyMotion, domAnimation, AnimatePresence } from "motion/react";
 
+import { getInvoiceValidationErrors } from "@/@types/invoice";
 import { createFreePlan, getAllThePlans } from "@/actions/fetch-action";
 import { getForUser } from "@/actions/vendor-category-actions";
+import { InvoiceDetailsForm } from "@/components/custom/checkout/invoice-details-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -79,9 +81,10 @@ export default function CheckoutPage() {
     planId,
     addonIds,
     couponCode,
+    invoiceDetails,
     setCouponCode,
+    setInvoiceDetails,
     toggleAddon,
-    clearCheckout,
   } = useCheckoutStore();
 
   const [couponInput, setCouponInput] = useState(couponCode);
@@ -141,16 +144,28 @@ export default function CheckoutPage() {
   const hasItems = !!planId || addonIds.length > 0;
   const { mutate, isPending } = useMutation({
     mutationKey: ["checkout-free"],
-    mutationFn: () => createFreePlan(planId!, couponCode, addonIds),
+    mutationFn: () =>
+      createFreePlan(planId!, couponCode, addonIds, invoiceDetails),
     onSuccess: (data) => {
       if (data?.error) {
-        toast.error(data?.message);
+        toast.error(data.error.message);
         return;
       }
       router.push("/checkout/free-plan");
     },
   });
   const handlePay = () => {
+    const invoiceErrors = getInvoiceValidationErrors(invoiceDetails);
+    if (invoiceErrors.length > 0) {
+      const preview = invoiceErrors.slice(0, 3).join(", ");
+      const suffix =
+        invoiceErrors.length > 3
+          ? ` and ${invoiceErrors.length - 3} more`
+          : "";
+      toast.error(`Please complete invoice details: ${preview}${suffix}`);
+      return;
+    }
+
     if (subtotal === 0) {
       mutate();
       return;
@@ -416,6 +431,18 @@ export default function CheckoutPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
+                >
+                  <InvoiceDetailsForm
+                    value={invoiceDetails}
+                    onChange={setInvoiceDetails}
+                  />
+                </m.div>
+
+                {/* â”€â”€ Trust badges â”€â”€ */}
+                <m.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.35 }}
                   className="grid grid-cols-3 gap-3"
                 >
                   {[

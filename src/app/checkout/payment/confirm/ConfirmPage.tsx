@@ -33,7 +33,7 @@ const STATUS_CONFIG = {
     iconColor: "text-lime-500",
     iconBg: "bg-lime-100",
     title: "Payment Successful!",
-    message: "Your subscription has been activated. Enjoy your new plan!",
+    message: "Your purchase has been completed successfully.",
     cardBorder: "border-lime-200",
     cardBg: "bg-lime-50/30",
     badge: "bg-lime-100 text-lime-700",
