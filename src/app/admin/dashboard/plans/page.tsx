@@ -200,6 +200,14 @@ export default function AdminPage() {
                           ${(viewingPlan.priceCents / 100).toFixed(2)}
                         </span>
                       </div>
+                      <div className="flex justify-between items-center py-2 border-b border-slate-200 gap-4">
+                        <span className="text-sm text-slate-600">
+                          Public Sub Price
+                        </span>
+                        <span className="text-right font-medium text-slate-900">
+                          {viewingPlan.subPrice?.trim() || "Not set"}
+                        </span>
+                      </div>
                       <div className="flex justify-between items-center py-2 border-b border-slate-200">
                         <span className="text-sm text-slate-600">Currency</span>
                         <span className="font-medium text-slate-900">

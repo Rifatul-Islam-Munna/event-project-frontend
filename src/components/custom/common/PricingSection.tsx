@@ -180,6 +180,7 @@ export function PricingSection() {
         const isPopular = index === 1;
         const IconComponent = config.icon;
         const ButtonIcon = config.buttonIcon;
+        const visibleSubPrice = plan.subPrice?.trim();
 
         return (
           <m.div
@@ -233,9 +234,15 @@ export function PricingSection() {
                 </div>
 
                 <div className="flex items-baseline justify-center gap-1 mb-2">
-                  <span className="text-4xl font-bold text-slate-900">
-                    {formatPrice(plan.priceCents, plan.currency)}
-                  </span>
+                  {visibleSubPrice ? (
+                    <span className="max-w-[15rem] break-words text-center text-2xl font-bold leading-tight text-slate-900">
+                      {visibleSubPrice}
+                    </span>
+                  ) : (
+                    <span className="text-4xl font-bold text-slate-900">
+                      {formatPrice(plan.priceCents, plan.currency)}
+                    </span>
+                  )}
                 </div>
 
                 <p className="text-sm text-slate-600 px-2">

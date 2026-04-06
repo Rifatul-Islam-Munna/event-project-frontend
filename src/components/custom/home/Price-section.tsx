@@ -38,10 +38,10 @@ export function PricingSection() {
     queryFn: () => getAllThePlans(),
   });
 
-  const formatPrice = (priceCents: number) => {
+  const formatPrice = (priceCents: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "EUR",
+      currency,
     }).format(priceCents / 100);
   };
 
@@ -164,6 +164,7 @@ export function PricingSection() {
         const isPopular = plan.isPopular;
         const IconComponent = config.icon;
         const ButtonIcon = config.buttonIcon;
+        const visibleSubPrice = plan.subPrice?.trim();
 
         return (
           <m.div
@@ -217,9 +218,15 @@ export function PricingSection() {
                 </div>
 
                 <div className="flex items-baseline justify-center gap-1 mb-2">
-                  <span className="text-4xl font-bold text-slate-900">
-                    {formatPrice(plan.priceCents)}
-                  </span>
+                  {visibleSubPrice ? (
+                    <span className="max-w-[15rem] break-words text-center text-2xl font-bold leading-tight text-slate-900">
+                      {visibleSubPrice}
+                    </span>
+                  ) : (
+                    <span className="text-4xl font-bold text-slate-900">
+                      {formatPrice(plan.priceCents, plan.currency)}
+                    </span>
+                  )}
                 </div>
 
                 <p className="text-sm text-slate-600 px-2">

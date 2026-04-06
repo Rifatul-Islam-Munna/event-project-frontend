@@ -39,6 +39,7 @@ export function PlanForm({
     title: initialData?.title || "",
     description: initialData?.description || "",
     priceCents: initialData?.priceCents || 0,
+    subPrice: initialData?.subPrice || "",
     currency: initialData?.currency || "USD",
     billingUnit: initialData?.billingUnit || "PER_MONTH",
     permissions: initialData?.permissions || [],
@@ -129,6 +130,26 @@ export function PlanForm({
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="subPrice">Sub Price (optional)</Label>
+            <Input
+              id="subPrice"
+              value={formData.subPrice || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  subPrice: e.target.value,
+                }))
+              }
+              placeholder='Example: "15% off per event 10$"'
+            />
+            <p className="text-xs text-slate-500">
+              If you set this, the public pricing cards will show this text
+              instead of the normal price. Checkout still uses the real plan
+              price.
+            </p>
           </div>
 
           {/* ── Order + Plan Type ─────────────────────────────────────────── */}

@@ -28,7 +28,7 @@ export function PlansTable({
   const formatPrice = (priceCents: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "EUR",
+      currency,
     }).format(priceCents / 100);
   };
 
@@ -65,12 +65,22 @@ export function PlansTable({
                   {plan.active ? "Active" : "Inactive"}
                 </Badge>
                 <div className="text-right">
+                  {plan.subPrice?.trim() && (
+                    <div className="text-sm font-semibold text-lime-700">
+                      {plan.subPrice.trim()}
+                    </div>
+                  )}
                   <div className="text-2xl font-bold">
                     {formatPrice(plan.priceCents, plan.currency)}
                     <span className="text-sm font-normal text-muted-foreground">
                       {formatBillingUnit(plan.billingUnit)}
                     </span>
                   </div>
+                  {plan.subPrice?.trim() && (
+                    <div className="text-xs text-muted-foreground">
+                      Checkout price
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
