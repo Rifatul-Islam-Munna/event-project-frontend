@@ -55,7 +55,7 @@ enum AddOnType {
   message = "message",
   whatsapp = "whatsapp",
   email = "email",
-  flushCard = "flushCard",
+  flushCamera = "flushCamera",
 }
 
 interface AddOn {
@@ -107,8 +107,8 @@ const TYPE_CONFIG: Record<
     badge: "bg-purple-100 text-purple-700 border-purple-200",
     iconBg: "bg-purple-100 text-purple-600",
   },
-  [AddOnType.flushCard]: {
-    label: "Flush Card",
+  [AddOnType.flushCamera]: {
+    label: "Flush Camera",
     icon: CreditCard,
     badge: "bg-orange-100 text-orange-700 border-orange-200",
     iconBg: "bg-orange-100 text-orange-600",
@@ -211,8 +211,8 @@ export default function AddOnManagement() {
     setForm(defaultForm);
   };
 
-  const isFlushCard = form.type === AddOnType.flushCard;
-  const isMessageType = form.type && form.type !== AddOnType.flushCard;
+  const isFlushCard = form.type === AddOnType.flushCamera;
+  const isMessageType = form.type && form.type !== AddOnType.flushCamera;
 
   const handleSubmit = () => {
     if (!form.type) {
@@ -284,8 +284,8 @@ export default function AddOnManagement() {
       color: "bg-purple-100 text-purple-600",
     },
     {
-      label: "Flush Card",
-      type: AddOnType.flushCard,
+      label: "Flush Camera",
+      type: AddOnType.flushCamera,
       icon: CreditCard,
       color: "bg-orange-100 text-orange-600",
     },
@@ -306,7 +306,7 @@ export default function AddOnManagement() {
                   Add-On Management
                 </h1>
                 <p className="text-sm text-slate-600">
-                  Manage message, WhatsApp, email & flush card add-ons
+                  Manage message, WhatsApp, email & flush Camera add-ons
                 </p>
               </div>
             </div>
@@ -406,7 +406,7 @@ export default function AddOnManagement() {
                         "Price", // ← NEW
                         "No. of Messages",
                         "Message Content",
-                        "Flush Card Coupon",
+                        "Flush Camera Coupon",
                         "Actions",
                       ].map((h) => (
                         <TableHead
@@ -587,10 +587,10 @@ export default function AddOnManagement() {
                       <Mail className="h-4 w-4 text-purple-500" /> Email
                     </div>
                   </SelectItem>
-                  <SelectItem value={AddOnType.flushCard}>
+                  <SelectItem value={AddOnType.flushCamera}>
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4 text-orange-500" /> Flush
-                      Card
+                      Camera
                     </div>
                   </SelectItem>
                 </SelectContent>

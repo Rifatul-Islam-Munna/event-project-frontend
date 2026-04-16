@@ -113,7 +113,7 @@ const getAddOnDescription = (addOn: AddOn) => {
   }
 
   const quantity = Number(addOn.numberMessage ?? 0);
-  const label = addOnTypeMeta[addOn.type].label.toLowerCase();
+  const label = addOnTypeMeta[addOn.type]?.label?.toLowerCase();
   const summary = `${quantity} ${label} credit${quantity === 1 ? "" : "s"}`;
 
   if (addOn.message?.trim()) {
@@ -697,16 +697,19 @@ export default function UserManagementDashboard() {
                   <p className="text-sm text-red-500">{addOnsErrorMessage}</p>
                 )}
 
-                {!isAddOnsLoading && !addOnsErrorMessage && addOns.length === 0 && (
-                  <p className="text-sm text-slate-500">
-                    No add-ons available right now.
-                  </p>
-                )}
+                {!isAddOnsLoading &&
+                  !addOnsErrorMessage &&
+                  addOns.length === 0 && (
+                    <p className="text-sm text-slate-500">
+                      No add-ons available right now.
+                    </p>
+                  )}
 
                 {!isAddOnsLoading &&
                   !addOnsErrorMessage &&
                   addOns.map((addOn) => {
-                    const meta = addOnTypeMeta[addOn.type] ?? addOnTypeMeta.message;
+                    const meta =
+                      addOnTypeMeta[addOn.type] ?? addOnTypeMeta.message;
                     const Icon = meta.icon;
                     const isSelected = selectedAddOnIds.includes(addOn._id);
                     const checkboxId = `user-addon-${addOn._id}`;
