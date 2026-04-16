@@ -122,7 +122,7 @@ export function GuestListTab({
         toast.error("Failed to download CSV");
         return;
       }
-      const blob = new Blob([result.data], { type: "text/csv" });
+      const blob = new Blob([String(result.data)], { type: "text/csv" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -277,6 +277,7 @@ export function GuestListTab({
                 <TabsContent value="csv" className="mt-6">
                   <UploadCsvForm
                     onClose={() => setIsCreateGuestModalOpen(false)}
+                    eventId={eventId}
                   />
                 </TabsContent>
               </Tabs>

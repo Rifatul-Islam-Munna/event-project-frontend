@@ -101,7 +101,11 @@ function looksLikeEmail(s: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s));
 }
 
-export async function updateMultipleGuest(file: File, eventId: string) {
+export async function updateMultipleGuest(
+  file: File,
+  eventId: string,
+  guestType?: string,
+) {
   
   const buffer = Buffer.from(await file.arrayBuffer());
 
@@ -142,6 +146,9 @@ export async function updateMultipleGuest(file: File, eventId: string) {
     if (!name) continue;
     if (email && !looksLikeEmail(email)) continue;
 
+    const parsedGuestType = typeKey ? String(r[typeKey]).trim() : undefined;
+    const appliedGuestType = guestType?.trim() || parsedGuestType || undefined;
+
     result.push({
       name,
       email,
@@ -149,7 +156,7 @@ export async function updateMultipleGuest(file: File, eventId: string) {
       adults,
       children,
       event_id: eventId,
-      type: typeKey ? String(r[typeKey]) : undefined,
+      type: appliedGuestType,
     });
   }
 
@@ -471,7 +478,7 @@ export const DeleteHeader = async (id:string) =>{
 }
 interface User {
   _id: string;
-  type: "user";
+  type: "user" | "admin" | "editor";
   name: string;
   email: string;
   password: string;
@@ -489,8 +496,31 @@ interface PaginatedUsersResponse {
   currentPage: number;
 }
 
-export const getAllUser = async (page:number,limit:number)=>{
-  const [data,error] = await GetRequestNormal<PaginatedUsersResponse>(`/user/get-all-user?limit=${limit}&page=${page}`);
+export const getAllUser = async (
+  page:number,
+  limit:number,
+  type?: "user" | "admin" | "editor",
+)=>{
+  const query = new URLSearchParams({
+    limit: String(limit),
+    page: String(page),
+  });
+
+  if (type) {
+    query.append("type", type);
+  }
+
+  const [data,error] = await GetRequestNormal<PaginatedUsersResponse>(`/user/get-all-user?${query.toString()}`);
+  return {data,error}
+}
+
+export const createDashboardUser = async (payload:{
+  name:string;
+  email:string;
+  password:string;
+  type:"user" | "admin";
+})=>{
+  const [data,error] = await PostRequestAxios(`/user/admin-create`,payload);
   return {data,error}
 }
 

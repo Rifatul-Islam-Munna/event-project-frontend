@@ -240,7 +240,7 @@ export function PricingSection() {
                     </span>
                   ) : (
                     <span className="text-4xl font-bold text-slate-900">
-                      {formatPrice(plan.priceCents, plan.currency)}
+                      {formatPrice(plan.priceCents, "EUR")}
                     </span>
                   )}
                 </div>

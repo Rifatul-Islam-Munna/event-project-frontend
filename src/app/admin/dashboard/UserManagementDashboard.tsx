@@ -1,10 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -21,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -52,6 +52,7 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
+  createDashboardUser,
   deleteUSer,
   getAllThePlans,
   getAllUser,
@@ -59,10 +60,61 @@ import {
 } from "@/actions/fetch-action";
 import { toast } from "sonner";
 
+const accountTypeMeta = {
+  admin: {
+    label: "Admin",
+    className: "border-amber-200 bg-amber-100 text-amber-800",
+  },
+  user: {
+    label: "User",
+    className: "border-blue-200 bg-blue-100 text-blue-800",
+  },
+  editor: {
+    label: "Editor",
+    className: "border-violet-200 bg-violet-100 text-violet-800",
+  },
+} as const;
+
+type CreateAccountFormState = {
+  name: string;
+  email: string;
+  password: string;
+  type: "admin" | "user";
+};
+
+type DashboardUser = {
+  _id: string;
+  name: string;
+  email: string;
+  type: "user" | "admin" | "editor";
+  plan?: string;
+  createdAt?: string;
+};
+
+type SubscriptionPlan = {
+  _id: string;
+  title: string;
+  priceCents: number;
+};
+
+type PaginatedUsersData = {
+  data: DashboardUser[];
+  totalPages: number;
+  totalDocs: number;
+  currentPage: number;
+};
+
+const createAccountDefaults: CreateAccountFormState = {
+  name: "",
+  email: "",
+  password: "",
+  type: "admin",
+};
+
 // Pagination Component
 const Pagination = ({ currentPage, totalPages, onPageChange, isLoading }) => {
   const getPageNumbers = () => {
-    const pages = [];
+    const pages: number[] = [];
     const showPages = 5; // Show 5 page numbers at most
 
     let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
@@ -143,61 +195,122 @@ export default function UserManagementDashboard() {
 
   // State management
   const [currentPage, setCurrentPage] = useState(1);
+  const [userTypeFilter, setUserTypeFilter] = useState<
+    "all" | "admin" | "user"
+  >("all");
+  const [createAccountModal, setCreateAccountModal] = useState(false);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<DashboardUser | null>(null);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [createAccountForm, setCreateAccountForm] =
+    useState<CreateAccountFormState>(createAccountDefaults);
 
   // Form states
   const [subscriptionType, setSubscriptionType] = useState("");
-  const [endDate, setEndDate] = useState();
-  const { data: subscriptionTypes, refetch } = useQuery({
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const { data: subscriptionTypes = [] } = useQuery<SubscriptionPlan[]>({
     queryKey: ["plans"],
-    queryFn: () => getAllThePlans(),
+    queryFn: async () => {
+      const result = await getAllThePlans();
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to load plans");
+      }
+
+      return result.data ?? [];
+    },
   });
 
   // Fetch users with React Query
   const {
     data: usersData,
     isLoading,
-    isError,
     error,
-  } = useQuery({
-    queryKey: ["users", currentPage],
-    queryFn: () => getAllUser(currentPage, 10),
+  } = useQuery<PaginatedUsersData>({
+    queryKey: ["users", currentPage, userTypeFilter],
+    queryFn: async () => {
+      const result = await getAllUser(
+        currentPage,
+        10,
+        userTypeFilter === "all" ? undefined : userTypeFilter,
+      );
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to load users");
+      }
+
+      return (
+        result.data ?? {
+          data: [],
+          totalPages: 1,
+          totalDocs: 0,
+          currentPage,
+        }
+      );
+    },
 
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  const createAccountMutation = useMutation({
+    mutationFn: async (payload: CreateAccountFormState) => {
+      const result = await createDashboardUser(payload);
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to create account");
+      }
+
+      return result.data;
+    },
+    onSuccess: (_, variables) => {
+      showMessage(
+        "success",
+        `${variables.type === "admin" ? "Admin" : "User"} account created successfully!`,
+      );
+      setCreateAccountModal(false);
+      resetCreateAccountForm();
+      setCurrentPage(1);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (mutationError) => {
+      showMessage("error", mutationError.message);
+    },
+  });
+
   // Add subscription mutation
   const addSubscriptionMutation = useMutation({
-    mutationFn: (subscriptionData: Record<string, unknown>) =>
-      postAdminSub(subscriptionData),
+    mutationFn: async (subscriptionData: Record<string, unknown>) => {
+      const result = await postAdminSub(subscriptionData);
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to add subscription");
+      }
+
+      return result.data;
+    },
     onSuccess: () => {
       showMessage("success", "Subscription added successfully!");
       setSubscriptionModal(false);
       resetForm();
-      // Invalidate and refetch users data
-      queryClient.invalidateQueries(["users"]);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: (error) => {
-      showMessage("error", error.message);
+    onError: (mutationError) => {
+      showMessage("error", mutationError.message);
     },
   });
 
   // Delete user mutation
   const deleteUserMutation = useMutation({
-    mutationFn: (userId: string) => deleteUSer(userId),
-    onSuccess: (data) => {
-      if (data?.data) {
-        queryClient.invalidateQueries(["users"]);
-
-        return toast.success("User deleted successfully");
+    mutationFn: async (userId: string) => {
+      const result = await deleteUSer(userId);
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to delete user");
       }
-      return toast.success("User deleted failed");
-      // Invalidate and refetch users data
+
+      return result.data;
     },
-    onError: (error) => {
-      showMessage("error", error.message);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      return toast.success("User deleted successfully");
+    },
+    onError: (mutationError) => {
+      showMessage("error", mutationError.message);
     },
   });
 
@@ -227,6 +340,29 @@ export default function UserManagementDashboard() {
     addSubscriptionMutation.mutate(subscriptionData);
   };
 
+  const handleCreateAccount = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const name = createAccountForm.name.trim();
+    const email = createAccountForm.email.trim().toLowerCase();
+
+    if (!name || !email || !createAccountForm.password) {
+      showMessage("error", "Please fill in all required fields");
+      return;
+    }
+
+    if (createAccountForm.password.length < 6) {
+      showMessage("error", "Password must be at least 6 characters");
+      return;
+    }
+
+    createAccountMutation.mutate({
+      ...createAccountForm,
+      name,
+      email,
+    });
+  };
+
   // Handle delete user
   const handleDeleteUser = async (userId, userName) => {
     if (
@@ -245,11 +381,27 @@ export default function UserManagementDashboard() {
     setCurrentPage(newPage);
   };
 
+  const handleFilterChange = (value: "all" | "admin" | "user") => {
+    setUserTypeFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleCreateAccountModalChange = (open: boolean) => {
+    setCreateAccountModal(open);
+    if (!open) {
+      resetCreateAccountForm();
+    }
+  };
+
   // Reset form
   const resetForm = () => {
     setSelectedUser(null);
     setSubscriptionType("");
     setEndDate(undefined);
+  };
+
+  const resetCreateAccountForm = () => {
+    setCreateAccountForm(createAccountDefaults);
   };
 
   // Show message helper
@@ -268,31 +420,43 @@ export default function UserManagementDashboard() {
 
   // Get subscription type name
   const getSubscriptionTypeName = (typeId) => {
-    const type = subscriptionTypes?.data?.find((t) => t._id === typeId);
+    const type = subscriptionTypes.find((t) => t._id === typeId);
     return type ? type.title : "Unknown Plan";
   };
 
-  const users = usersData?.data?.data || [];
-  const totalPages = usersData?.data?.totalPages || 1;
-  const totalDocs = usersData?.data?.totalDocs || 0;
+  const getAccountBadgeClassName = (type = "user") => {
+    return (
+      accountTypeMeta[type as keyof typeof accountTypeMeta]?.className ||
+      accountTypeMeta.user.className
+    );
+  };
+
+  const getAccountLabel = (type = "user") => {
+    return (
+      accountTypeMeta[type as keyof typeof accountTypeMeta]?.label ||
+      accountTypeMeta.user.label
+    );
+  };
+
+  const users = usersData?.data || [];
+  const totalPages = usersData?.totalPages || 1;
+  const totalDocs = usersData?.totalDocs || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/30 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4 mb-12">
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-200/60 backdrop-blur-sm">
-            <Shield className="h-5 w-5 text-indigo-600" />
-            <span className="text-indigo-700 font-semibold">
-              Admin Dashboard
-            </span>
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-lime-100 to-lime-100 border border-lime-200/60 backdrop-blur-sm">
+            <Shield className="h-5 w-5 text-lime-600" />
+            <span className="text-lime-700 font-semibold">Admin Dashboard</span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-lime-600 to-lime-600 bg-clip-text text-transparent">
             User Management
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Manage users, subscriptions, and account permissions
+            Manage admins, users, subscriptions, and account permissions
           </p>
         </div>
 
@@ -319,17 +483,45 @@ export default function UserManagementDashboard() {
         {/* Users Table */}
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl border-2 border-slate-200/60 shadow-xl overflow-hidden">
           <div className="p-6 border-b border-slate-200/60">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center">
                   <Users className="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-slate-900">
-                    All Users
+                    All Accounts
                   </h2>
-                  <p className="text-slate-600">Total users: {totalDocs}</p>
+                  <p className="text-slate-600">
+                    Matching accounts: {totalDocs}
+                  </p>
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="w-full sm:w-[180px]">
+                  <Select
+                    value={userTypeFilter}
+                    onValueChange={handleFilterChange}
+                  >
+                    <SelectTrigger className="border-slate-300 bg-white">
+                      <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All accounts</SelectItem>
+                      <SelectItem value="admin">Admins</SelectItem>
+                      <SelectItem value="user">Users</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  onClick={() => setCreateAccountModal(true)}
+                  className="bg-slate-900 text-white hover:bg-slate-800"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Account
+                </Button>
               </div>
             </div>
           </div>
@@ -342,21 +534,18 @@ export default function UserManagementDashboard() {
           )}
 
           {/* Error State */}
-          {isError && (
+          {error && (
             <div className="p-12 text-center">
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <p className="text-red-600 font-medium">Error loading users</p>
+              <p className="text-red-600 font-medium">Error loading accounts</p>
               <p className="text-slate-500 text-sm">{error?.message}</p>
             </div>
           )}
 
           {/* Table */}
-          {!isLoading && !isError && (
+          {!isLoading && !error && (
             <>
               <Table>
-                <TableCaption className="p-6 text-slate-500">
-                  A list of all registered users and their subscription status.
-                </TableCaption>
                 <TableHeader>
                   <TableRow className="hover:bg-slate-50/50">
                     <TableHead className="font-semibold text-slate-700">
@@ -364,6 +553,9 @@ export default function UserManagementDashboard() {
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700">
                       Email
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Type
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700">
                       Subscription
@@ -377,6 +569,21 @@ export default function UserManagementDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {users.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="py-10 text-center text-slate-500"
+                      >
+                        No{" "}
+                        {userTypeFilter === "all"
+                          ? "accounts"
+                          : `${userTypeFilter} accounts`}{" "}
+                        found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+
                   {users.map((user) => (
                     <TableRow
                       key={user._id}
@@ -394,6 +601,17 @@ export default function UserManagementDashboard() {
                         {user.email}
                       </TableCell>
                       <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "font-semibold",
+                            getAccountBadgeClassName(user.type),
+                          )}
+                        >
+                          {getAccountLabel(user.type)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
                         {user.plan ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-lime-100 text-lime-800">
                             <Crown className="h-3 w-3 mr-1" />
@@ -401,7 +619,7 @@ export default function UserManagementDashboard() {
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
-                            Free
+                            No Plan
                           </span>
                         )}
                       </TableCell>
@@ -410,17 +628,29 @@ export default function UserManagementDashboard() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-2">
-                          <Button
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setSubscriptionModal(true);
-                            }}
-                            size="sm"
-                            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-3 py-1"
-                          >
-                            <UserPlus className="h-4 w-4 mr-1" />
-                            Add Plan
-                          </Button>
+                          {user.type === "user" ? (
+                            <Button
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setSubscriptionModal(true);
+                              }}
+                              size="sm"
+                              className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-3 py-1"
+                            >
+                              <UserPlus className="h-4 w-4 mr-1" />
+                              Add Plan
+                            </Button>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "font-semibold",
+                                getAccountBadgeClassName(user.type),
+                              )}
+                            >
+                              {getAccountLabel(user.type)} account
+                            </Badge>
+                          )}
                           <Button
                             onClick={() =>
                               handleDeleteUser(user._id, user.name)
@@ -450,8 +680,134 @@ export default function UserManagementDashboard() {
           )}
         </div>
 
+        <Dialog
+          open={createAccountModal}
+          onOpenChange={handleCreateAccountModalChange}
+        >
+          <DialogContent className="sm:max-w-[520px]">
+            <form onSubmit={handleCreateAccount}>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-xl">
+                  <Shield className="h-6 w-6 text-slate-800" />
+                  Create Account
+                </DialogTitle>
+                <DialogDescription>
+                  Add another admin or user directly from the dashboard.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-5 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="create-account-name">Full Name *</Label>
+                  <Input
+                    id="create-account-name"
+                    value={createAccountForm.name}
+                    onChange={(event) =>
+                      setCreateAccountForm((current) => ({
+                        ...current,
+                        name: event.target.value,
+                      }))
+                    }
+                    placeholder="Enter full name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="create-account-email">Email *</Label>
+                  <Input
+                    id="create-account-email"
+                    type="email"
+                    value={createAccountForm.email}
+                    onChange={(event) =>
+                      setCreateAccountForm((current) => ({
+                        ...current,
+                        email: event.target.value,
+                      }))
+                    }
+                    placeholder="Enter email address"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="create-account-password">Password *</Label>
+                  <Input
+                    id="create-account-password"
+                    type="password"
+                    value={createAccountForm.password}
+                    onChange={(event) =>
+                      setCreateAccountForm((current) => ({
+                        ...current,
+                        password: event.target.value,
+                      }))
+                    }
+                    placeholder="Minimum 6 characters"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Account Type *</Label>
+                  <Select
+                    value={createAccountForm.type}
+                    onValueChange={(value: "admin" | "user") =>
+                      setCreateAccountForm((current) => ({
+                        ...current,
+                        type: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select account type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="user">User</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <DialogFooter className="gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleCreateAccountModalChange(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createAccountMutation.isPending}
+                  className="bg-slate-900 text-white hover:bg-slate-800"
+                >
+                  {createAccountMutation.isPending ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Creating...
+                    </div>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      {createAccountForm.type === "admin"
+                        ? "Create Admin"
+                        : "Create User"}
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
         {/* Add Subscription Modal */}
-        <Dialog open={subscriptionModal} onOpenChange={setSubscriptionModal}>
+        <Dialog
+          open={subscriptionModal}
+          onOpenChange={(open) => {
+            setSubscriptionModal(open);
+            if (!open) {
+              resetForm();
+            }
+          }}
+        >
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
@@ -497,7 +853,7 @@ export default function UserManagementDashboard() {
                     <SelectValue placeholder="Select a subscription plan" />
                   </SelectTrigger>
                   <SelectContent>
-                    {subscriptionTypes?.data?.map((type) => (
+                    {subscriptionTypes.map((type) => (
                       <SelectItem key={type._id} value={type._id}>
                         <div className="flex items-center justify-between w-full">
                           <span>{type?.title}</span>
