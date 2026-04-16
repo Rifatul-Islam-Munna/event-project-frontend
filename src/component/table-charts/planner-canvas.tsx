@@ -14,10 +14,62 @@ import type {
 import { CHAIR_SIZE, type PlannerNode } from "./planner-types";
 import { getDecorativeAsset, getSeatGeometries, getNodeHeight, getNodeWidth } from "./planner-utils";
 
+interface ExportTextBadgeProps {
+  text: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fontSize: number;
+}
+
+function ExportTextBadge({
+  text,
+  x,
+  y,
+  width,
+  height,
+  fontSize,
+}: ExportTextBadgeProps) {
+  return (
+    <Group listening={false}>
+      <Rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        cornerRadius={Math.min(12, height / 2)}
+        fill="rgba(255,255,255,0.97)"
+        stroke="#cbd5e1"
+        strokeWidth={1}
+        shadowColor="#0f172a"
+        shadowBlur={8}
+        shadowOpacity={0.1}
+      />
+      <Text
+        text={text}
+        x={x + 6}
+        y={y + 5}
+        width={width - 12}
+        height={height - 10}
+        align="center"
+        verticalAlign="middle"
+        fontSize={fontSize}
+        fontStyle="bold"
+        fill="#0f172a"
+        wrap="word"
+        lineHeight={1.02}
+        ellipsis
+      />
+    </Group>
+  );
+}
+
 interface DecorativeCanvasNodeProps {
   node: DecorativePlannerNode;
   isSelected: boolean;
   canInteract: boolean;
+  isExporting?: boolean;
   onSelect: (nodeId: string) => void;
   onDragMove: (nodeId: string, position: Point) => void;
   onDragEnd: (nodeId: string, position: Point) => void;
@@ -28,6 +80,7 @@ function DecorativeCanvasNodeInner({
   node,
   isSelected,
   canInteract,
+  isExporting = false,
   onSelect,
   onDragMove,
   onDragEnd,
@@ -138,7 +191,7 @@ function DecorativeCanvasNodeInner({
             y={node.data.height + 8}
             width={node.data.width}
             align="center"
-            fontSize={10}
+            fontSize={isExporting ? 12 : 10}
             fill="#334155"
           />
         </>
@@ -151,6 +204,7 @@ interface SeatingCanvasNodeBaseProps {
   isSelected: boolean;
   hoveredSeatKey: string | null;
   canInteract: boolean;
+  isExporting?: boolean;
   onSelect: (nodeId: string) => void;
   onDragMove: (nodeId: string, position: Point) => void;
   onDragEnd: (nodeId: string, position: Point) => void;
@@ -175,6 +229,7 @@ function TableCanvasNodeInner({
   isSelected,
   hoveredSeatKey,
   canInteract,
+  isExporting = false,
   onSelect,
   onDragMove,
   onDragEnd,
@@ -190,6 +245,11 @@ function TableCanvasNodeInner({
     node.data.widthTable && node.data.heightTable && node.data.measurementType
       ? `${node.data.widthTable} x ${node.data.heightTable} ${node.data.measurementType}`
       : "";
+  const tableLabelFontSize = isExporting ? 22 : 14;
+  const tableMetaFontSize = isExporting ? 12 : 8;
+  const seatNameFontSize = isExporting ? 10 : 7;
+  const exportTableLabelWidth = Math.max(76, node.data.width - 28);
+  const exportTableLabelX = (node.data.width - exportTableLabelWidth) / 2;
 
   return (
     <Group
@@ -241,26 +301,45 @@ function TableCanvasNodeInner({
         />
       )}
 
+      {isExporting ? (
+        <Rect
+          x={exportTableLabelX}
+          y={node.data.height / 2 - 31}
+          width={exportTableLabelWidth}
+          height={28}
+          cornerRadius={14}
+          fill="rgba(255,255,255,0.94)"
+          stroke="#e2e8f0"
+          strokeWidth={1}
+          shadowColor="#0f172a"
+          shadowBlur={8}
+          shadowOpacity={0.08}
+        />
+      ) : null}
+
       <Text
         text={node.data.label}
         x={0}
-        y={node.data.height / 2 - 14}
+        y={node.data.height / 2 - (isExporting ? 27 : 14)}
         width={node.data.width}
         align="center"
-        fontSize={14}
+        fontSize={tableLabelFontSize}
         fontStyle="bold"
-        fill="#1f2937"
+        fill="#0f172a"
+        stroke={isExporting ? "#ffffff" : undefined}
+        strokeWidth={isExporting ? 0.75 : 0}
       />
 
       {tableMeta ? (
         <Text
           text={tableMeta}
           x={0}
-          y={node.data.height / 2 + 7}
+          y={node.data.height / 2 + (isExporting ? 4 : 7)}
           width={node.data.width}
           align="center"
-          fontSize={8}
-          fill="#64748b"
+          fontSize={tableMetaFontSize}
+          fill={isExporting ? "#475569" : "#64748b"}
+          fontStyle={isExporting ? "bold" : "normal"}
         />
       ) : null}
 
@@ -313,15 +392,26 @@ function TableCanvasNodeInner({
             />
 
             {isOccupied && seatGeometry.seat.occupiedByName ? (
-              <Text
-                text={seatGeometry.seat.occupiedByName}
-                x={-26}
-                y={index % 2 === 0 ? 34 : -28}
-                width={82}
-                align="center"
-                fontSize={7}
-                fill="#334155"
-              />
+              isExporting ? (
+                <ExportTextBadge
+                  text={seatGeometry.seat.occupiedByName}
+                  x={-40}
+                  y={index % 2 === 0 ? 34 : -36}
+                  width={110}
+                  height={30}
+                  fontSize={seatNameFontSize}
+                />
+              ) : (
+                <Text
+                  text={seatGeometry.seat.occupiedByName}
+                  x={-26}
+                  y={index % 2 === 0 ? 34 : -28}
+                  width={82}
+                  align="center"
+                  fontSize={seatNameFontSize}
+                  fill="#334155"
+                />
+              )
             ) : null}
 
             {showDragHandle ? (
@@ -402,6 +492,7 @@ function ChairCanvasNodeInner({
   isSelected,
   hoveredSeatKey,
   canInteract,
+  isExporting = false,
   onSelect,
   onDragMove,
   onDragEnd,
@@ -411,6 +502,8 @@ function ChairCanvasNodeInner({
   onRemoveGuest,
 }: ChairCanvasNodeProps) {
   const seatGeometries = getSeatGeometries(node);
+  const chairLabelFontSize = isExporting ? 15 : 12;
+  const chairGuestNameFontSize = isExporting ? 10 : 8;
 
   return (
     <Group
@@ -450,7 +543,7 @@ function ChairCanvasNodeInner({
         x={8}
         y={7}
         width={node.data.width - 16}
-        fontSize={12}
+        fontSize={chairLabelFontSize}
         fontStyle="bold"
         fill="#334155"
       />
@@ -504,15 +597,26 @@ function ChairCanvasNodeInner({
             />
 
             {isOccupied && chairGeometry.seat.occupiedByName ? (
-              <Text
-                text={chairGeometry.seat.occupiedByName}
-                x={-24}
-                y={CHAIR_SIZE + 4}
-                width={CHAIR_SIZE + 48}
-                align="center"
-                fontSize={8}
-                fill="#334155"
-              />
+              isExporting ? (
+                <ExportTextBadge
+                  text={chairGeometry.seat.occupiedByName}
+                  x={-36}
+                  y={CHAIR_SIZE + 4}
+                  width={CHAIR_SIZE + 72}
+                  height={30}
+                  fontSize={chairGuestNameFontSize}
+                />
+              ) : (
+                <Text
+                  text={chairGeometry.seat.occupiedByName}
+                  x={-24}
+                  y={CHAIR_SIZE + 4}
+                  width={CHAIR_SIZE + 48}
+                  align="center"
+                  fontSize={chairGuestNameFontSize}
+                  fill="#334155"
+                />
+              )
             ) : null}
 
             {showDragHandle ? (
@@ -689,7 +793,8 @@ export const DecorativeCanvasNode = memo(
   (previous, next) =>
     previous.node === next.node &&
     previous.isSelected === next.isSelected &&
-    previous.canInteract === next.canInteract,
+    previous.canInteract === next.canInteract &&
+    previous.isExporting === next.isExporting,
 );
 DecorativeCanvasNode.displayName = "DecorativeCanvasNode";
 
@@ -699,7 +804,8 @@ export const TableCanvasNode = memo(
     previous.node === next.node &&
     previous.isSelected === next.isSelected &&
     previous.hoveredSeatKey === next.hoveredSeatKey &&
-    previous.canInteract === next.canInteract,
+    previous.canInteract === next.canInteract &&
+    previous.isExporting === next.isExporting,
 );
 TableCanvasNode.displayName = "TableCanvasNode";
 
@@ -709,7 +815,8 @@ export const ChairCanvasNode = memo(
     previous.node === next.node &&
     previous.isSelected === next.isSelected &&
     previous.hoveredSeatKey === next.hoveredSeatKey &&
-    previous.canInteract === next.canInteract,
+    previous.canInteract === next.canInteract &&
+    previous.isExporting === next.isExporting,
 );
 ChairCanvasNode.displayName = "ChairCanvasNode";
 

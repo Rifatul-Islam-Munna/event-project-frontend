@@ -37,6 +37,7 @@ import { PlannerAddItemDialog, PlannerEditDialog } from "./planner-dialogs";
 import {
   PlannerActionBar,
   PlannerEmptyState,
+  PlannerExportOverlay,
   PlannerLoadingSkeleton,
   PlannerSelectionActions,
   PlannerViewportControls,
@@ -57,6 +58,118 @@ import {
 
 export type { TableNodeData, TableType } from "./planner-types";
 export { getRectangularSeatDistribution } from "./planner-utils";
+
+const PDF_EXPORT_TARGET_MAX_PIXELS = 6200;
+const PDF_EXPORT_MIN_PIXEL_RATIO = 5;
+const PDF_EXPORT_MAX_PIXEL_RATIO = 8;
+const PDF_EXPORT_MARGIN_MM = 14;
+const PDF_EXPORT_TOP_MARGIN_MM = 12;
+const PDF_EXPORT_FOOTER_MM = 12;
+const PDF_EXPORT_TITLE_LINE_HEIGHT_MM = 8;
+const PDF_POINT_TO_MM = 0.352778;
+
+const convertImageToPngDataUrl = (image: HTMLImageElement) => {
+  const canvas = document.createElement("canvas");
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error("Unable to convert image for PDF.");
+  }
+
+  context.clearRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+
+  return canvas.toDataURL("image/png");
+};
+
+const getPdfImageFormatFromSource = (src: string) => {
+  const normalized = src.toLowerCase().split("?")[0];
+
+  if (
+    normalized.endsWith(".png") ||
+    normalized.endsWith(".svg") ||
+    normalized.startsWith("data:image/png") ||
+    normalized.startsWith("data:image/svg")
+  ) {
+    return "PNG" as const;
+  }
+
+  if (
+    normalized.endsWith(".webp") ||
+    normalized.startsWith("data:image/webp")
+  ) {
+    return "WEBP" as const;
+  }
+
+  return "JPEG" as const;
+};
+
+interface PdfTextBadge {
+  text: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fontStyle?: "normal" | "bold";
+  maxLines?: number;
+  fillColor?: [number, number, number];
+  strokeColor?: [number, number, number];
+  textColor?: [number, number, number];
+}
+
+const drawPdfTextBadge = (pdf: jsPDF, badge: PdfTextBadge) => {
+  if (!badge.text.trim() || badge.width <= 2 || badge.height <= 2) {
+    return;
+  }
+
+  const fillColor = badge.fillColor ?? [255, 255, 255];
+  const strokeColor = badge.strokeColor ?? [203, 213, 225];
+  const textColor = badge.textColor ?? [15, 23, 42];
+  const horizontalPadding = Math.min(2.4, badge.width * 0.12);
+  const verticalPadding = Math.min(1.5, badge.height * 0.18);
+  const innerWidth = Math.max(1, badge.width - horizontalPadding * 2);
+  const innerHeight = Math.max(1, badge.height - verticalPadding * 2);
+  const fontSize = Math.max(7, Math.min(12, badge.height * 1.15));
+  const lineHeight = fontSize * PDF_POINT_TO_MM * 0.92;
+  const rawLines = pdf.splitTextToSize(badge.text.trim(), innerWidth);
+  const rawLineList = Array.isArray(rawLines) ? rawLines : [rawLines];
+  const maxLines = badge.maxLines ?? Math.max(1, Math.floor(innerHeight / lineHeight));
+  const lines = rawLineList.slice(0, maxLines);
+
+  if (rawLineList.length > maxLines && lines.length > 0) {
+    const lastLine = lines[lines.length - 1]!.replace(/\s+\S*$/, "").trimEnd();
+    lines[lines.length - 1] = `${lastLine || lines[lines.length - 1]}...`;
+  }
+
+  const totalTextHeight = lines.length * lineHeight;
+  const textStartY =
+    badge.y + (badge.height - totalTextHeight) / 2 + lineHeight * 0.78;
+  const radius = Math.min(2.2, badge.height / 2);
+
+  pdf.setFillColor(...fillColor);
+  pdf.setDrawColor(...strokeColor);
+  pdf.setLineWidth(0.3);
+  pdf.roundedRect(
+    badge.x,
+    badge.y,
+    badge.width,
+    badge.height,
+    radius,
+    radius,
+    "FD",
+  );
+  pdf.setFont("helvetica", badge.fontStyle ?? "bold");
+  pdf.setFontSize(fontSize);
+  pdf.setTextColor(...textColor);
+  pdf.text(lines, badge.x + badge.width / 2, textStartY, {
+    align: "center",
+  });
+};
 
 function WeddingPlanner() {
   const query = useSearchParams();
@@ -458,11 +571,23 @@ function WeddingPlanner() {
     const hydratedNodes: PlannerNode[] = [];
 
     if (Array.isArray(seatPlanResponse?.data)) {
-      hydratedNodes.push(...seatPlanResponse.data.map(hydrateSeatPlanNode));
+      hydratedNodes.push(
+        ...seatPlanResponse.data.map((node) =>
+          hydrateSeatPlanNode(
+            node as unknown as Parameters<typeof hydrateSeatPlanNode>[0],
+          ),
+        ),
+      );
     }
 
     if (Array.isArray(decoratorResponse?.data)) {
-      hydratedNodes.push(...decoratorResponse.data.map(hydrateDecorativeNode));
+      hydratedNodes.push(
+        ...decoratorResponse.data.map((node) =>
+          hydrateDecorativeNode(
+            node as unknown as Parameters<typeof hydrateDecorativeNode>[0],
+          ),
+        ),
+      );
     }
 
     setNodes(hydratedNodes);
@@ -735,16 +860,30 @@ function WeddingPlanner() {
     setSelectedNodeId(null);
 
     const previousViewport = viewportRef.current;
-    const exportViewport = getViewportForBounds(getContentBounds(nodesRef.current));
+    const exportBounds = getContentBounds(nodesRef.current);
+    const exportViewport = getViewportForBounds(exportBounds);
     setViewport(exportViewport);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 250));
+      if ("fonts" in document) {
+        await document.fonts.ready;
+      }
+
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => resolve());
+        });
+      });
 
       stageRef.current.batchDraw();
       boundaryStageRef.current?.batchDraw();
 
-      const exportPixelRatio = 2;
+      const exportPixelRatio = clamp(
+        PDF_EXPORT_TARGET_MAX_PIXELS /
+          Math.max(stageSize.width, stageSize.height, 1),
+        PDF_EXPORT_MIN_PIXEL_RATIO,
+        PDF_EXPORT_MAX_PIXEL_RATIO,
+      );
       const mainStageUrl = stageRef.current.toDataURL({
         pixelRatio: exportPixelRatio,
       });
@@ -759,6 +898,8 @@ function WeddingPlanner() {
         throw new Error("Unable to create export canvas.");
       }
 
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
       context.fillStyle = "#ffffff";
       context.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
 
@@ -782,58 +923,220 @@ function WeddingPlanner() {
 
       context.drawImage(mainStageImage, 0, 0);
 
-      const dataUrl = compositeCanvas.toDataURL("image/jpeg", 0.9);
+      const dataUrl = compositeCanvas.toDataURL("image/png");
       const image = await loadImageElement(dataUrl);
-      const canvasWidthMm = image.width * 0.264583;
-      const canvasHeightMm = image.height * 0.264583;
-      const pageWidth = Math.max(canvasWidthMm + 40, 210);
-      const pageHeight = canvasHeightMm + 75;
+      const isLandscape = image.width >= image.height;
 
       const pdf = new jsPDF({
-        orientation: canvasWidthMm > canvasHeightMm ? "landscape" : "portrait",
+        orientation: isLandscape ? "landscape" : "portrait",
         unit: "mm",
-        format: [pageWidth, pageHeight],
+        format: "a3",
         compress: true,
       });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
       const title = companyInfo?.data?.title || "Wedding Planner";
       const logoUrl = companyInfo?.data?.imageUrl || "";
+      const logoBoxSize = logoUrl ? 38 : 0;
+      const logoSize = logoUrl ? 28 : 0;
+      const headerStartY = PDF_EXPORT_TOP_MARGIN_MM;
+      const titleTopY = headerStartY + (logoBoxSize > 0 ? logoBoxSize + 10 : 8);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(22);
+      pdf.setTextColor(15, 23, 42);
+      const titleLines = pdf.splitTextToSize(
+        title,
+        pageWidth - PDF_EXPORT_MARGIN_MM * 2,
+      );
 
       if (logoUrl) {
         try {
           const logo = await loadImageElement(logoUrl);
-          const logoSize = 24;
-          pdf.addImage(
-            logo,
-            "PNG",
-            (pageWidth - logoSize) / 2,
-            12,
-            logoSize,
-            logoSize,
+          const logoBoxX = (pageWidth - logoBoxSize) / 2;
+          const logoX = logoBoxX + (logoBoxSize - logoSize) / 2;
+          const logoY = headerStartY + (logoBoxSize - logoSize) / 2;
+
+          pdf.setFillColor(248, 250, 252);
+          pdf.setDrawColor(203, 213, 225);
+          pdf.roundedRect(
+            logoBoxX,
+            headerStartY,
+            logoBoxSize,
+            logoBoxSize,
+            6,
+            6,
+            "FD",
           );
+
+          try {
+            const logoDataUrl = convertImageToPngDataUrl(logo);
+            pdf.addImage(
+              logoDataUrl,
+              "PNG",
+              logoX,
+              logoY,
+              logoSize,
+              logoSize,
+            );
+          } catch {
+            pdf.addImage(
+              logo,
+              getPdfImageFormatFromSource(logo.currentSrc || logoUrl),
+              logoX,
+              logoY,
+              logoSize,
+              logoSize,
+            );
+          }
         } catch {
           // Ignore logo rendering failure.
         }
       }
 
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(22);
-      pdf.text(title, pageWidth / 2, 44, { align: "center" });
+      pdf.text(titleLines, pageWidth / 2, titleTopY, { align: "center" });
+
+      const headerBottomY =
+        titleTopY + titleLines.length * PDF_EXPORT_TITLE_LINE_HEIGHT_MM + 4;
+
+      pdf.setDrawColor(203, 213, 225);
+      pdf.setLineWidth(0.5);
+      pdf.line(
+        PDF_EXPORT_MARGIN_MM,
+        headerBottomY,
+        pageWidth - PDF_EXPORT_MARGIN_MM,
+        headerBottomY,
+      );
+
+      const availableWidth = pageWidth - PDF_EXPORT_MARGIN_MM * 2;
+      const availableHeight =
+        pageHeight - headerBottomY - PDF_EXPORT_FOOTER_MM - 8;
+      const imageScale = Math.min(
+        availableWidth / image.width,
+        availableHeight / image.height,
+      );
+      const imageWidthMm = image.width * imageScale;
+      const imageHeightMm = image.height * imageScale;
+      const imageX = (pageWidth - imageWidthMm) / 2;
+      const imageY = headerBottomY + 6;
 
       pdf.addImage(
         image,
-        "JPEG",
-        (pageWidth - canvasWidthMm) / 2,
-        55,
-        canvasWidthMm,
-        canvasHeightMm,
+        "PNG",
+        imageX,
+        imageY,
+        imageWidthMm,
+        imageHeightMm,
       );
+
+      const stageToPdfScaleX = imageWidthMm / stageSize.width;
+      const stageToPdfScaleY = imageHeightMm / stageSize.height;
+      const worldRectToPdfBadge = (
+        worldX: number,
+        worldY: number,
+        worldWidth: number,
+        worldHeight: number,
+      ) => ({
+        x:
+          imageX +
+          (worldX * exportViewport.zoom + exportViewport.x) * stageToPdfScaleX,
+        y:
+          imageY +
+          (worldY * exportViewport.zoom + exportViewport.y) * stageToPdfScaleY,
+        width: worldWidth * exportViewport.zoom * stageToPdfScaleX,
+        height: worldHeight * exportViewport.zoom * stageToPdfScaleY,
+      });
+
+      nodesRef.current.forEach((node) => {
+        if (node.type === "tableNode") {
+          const tableLabelWidth = Math.max(76, node.data.width - 28);
+          const tableLabelX = node.position.x + (node.data.width - tableLabelWidth) / 2;
+          const tableLabelBadge = worldRectToPdfBadge(
+            tableLabelX,
+            node.position.y + node.data.height / 2 - 31,
+            tableLabelWidth,
+            28,
+          );
+
+          drawPdfTextBadge(pdf, {
+            text: node.data.label,
+            ...tableLabelBadge,
+            fontStyle: "bold",
+            maxLines: 2,
+            fillColor: [255, 255, 255],
+            strokeColor: [226, 232, 240],
+            textColor: [15, 23, 42],
+          });
+
+          const seatGeometries = getSeatGeometries(node);
+
+          seatGeometries.forEach((seatGeometry, index) => {
+            if (!seatGeometry.seat.occupiedByName?.trim()) {
+              return;
+            }
+
+            const guestNameBadge = worldRectToPdfBadge(
+              seatGeometry.x - 40,
+              seatGeometry.y + (index % 2 === 0 ? 34 : -36),
+              110,
+              30,
+            );
+
+            drawPdfTextBadge(pdf, {
+              text: seatGeometry.seat.occupiedByName,
+              ...guestNameBadge,
+              fontStyle: "bold",
+              maxLines: 2,
+              fillColor: [255, 255, 255],
+              strokeColor: [203, 213, 225],
+              textColor: [15, 23, 42],
+            });
+          });
+
+          return;
+        }
+
+        if (node.type !== "chairNode") {
+          return;
+        }
+
+        const chairSeats = getSeatGeometries(node);
+
+        chairSeats.forEach((chairGeometry) => {
+          if (!chairGeometry.seat.occupiedByName?.trim()) {
+            return;
+          }
+
+          const guestNameBadge = worldRectToPdfBadge(
+            chairGeometry.x - 36,
+            chairGeometry.y + chairGeometry.height + 4,
+            chairGeometry.width + 72,
+            30,
+          );
+
+          drawPdfTextBadge(pdf, {
+            text: chairGeometry.seat.occupiedByName,
+            ...guestNameBadge,
+            fontStyle: "bold",
+            maxLines: 2,
+            fillColor: [255, 255, 255],
+            strokeColor: [203, 213, 225],
+            textColor: [15, 23, 42],
+          });
+        });
+      });
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(10);
+      pdf.setTextColor(71, 85, 105);
       pdf.text(
-        `Generated on ${new Date().toLocaleDateString()}`,
-        pageWidth - 20,
+        `Generated on ${new Date().toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })}`,
+        pageWidth - PDF_EXPORT_MARGIN_MM,
         pageHeight - 10,
         { align: "right" },
       );
@@ -963,6 +1266,7 @@ function WeddingPlanner() {
                         key={node.id}
                         node={node}
                         isSelected={isSelected}
+                        isExporting={isExporting}
                         hoveredSeatKey={
                           hoveredSeatKey?.startsWith(`${node.id}:`)
                             ? hoveredSeatKey
@@ -986,6 +1290,7 @@ function WeddingPlanner() {
                         key={node.id}
                         node={node}
                         isSelected={isSelected}
+                        isExporting={isExporting}
                         hoveredSeatKey={
                           hoveredSeatKey?.startsWith(`${node.id}:`)
                             ? hoveredSeatKey
@@ -1008,6 +1313,7 @@ function WeddingPlanner() {
                       key={node.id}
                       node={node}
                       isSelected={isSelected}
+                      isExporting={isExporting}
                       canInteract={canInteractWithNodes}
                       onSelect={handleSelectNode}
                       onDragMove={handleNodeDragMove}
@@ -1066,16 +1372,16 @@ function WeddingPlanner() {
           </div>
         )}
 
-        {!isExporting ? (
-          <PlannerActionBar
-            pendingChanges={pendingChangesCount}
-            guestCount={guests.length}
-            unassignedGuestCount={unassignedGuestCount}
-            isPdfDownloading={isPdfDownloading}
-            onSave={handleSaveChanges}
-            onDownloadPdf={handleDownloadPdf}
-          />
-        ) : null}
+        <PlannerActionBar
+          pendingChanges={pendingChangesCount}
+          guestCount={guests.length}
+          unassignedGuestCount={unassignedGuestCount}
+          isPdfDownloading={isPdfDownloading}
+          onSave={handleSaveChanges}
+          onDownloadPdf={handleDownloadPdf}
+        />
+
+        {isPdfDownloading ? <PlannerExportOverlay /> : null}
 
         {!isExporting && (
           <>

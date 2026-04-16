@@ -30,9 +30,14 @@ export function PlannerActionBar({
 }: PlannerActionBarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const hasPendingChanges = pendingChanges > 0;
-  const plannerStatusLabel = hasPendingChanges
-    ? `${pendingChanges} pending`
-    : "All saved";
+  const plannerStatusLabel = isPdfDownloading
+    ? "Preparing PDF..."
+    : hasPendingChanges
+      ? `${pendingChanges} pending`
+      : "All saved";
+  const plannerStatusSubLabel = isPdfDownloading
+    ? "Rendering a sharper seating plan with names and logo"
+    : `${guestCount} guests | ${unassignedGuestCount} open`;
 
   return (
     <div className="pointer-events-none absolute inset-x-4 top-4 z-20 flex justify-center md:justify-end">
@@ -59,7 +64,7 @@ export function PlannerActionBar({
                   {plannerStatusLabel}
                 </p>
                 <p className="truncate text-[10px] text-slate-500">
-                  {guestCount} guests | {unassignedGuestCount} open
+                  {plannerStatusSubLabel}
                 </p>
               </div>
             </div>
@@ -85,7 +90,9 @@ export function PlannerActionBar({
               ) : (
                 <FileText className="h-4 w-4" />
               )}
-              <span className="hidden md:inline">PDF</span>
+              <span className="hidden md:inline">
+                {isPdfDownloading ? "Generating..." : "PDF"}
+              </span>
             </Button>
 
             <CollapsibleTrigger asChild>
@@ -143,6 +150,26 @@ export function PlannerActionBar({
           </CollapsibleContent>
         </div>
       </Collapsible>
+    </div>
+  );
+}
+
+export function PlannerExportOverlay() {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-white/28 backdrop-blur-[2px]">
+      <div className="flex max-w-sm items-center gap-4 rounded-3xl border border-white/80 bg-white/95 px-5 py-4 shadow-[0_24px_80px_-32px_rgba(15,23,42,0.4)]">
+        <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-slate-900">
+            Generating high-resolution PDF
+          </p>
+          <p className="text-xs text-slate-500">
+            Please wait while we sharpen names, layout, and logo.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
