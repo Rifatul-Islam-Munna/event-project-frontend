@@ -343,7 +343,8 @@ export function PricingSection() {
     <LazyMotion features={domAnimation}>
       <section
         id="pricing"
-        className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-b from-white to-lime-50/50"
+        translate="no"
+        className="notranslate w-full py-16 md:py-24 lg:py-32 bg-gradient-to-b from-white to-lime-50/50"
       >
         <div className="container mx-auto px-4 md:px-6 max-w-7xl">
           <m.div

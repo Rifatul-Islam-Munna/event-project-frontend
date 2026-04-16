@@ -378,10 +378,14 @@ export function PricingSection() {
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent
           side="top"
-          className="h-screen overflow-y-auto bg-gradient-to-b from-white to-lime-50/50 border-none p-0"
+          translate="no"
+          className="notranslate h-screen overflow-y-auto bg-gradient-to-b from-white to-lime-50/50 border-none p-0"
         >
           <LazyMotion features={domAnimation}>
-            <section className="w-full py-16 md:py-24 lg:py-32">
+            <section
+              translate="no"
+              className="notranslate w-full py-16 md:py-24 lg:py-32"
+            >
               <div className="container mx-auto px-4 md:px-6 max-w-7xl">
                 <m.div
                   initial={{ opacity: 0, y: 20 }}
