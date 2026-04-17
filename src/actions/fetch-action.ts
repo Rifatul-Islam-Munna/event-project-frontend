@@ -50,8 +50,29 @@ export const getOneEvent = async (id:string)=>{
     const [data,error] = await GetRequestNormal<EventItem>(`/events/get-one-document?mongoId=${id}`);
     console.log("event-data->",data,"event-error->",error);
     return {data,error}
-
 }
+
+export const getEventsByUser = async (userId: string, page: number = 1, limit: number = 100) => {
+    const [data, error] = await GetRequestNormal<{
+        data: any[];
+        totalPages: number;
+        totalDocs: number;
+        currentPage: number;
+    }>(`/events/get-events-by-user?userId=${userId}&page=${page}&limit=${limit}`);
+    console.log("events-by-user-data->", data, "events-by-user-error->", error);
+    return { data, error };
+};
+
+export const getAllEventsAdmin = async (page: number = 1, limit: number = 100) => {
+    const [data, error] = await GetRequestNormal<{
+        data: any[];
+        totalPages: number;
+        totalDocs: number;
+        currentPage: number;
+    }>(`/events/get-all-events-admin?page=${page}&limit=${limit}`);
+    console.log("all-events-admin-data->", data, "all-events-admin-error->", error);
+    return { data, error };
+};
 
 export const deleteEvent = async (id:string)=>{
     const [data,error] = await DeleteAxios(`/events/delete-document?mongoId=${id}`);
@@ -517,6 +538,7 @@ export const getAllUser = async (
   page:number,
   limit:number,
   type?: "user" | "admin" | "editor",
+  search?: string,
 )=>{
   const query = new URLSearchParams({
     limit: String(limit),
@@ -525,6 +547,10 @@ export const getAllUser = async (
 
   if (type) {
     query.append("type", type);
+  }
+
+  if (search) {
+    query.append("search", search);
   }
 
   const [data,error] = await GetRequestNormal<PaginatedUsersResponse>(`/user/get-all-user?${query.toString()}`);
@@ -552,6 +578,18 @@ export const deleteUSer = async (id:string) =>{
     console.log("guest-data-update->",data,"guest-error-update->",error);
     return {data,error}
 }
+
+export const assignUserLimits = async (payload: {
+  userId: string;
+  message?: number;
+  email?: number;
+  whatsapp?: number;
+  flushCardCoupon?: string;
+}) => {
+  const [data, error] = await PostRequestAxios(`/user-limits/admin/assign`, payload);
+  console.log("assign-limits-data->", data, "assign-limits-error->", error);
+  return { data, error };
+};
 
  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-08-27.basil",

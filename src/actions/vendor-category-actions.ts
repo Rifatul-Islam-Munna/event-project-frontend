@@ -71,6 +71,13 @@ export const getMyLimit = async ()=>{
   console.log("search-data->",data,"search-error->",error);
   return { data, error };
 }
+
+export const getUserLimit = async (userId: string) => {
+  const [data, error] = await GetRequestNormal(`/user-limits/user/${userId}`);
+  console.log("user-limit-data->", data, "user-limit-error->", error);
+  return { data, error };
+};
+
 export const updateMessageService = async (event_id: string, startingDate: string) => {
   const [data, error] = await PatchRequestAxios<MessageSend>(
     `/seat-plan/update-date`,

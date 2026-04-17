@@ -1,6 +1,7 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -48,6 +49,13 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreHorizontal,
+  MessageSquare,
+  Mail,
+  Phone,
+  CreditCard,
+  Zap,
+  Search,
+  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -57,6 +65,7 @@ import {
   getAllThePlans,
   getAllUser,
   postAdminSub,
+  assignUserLimits,
 } from "@/actions/fetch-action";
 import { toast } from "sonner";
 
@@ -198,6 +207,18 @@ export default function UserManagementDashboard() {
   const [userTypeFilter, setUserTypeFilter] = useState<
     "all" | "admin" | "user"
   >("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const router = useRouter();
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const [createAccountModal, setCreateAccountModal] = useState(false);
   const [subscriptionModal, setSubscriptionModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<DashboardUser | null>(null);
@@ -208,6 +229,13 @@ export default function UserManagementDashboard() {
   // Form states
   const [subscriptionType, setSubscriptionType] = useState("");
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [customLimitsModal, setCustomLimitsModal] = useState(false);
+  const [customLimits, setCustomLimits] = useState({
+    message: 0,
+    email: 0,
+    whatsapp: 0,
+    flushCardCoupon: "",
+  });
   const { data: subscriptionTypes = [] } = useQuery<SubscriptionPlan[]>({
     queryKey: ["plans"],
     queryFn: async () => {
@@ -235,12 +263,13 @@ export default function UserManagementDashboard() {
     isLoading,
     error,
   } = useQuery<PaginatedUsersData>({
-    queryKey: ["users", currentPage, userTypeFilter],
+    queryKey: ["users", currentPage, userTypeFilter, debouncedSearch],
     queryFn: async () => {
       const result = await getAllUser(
         currentPage,
         10,
         userTypeFilter === "all" ? undefined : userTypeFilter,
+        debouncedSearch || undefined,
       );
       if (result.error) {
         throw new Error(result.error.message || "Failed to load users");
@@ -323,6 +352,38 @@ export default function UserManagementDashboard() {
     },
   });
 
+  // Assign custom limits mutation
+  const assignCustomLimitsMutation = useMutation({
+    mutationFn: async (limitsData: {
+      userId: string;
+      message?: number;
+      email?: number;
+      whatsapp?: number;
+      flushCardCoupon?: string;
+    }) => {
+      const result = await assignUserLimits(limitsData);
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to assign custom limits");
+      }
+
+      return result.data;
+    },
+    onSuccess: () => {
+      showMessage("success", "Custom limits assigned successfully!");
+      setCustomLimitsModal(false);
+      setCustomLimits({
+        message: 0,
+        email: 0,
+        whatsapp: 0,
+        flushCardCoupon: "",
+      });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (mutationError) => {
+      showMessage("error", mutationError.message);
+    },
+  });
+
   // Handle add subscription
   const handleAddSubscription = async () => {
     if (!selectedUser || !subscriptionType || !endDate) {
@@ -347,6 +408,31 @@ export default function UserManagementDashboard() {
     console.log("subscription-data->", subscriptionData);
 
     addSubscriptionMutation.mutate(subscriptionData);
+  };
+
+  const handleAssignCustomLimits = () => {
+    if (!selectedUser) {
+      showMessage("error", "No user selected");
+      return;
+    }
+
+    if (
+      customLimits.message === 0 &&
+      customLimits.email === 0 &&
+      customLimits.whatsapp === 0 &&
+      !customLimits.flushCardCoupon
+    ) {
+      showMessage("error", "Please enter at least one limit value");
+      return;
+    }
+
+    assignCustomLimitsMutation.mutate({
+      userId: selectedUser._id as string,
+      message: customLimits.message,
+      email: customLimits.email,
+      whatsapp: customLimits.whatsapp,
+      flushCardCoupon: customLimits.flushCardCoupon || undefined,
+    });
   };
 
   const handleCreateAccount = (event: FormEvent<HTMLFormElement>) => {
@@ -392,6 +478,11 @@ export default function UserManagementDashboard() {
 
   const handleFilterChange = (value: "all" | "admin" | "user") => {
     setUserTypeFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
     setCurrentPage(1);
   };
 
@@ -524,6 +615,14 @@ export default function UserManagementDashboard() {
                   </Select>
                 </div>
 
+                <Input
+                    type="text"
+                    placeholder="Search by name or email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pr-10"
+                  />
+
                 <Button
                   onClick={() => setCreateAccountModal(true)}
                   className="bg-slate-900 text-white hover:bg-slate-800"
@@ -637,18 +736,42 @@ export default function UserManagementDashboard() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-2">
-                          {user.type === "user" ? (
-                            <Button
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setSubscriptionModal(true);
-                              }}
-                              size="sm"
-                              className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-3 py-1"
-                            >
-                              <UserPlus className="h-4 w-4 mr-1" />
-                              Add Plan
-                            </Button>
+                          <Button
+                            onClick={() => {
+                              router.push(`/admin/dashboard/users/${user._id}`);
+                            }}
+                            size="sm"
+                            variant="outline"
+                            className="border-slate-300 hover:bg-slate-100"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                          {user.type === "user" || user.type === "admin" || user.type === "editor" ? (
+                            <>
+                              <Button
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setSubscriptionModal(true);
+                                }}
+                                size="sm"
+                                className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-3 py-1"
+                              >
+                                <UserPlus className="h-4 w-4 mr-1" />
+                                Plan
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setCustomLimitsModal(true);
+                                }}
+                                size="sm"
+                                className="bg-purple-500 hover:bg-purple-600 text-white rounded-lg px-3 py-1"
+                              >
+                                <Zap className="h-4 w-4 mr-1" />
+                                Add-ons
+                              </Button>
+                            </>
                           ) : (
                             <Badge
                               variant="outline"
@@ -945,6 +1068,181 @@ export default function UserManagementDashboard() {
                   <div className="flex items-center gap-2">
                     <Plus className="h-4 w-4" />
                     Add Subscription
+                  </div>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Custom Add-ons Modal */}
+        <Dialog
+          open={customLimitsModal}
+          onOpenChange={(open) => {
+            setCustomLimitsModal(open);
+            if (!open) {
+              setCustomLimits({
+                message: 0,
+                email: 0,
+                whatsapp: 0,
+                flushCardCoupon: "",
+              });
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <Zap className="h-6 w-6 text-purple-600" />
+                Custom Add-ons
+              </DialogTitle>
+              <DialogDescription>
+                Give custom add-on credits to {selectedUser?.name}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6 py-4">
+              {/* User Info */}
+              <div className="p-4 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-semibold">
+                    {selectedUser?.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900">
+                      {selectedUser?.name}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {selectedUser?.email}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message/SMS Limit */}
+              <div className="space-y-2">
+                <Label htmlFor="message-limit" className="text-base font-medium">
+                  <MessageSquare className="h-4 w-4 inline mr-1" />
+                  SMS Credits
+                </Label>
+                <Input
+                  id="message-limit"
+                  type="number"
+                  min="0"
+                  value={customLimits.message}
+                  onChange={(e) =>
+                    setCustomLimits((prev) => ({
+                      ...prev,
+                      message: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="e.g., 500"
+                />
+                <p className="text-sm text-slate-500">
+                  Enter number of SMS credits to give (e.g., 500)
+                </p>
+              </div>
+
+              {/* WhatsApp Limit */}
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp-limit" className="text-base font-medium">
+                  <Phone className="h-4 w-4 inline mr-1" />
+                  WhatsApp Credits
+                </Label>
+                <Input
+                  id="whatsapp-limit"
+                  type="number"
+                  min="0"
+                  value={customLimits.whatsapp}
+                  onChange={(e) =>
+                    setCustomLimits((prev) => ({
+                      ...prev,
+                      whatsapp: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="e.g., 1000"
+                />
+                <p className="text-sm text-slate-500">
+                  Enter number of WhatsApp credits to give (e.g., 1000)
+                </p>
+              </div>
+
+              {/* Email Limit */}
+              <div className="space-y-2">
+                <Label htmlFor="email-limit" className="text-base font-medium">
+                  <Mail className="h-4 w-4 inline mr-1" />
+                  Email Credits
+                </Label>
+                <Input
+                  id="email-limit"
+                  type="number"
+                  min="0"
+                  value={customLimits.email}
+                  onChange={(e) =>
+                    setCustomLimits((prev) => ({
+                      ...prev,
+                      email: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="e.g., 100"
+                />
+                <p className="text-sm text-slate-500">
+                  Enter number of email credits to give (e.g., 100)
+                </p>
+              </div>
+
+              {/* Flush Card Coupon */}
+              <div className="space-y-2">
+                <Label htmlFor="flush-card-coupon" className="text-base font-medium">
+                  <CreditCard className="h-4 w-4 inline mr-1" />
+                  Flush Card Coupon
+                </Label>
+                <Input
+                  id="flush-card-coupon"
+                  value={customLimits.flushCardCoupon}
+                  onChange={(e) =>
+                    setCustomLimits((prev) => ({
+                      ...prev,
+                      flushCardCoupon: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g., FLUSH2024"
+                />
+                <p className="text-sm text-slate-500">
+                  Enter flush card coupon code (optional)
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCustomLimitsModal(false);
+                  setCustomLimits({
+                    message: 0,
+                    email: 0,
+                    whatsapp: 0,
+                    flushCardCoupon: "",
+                  });
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAssignCustomLimits}
+                disabled={assignCustomLimitsMutation.isPending}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {assignCustomLimitsMutation.isPending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Assigning...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    Assign Add-ons
                   </div>
                 )}
               </Button>
