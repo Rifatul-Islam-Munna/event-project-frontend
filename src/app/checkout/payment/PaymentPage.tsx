@@ -69,14 +69,14 @@ function CheckoutPane({
   const hasCurrencyOptions = (checkout.currencyOptions?.length ?? 0) > 0;
 
   const lineItems = checkout.lineItems ?? [];
-  const totalLabel = checkout.total?.total?.amount ?? formatFallbackEur(fallbackTotalCents);
+  const totalLabel =
+    checkout.total?.total?.amount ?? formatFallbackEur(fallbackTotalCents);
   const selectedCurrency = checkout.currency?.toUpperCase() ?? "EUR";
 
   const confirmPay = useMutation({
     mutationKey: ["confirm-custom-checkout"],
     mutationFn: async () => {
       const result = await checkout.confirm({
-        returnUrl: `${window.location.origin}/checkout/payment/confirm?session_id={CHECKOUT_SESSION_ID}`,
         redirect: "if_required",
       });
 
@@ -97,7 +97,9 @@ function CheckoutPane({
           {
             id: "plan",
             name: "Selected Plan",
-            total: { amount: formatFallbackEur(fallbackBreakdown.planOriginal) },
+            total: {
+              amount: formatFallbackEur(fallbackBreakdown.planOriginal),
+            },
           },
         ]
       : []),
@@ -120,7 +122,8 @@ function CheckoutPane({
               Payment Details
             </CardTitle>
             <CardDescription className="text-lime-100 text-sm">
-              Stripe can show the local payment currency from the buyer location, with EUR still available.
+              Stripe can show the local payment currency from the buyer
+              location, with EUR still available.
             </CardDescription>
           </CardHeader>
 
@@ -132,7 +135,8 @@ function CheckoutPane({
                   Choose payment currency
                 </div>
                 <p className="mb-3 text-xs text-slate-500">
-                  Stripe will suggest the local currency from the buyer location and keep EUR as the fallback option.
+                  Stripe will suggest the local currency from the buyer location
+                  and keep EUR as the fallback option.
                 </p>
                 <CurrencySelectorElement
                   onLoadError={() => setHideCurrencySelector(true)}
@@ -249,7 +253,8 @@ function CheckoutPane({
 
               {fallbackBreakdown.planOriginal != null &&
               fallbackBreakdown.planAfterCoupon != null &&
-              fallbackBreakdown.planAfterCoupon < fallbackBreakdown.planOriginal ? (
+              fallbackBreakdown.planAfterCoupon <
+                fallbackBreakdown.planOriginal ? (
                 <div className="flex items-center justify-between text-sm text-green-600">
                   <span className="flex items-center gap-1">
                     <Sparkles className="h-3.5 w-3.5" />
@@ -435,23 +440,26 @@ export default function PaymentPage() {
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-10">
         <CheckoutProvider
           stripe={stripePromise}
-          options={{
-            fetchClientSecret: async () => clientSecret,
-            adaptivePricing: {
-              allowed: true,
-            },
-            elementsOptions: {
-              appearance: {
-                theme: "stripe",
-                variables: {
-                  colorPrimary: "#84cc16",
-                  colorBackground: "#ffffff",
-                  borderRadius: "12px",
-                  fontFamily: "inherit",
+          options={
+            {
+              fetchClientSecret: async () => clientSecret,
+              adaptivePricing: {
+                allowed: true,
+              },
+
+              elementsOptions: {
+                appearance: {
+                  theme: "stripe",
+                  variables: {
+                    colorPrimary: "#84cc16",
+                    colorBackground: "#ffffff",
+                    borderRadius: "12px",
+                    fontFamily: "inherit",
+                  },
                 },
               },
-            },
-          } as any}
+            } as any
+          }
         >
           <CheckoutPane
             fallbackTotalCents={finalAmount}
