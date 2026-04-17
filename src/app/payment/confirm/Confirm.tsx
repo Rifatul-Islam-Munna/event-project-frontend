@@ -1,40 +1,34 @@
 "use client";
-import { loadStripe } from "@stripe/stripe-js";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getSubTokenFirst, getUserBuyToken } from "@/actions/fetch-action";
 import { CheckCircle, XCircle, Clock, AlertCircle, Home } from "lucide-react";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-); // from your auth/session
-
 export default function ReturnPage() {
   const params = useSearchParams();
   const router = useRouter();
 
-  const plan = params.get("plan") ?? "basic";
+  const plan = params.get("plan") ?? "";
   const type = params.get("type") ?? null;
-  const clientSecret = params.get("payment_intent_client_secret") ?? "";
-  console.log("clientSecret->", clientSecret);
+  const sessionId = params.get("session_id") ?? "";
   const q = useQuery({
-    queryKey: ["finalize-payment", clientSecret, plan],
-    enabled: !!clientSecret, // don’t run without required param
+    queryKey: ["finalize-payment", sessionId, type],
+    enabled: !!sessionId,
     queryFn: async () => {
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error("Stripe init failed");
-      const { paymentIntent, error } =
-        await stripe.retrievePaymentIntent(clientSecret);
-      if (error) throw new Error(error.message || "Payment retrieval error");
-      if (!paymentIntent) throw new Error("No PaymentIntent found");
-
-      if (paymentIntent.status === "succeeded") {
+      const result =
         type === "add-on"
-          ? await getUserBuyToken(paymentIntent.id)
-          : await getSubTokenFirst(paymentIntent.id);
+          ? await getUserBuyToken(undefined, sessionId)
+          : await getSubTokenFirst(undefined, sessionId);
+
+      if (result.error) {
+        throw new Error(result.error.message || "Payment retrieval error");
+      }
+
+      if (result.data?.success) {
         return { status: "succeeded" as const };
       }
-      return { status: paymentIntent.status as string };
+
+      return { status: result.data?.status ?? "unknown" };
     },
   });
 
@@ -83,7 +77,7 @@ export default function ReturnPage() {
     }
   };
 
-  if (!clientSecret) {
+  if (!sessionId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-red-200">
@@ -187,7 +181,13 @@ export default function ReturnPage() {
 
           {q.data?.status === "requires_payment_method" && (
             <button
-              onClick={() => router.push(`/billing?plan=${plan}`)}
+              onClick={() => {
+                const query = new URLSearchParams({
+                  ...(plan ? { plan } : {}),
+                  ...(type ? { type } : {}),
+                });
+                router.push(`/payment${query.toString() ? `?${query.toString()}` : ""}`);
+              }}
               className={`w-full ${statusDisplay.buttonColor} text-white font-semibold py-3 px-6 rounded-xl transition-colors`}
             >
               Try Different Payment Method

@@ -318,7 +318,6 @@ interface CheckoutBreakdown {
 
 interface CheckoutIntentResponse {
   key: string;
-  customerSessionSecret?: string;
   id: string;
   finalAmount: number;
   success?: boolean;
@@ -329,6 +328,7 @@ export const subScript = async (
   sub:string,
   coupon?:string | null,
   invoiceDetails?: InvoiceBillingDetails,
+  returnUrlBase?: string,
 )=>{
   const user  = await getUserInfo();
   const payload = {
@@ -336,6 +336,7 @@ export const subScript = async (
     subscriptionType:sub,
     coupon:coupon,
     invoiceDetails,
+    returnUrlBase,
   };
    const [data,error] = await PostRequestAxios<CheckoutIntentResponse>(`/subscription/create-sub`,payload);
     console.log("vendor-data->",data,"vendor-error->",error);
@@ -346,12 +347,14 @@ export const CreateSubWithAddOn = async (
   coupon?:string | null,
   addons?:string[] | [],
   invoiceDetails?: InvoiceBillingDetails,
+  returnUrlBase?: string,
 )=>{
   const payload = {
     ...(plan ? { plan } : {}),
     coupon,
     addons,
     invoiceDetails,
+    returnUrlBase,
   };
    const [data,error] = await PostRequestAxios<CheckoutIntentResponse>(`/subscription/create-sub-with-add-ons`,payload);
     console.log("add-on-data->",data,"set-add-on-error->",error);
@@ -359,11 +362,11 @@ export const CreateSubWithAddOn = async (
 }
 export const AddSubForAddOn = async (
   sub:string,
-  coupon?:string | null,
   invoiceDetails?: InvoiceBillingDetails,
+  returnUrlBase?: string,
 )=>{
   const user  = await getUserInfo();
-  const payload = {userId:user?._id,addOnId:sub,invoiceDetails};
+  const payload = {userId:user?._id,addOnId:sub,invoiceDetails,returnUrlBase};
    const [data,error] = await PostRequestAxios<CheckoutIntentResponse>(`/add-ons/buy-add-on`,payload);
     console.log("vendor-data->",data,"vendor-error->",error);
     return {data,error}
@@ -371,22 +374,31 @@ export const AddSubForAddOn = async (
  
 interface AuthResponse {
   success: boolean;
+  status?: string;
+  sessionStatus?: string | null;
+  paymentStatus?: string | null;
   user?: AdminUser;
   access_token?: string;
   subToken?: string;
 }
+ 
+export const getSubTokenFirst = async (
+  paymentIntentId?: string,
+  checkoutSessionId?: string,
+)=>{
+  const query = new URLSearchParams();
+  if (paymentIntentId) query.append("paymentIntentId", paymentIntentId);
+  if (checkoutSessionId) query.append("checkoutSessionId", checkoutSessionId);
 
-export const getSubTokenFirst = async (sub:string)=>{
-  const [data,error] = await GetRequestNormal<AuthResponse>(`/subscription/create-payment?paymentIntentId=${sub}`);
+  const [data,error] = await GetRequestNormal<AuthResponse>(`/subscription/create-payment?${query.toString()}`);
    if(data?.success && data?.access_token && data?.user && data?.subToken){
      const coookies = await cookies();
        coookies.set("access_token",data?.access_token,{maxAge:60*60*24,path:'/',httpOnly:true});
       coookies.set("user_info",JSON.stringify(data?.user),{maxAge:60*60*24,path:'/',httpOnly:true})
       coookies.set("sub_token",data?.subToken,{maxAge:60*60*24,path:'/',httpOnly:true})
    }
-   const r = {success:true}
-  
-  return {r,error}
+ 
+  return {data,error}
 
 }
 export const createFreePlan = async (
@@ -408,12 +420,17 @@ export const createFreePlan = async (
   return {r,error}
 
 }
-export const getUserBuyToken = async (sub:string)=>{
-  const [data,error] = await GetRequestNormal<AuthResponse>(`/add-ons/create-payment?paymentIntentId=${sub}`);
-  
-   const r = {success:true}
-  
-  return {r,error}
+export const getUserBuyToken = async (
+  paymentIntentId?: string,
+  checkoutSessionId?: string,
+)=>{
+  const query = new URLSearchParams();
+  if (paymentIntentId) query.append("paymentIntentId", paymentIntentId);
+  if (checkoutSessionId) query.append("checkoutSessionId", checkoutSessionId);
+
+  const [data,error] = await GetRequestNormal<AuthResponse>(`/add-ons/create-payment?${query.toString()}`);
+ 
+  return {data,error}
 
 }
 
@@ -536,8 +553,9 @@ export const deleteUSer = async (id:string) =>{
     return {data,error}
 }
 
-
- const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-08-27.basil",
+ });
 
 export async function prepareBilling() {
   const user = await getUserInfo();             // { _id, email, name }

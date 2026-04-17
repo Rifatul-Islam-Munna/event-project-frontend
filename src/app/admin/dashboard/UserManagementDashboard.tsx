@@ -420,7 +420,7 @@ export default function UserManagementDashboard() {
 
   // Get subscription type name
   const getSubscriptionTypeName = (typeId) => {
-    const type = subscriptionTypes.find((t) => t._id === typeId);
+    const type = subscriptionTypes?.find((t) => t._id === typeId);
     return type ? type.title : "Unknown Plan";
   };
 
@@ -853,7 +853,7 @@ export default function UserManagementDashboard() {
                     <SelectValue placeholder="Select a subscription plan" />
                   </SelectTrigger>
                   <SelectContent>
-                    {subscriptionTypes.map((type) => (
+                    {subscriptionTypes?.map((type) => (
                       <SelectItem key={type._id} value={type._id}>
                         <div className="flex items-center justify-between w-full">
                           <span>{type?.title}</span>

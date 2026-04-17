@@ -2,10 +2,10 @@
 
 import { loadStripe } from "@stripe/stripe-js";
 import {
-  Elements,
+  CheckoutProvider,
+  CurrencySelectorElement,
   PaymentElement,
-  useStripe,
-  useElements,
+  useCheckout,
 } from "@stripe/react-stripe-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -19,7 +19,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CreditCard, Shield, CheckCircle } from "lucide-react";
+import {
+  Loader2,
+  CreditCard,
+  Shield,
+  Globe2,
+} from "lucide-react";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -28,81 +33,41 @@ const stripePromise = loadStripe(
   },
 );
 
-function Checkout({
-  clientSecret,
+function CheckoutCard({
   plan,
-  price,
   type,
 }: {
-  clientSecret: string;
   plan: string;
-  price: number;
   type?: string | null;
 }) {
-  const stripe = useStripe();
-  const elements = useElements();
+  const checkout = useCheckout();
+  const router = useRouter();
+  const hasCurrencyOptions = (checkout.currencyOptions?.length ?? 0) > 0;
 
   const confirmPay = useMutation({
-    mutationKey: ["confirm-pay"],
+    mutationKey: ["confirm-pay-legacy-route", type],
     mutationFn: async () => {
-      if (!stripe || !elements) throw new Error("Stripe not ready");
-
-      const { error: submitError } = await elements.submit();
-      if (submitError)
-        throw new Error(submitError.message || "Form submit failed");
-
-      const { error } = await stripe.confirmPayment({
-        elements,
-        clientSecret,
-        confirmParams: {
-          return_url: `${
-            window.location.origin
-          }/payment/confirm?plan=${encodeURIComponent(plan)}&type=${type}`,
-        },
-        redirect: "always",
+      const result = await checkout.confirm({
+        returnUrl: `${window.location.origin}/payment/confirm${type === "add-on" ? "?type=add-on&" : "?"}session_id={CHECKOUT_SESSION_ID}`,
+        redirect: "if_required",
       });
-      if (error) throw new Error(error.message || "Payment failed");
+
+      if (result.type === "error") {
+        throw new Error(result.error.message ?? "Payment failed");
+      }
+
+      const query = new URLSearchParams({
+        session_id: result.session.id,
+        ...(plan ? { plan } : {}),
+        ...(type === "add-on" ? { type: "add-on" } : {}),
+      });
+      router.push(`/payment/confirm?${query.toString()}`);
     },
-    onError: (e: any) => alert(e.message || "Payment error"),
+    onError: (e: Error) => alert(e.message || "Payment error"),
   });
-
-  const getPlanDetails = (planName: string) => {
-    const plans = {
-      basic: {
-        name: "Basic Plan",
-        price: "$9.99",
-        features: ["Feature 1", "Feature 2", "Feature 3"],
-      },
-      pro: {
-        name: "Pro Plan",
-        price: "$19.99",
-        features: [
-          "All Basic features",
-          "Feature 4",
-          "Feature 5",
-          "Priority support",
-        ],
-      },
-      enterprise: {
-        name: "Enterprise Plan",
-        price: "$49.99",
-        features: [
-          "All Pro features",
-          "Custom integrations",
-          "Dedicated support",
-        ],
-      },
-    };
-    return plans[planName as keyof typeof plans] || plans.basic;
-  };
-
-  const planDetails = getPlanDetails(plan);
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {/* Plan Summary Card */}
-
-      {/* Payment Form Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -110,10 +75,20 @@ function Checkout({
             Payment Details
           </CardTitle>
           <CardDescription>
-            Your payment information is secure and encrypted
+            Pay in your local currency or switch back to EUR before confirming.
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {hasCurrencyOptions ? (
+            <div className="mb-5 rounded-xl border border-lime-200 bg-lime-50 p-4">
+              <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
+                <Globe2 className="h-4 w-4 text-lime-600" />
+                Currency options
+              </div>
+              <CurrencySelectorElement />
+            </div>
+          ) : null}
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -122,16 +97,21 @@ function Checkout({
             className="space-y-6"
           >
             <div className="p-4 border rounded-lg bg-background">
-              <PaymentElement
-                options={{
-                  layout: "tabs",
-                }}
-              />
+              <PaymentElement options={{ layout: "tabs" }} />
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-lime-200 bg-lime-50 px-4 py-3">
+              <span className="text-sm font-semibold text-slate-700">
+                Amount due
+              </span>
+              <span className="text-xl font-bold text-lime-700">
+                {checkout.total?.total?.amount ?? "Loading..."}
+              </span>
             </div>
 
             <Button
               type="submit"
-              disabled={!stripe || confirmPay.isPending}
+              disabled={confirmPay.isPending}
               className="w-full h-12 text-lg font-semibold"
               size="lg"
             >
@@ -143,7 +123,7 @@ function Checkout({
               ) : (
                 <>
                   <CreditCard className="mr-2 h-5 w-5" />
-                  Complete Payment • ${price}
+                  Complete Payment
                 </>
               )}
             </Button>
@@ -157,34 +137,6 @@ function Checkout({
           </form>
         </CardContent>
       </Card>
-      {/* 
-      <Card className="border-2">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <CreditCard className="h-5 w-5 text-primary" />
-            <CardTitle className="text-2xl">Complete Your Purchase</CardTitle>
-          </div>
-          <CardDescription>
-            You're subscribing to the {planDetails.name}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-            <div>
-              <h3 className="font-semibold text-lg">{planDetails.name}</h3>
-              <Badge variant="secondary" className="mt-1">
-                {plan.charAt(0).toUpperCase() + plan.slice(1)}
-              </Badge>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-primary">
-                {price ?? 0}
-              </div>
-              <div className="text-sm text-muted-foreground">per month</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card> */}
     </div>
   );
 }
@@ -194,13 +146,14 @@ export default function BillingPage() {
   const plan = params.get("plan") ?? "basic";
   const coupon = params.get("coupon");
   const type = params.get("type") ?? null;
-  const total = (params.get("price") as number | null) ?? 0;
   const router = useRouter();
+
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["create-intent", plan],
+    queryKey: ["create-intent", plan, type, coupon],
     queryFn: () =>
-      type === "add-on" ? AddSubForAddOn(plan) : subScript(plan, coupon),
-    enabled: !params.get("payment_intent_client_secret"),
+      type === "add-on"
+        ? AddSubForAddOn(plan, undefined, window.location.origin)
+        : subScript(plan, coupon, undefined, window.location.origin),
     staleTime: 0,
   });
 
@@ -233,9 +186,12 @@ export default function BillingPage() {
             <h3 className="text-lg font-semibold mb-2 text-destructive">
               Payment Setup Failed
             </h3>
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-sm text-muted-foreground text-center mb-4">
               {(error as Error).message || "Failed to initialize payment"}
             </p>
+            <Button variant="outline" onClick={() => router.back()}>
+              Go Back
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -243,13 +199,6 @@ export default function BillingPage() {
   }
 
   const clientSecret = data?.data?.key;
-  const customerSessionSecret = data?.data?.customerSessionSecret;
-  const finalAmount = data?.data?.finalAmount ?? 0;
-  const isSuccess = data?.data?.success;
-  console.log("data", data);
-  if (isSuccess) {
-    router.push("/dashboard");
-  }
 
   if (!clientSecret) {
     return (
@@ -281,22 +230,32 @@ export default function BillingPage() {
           <p className="text-lg text-muted-foreground">
             Complete your subscription in just a few clicks
           </p>
+          <Badge className="mt-4 bg-lime-100 text-lime-700 border-lime-200">
+            Local currency available
+          </Badge>
         </div>
 
-        <Elements
-          stripe={stripePromise!}
+        <CheckoutProvider
+          stripe={stripePromise}
           options={{
-            clientSecret,
-            customerSessionClientSecret: customerSessionSecret,
-          }}
+            fetchClientSecret: async () => clientSecret,
+            adaptivePricing: {
+              allowed: true,
+            },
+            elementsOptions: {
+              appearance: {
+                theme: "stripe",
+                variables: {
+                  colorPrimary: "#84cc16",
+                  borderRadius: "12px",
+                  fontFamily: "inherit",
+                },
+              },
+            },
+          } as any}
         >
-          <Checkout
-            clientSecret={clientSecret}
-            plan={plan}
-            price={finalAmount / 100}
-            type={type}
-          />
-        </Elements>
+          <CheckoutCard plan={plan} type={type} />
+        </CheckoutProvider>
       </div>
     </div>
   );

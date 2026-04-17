@@ -2,13 +2,13 @@
 
 import { loadStripe } from "@stripe/stripe-js";
 import {
-  Elements,
+  CheckoutProvider,
+  CurrencySelectorElement,
   PaymentElement,
-  useStripe,
-  useElements,
+  useCheckout,
 } from "@stripe/react-stripe-js";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { getInvoiceValidationErrors } from "@/@types/invoice";
 import { CreateSubWithAddOn } from "@/actions/fetch-action";
 import { useCheckoutStore } from "@/zustan-fn/checkout-store";
@@ -28,130 +28,293 @@ import {
   Shield,
   ArrowLeft,
   Sparkles,
-  Euro,
   Package,
   Zap,
   Tag,
   CheckCircle2,
+  Globe2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
   { developerTools: { assistant: { enabled: true } } },
 );
 
-// ─── Inner form ───────────────────────────────────────────────────────────────
-function CheckoutForm({
-  clientSecret,
-  finalAmount,
+function formatFallbackEur(cents: number) {
+  return `€ ${(cents / 100).toFixed(2)}`;
+}
+
+function CheckoutPane({
+  fallbackTotalCents,
+  fallbackBreakdown,
+  couponCode,
 }: {
-  clientSecret: string;
-  finalAmount: number;
+  fallbackTotalCents: number;
+  fallbackBreakdown: {
+    planOriginal: number | null;
+    planAfterCoupon: number | null;
+    addOnsApplied: Array<{
+      id: string;
+      type: string;
+      priceCents: number;
+    }>;
+  };
+  couponCode?: string | null;
 }) {
-  const stripe = useStripe();
-  const elements = useElements();
+  const checkout = useCheckout();
   const router = useRouter();
-  const { clearCheckout } = useCheckoutStore();
+  const [hideCurrencySelector, setHideCurrencySelector] = useState(false);
+  const hasCurrencyOptions = (checkout.currencyOptions?.length ?? 0) > 0;
+
+  const lineItems = checkout.lineItems ?? [];
+  const totalLabel = checkout.total?.total?.amount ?? formatFallbackEur(fallbackTotalCents);
+  const selectedCurrency = checkout.currency?.toUpperCase() ?? "EUR";
 
   const confirmPay = useMutation({
-    mutationKey: ["confirm-pay"],
+    mutationKey: ["confirm-custom-checkout"],
     mutationFn: async () => {
-      if (!stripe || !elements) throw new Error("Stripe not ready");
-
-      const { error: submitError } = await elements.submit();
-      if (submitError)
-        throw new Error(submitError.message ?? "Form submit failed");
-
-      const { error } = await stripe.confirmPayment({
-        elements,
-        clientSecret,
-        confirmParams: {
-          return_url: `${window.location.origin}/checkout/payment/confirm`,
-        },
-        redirect: "always",
+      const result = await checkout.confirm({
+        returnUrl: `${window.location.origin}/checkout/payment/confirm?session_id={CHECKOUT_SESSION_ID}`,
+        redirect: "if_required",
       });
 
-      if (error) throw new Error(error.message ?? "Payment failed");
+      if (result.type === "error") {
+        throw new Error(result.error.message ?? "Payment failed");
+      }
+
+      router.push(
+        `/checkout/payment/confirm?session_id=${encodeURIComponent(result.session.id)}`,
+      );
     },
-    onSuccess: () => clearCheckout(),
     onError: (e: Error) => alert(e.message ?? "Payment error"),
   });
 
+  const fallbackItems = [
+    ...(fallbackBreakdown.planOriginal != null
+      ? [
+          {
+            id: "plan",
+            name: "Selected Plan",
+            total: { amount: formatFallbackEur(fallbackBreakdown.planOriginal) },
+          },
+        ]
+      : []),
+    ...fallbackBreakdown.addOnsApplied.map((item) => ({
+      id: item.id,
+      name: `${item.type} Add-On`,
+      total: { amount: formatFallbackEur(item.priceCents) },
+    })),
+  ];
+
+  const displayItems = lineItems.length > 0 ? lineItems : fallbackItems;
+
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        confirmPay.mutate();
-      }}
-      className="space-y-5"
-    >
-      {/* Stripe Element */}
-      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-        <PaymentElement options={{ layout: "tabs" }} />
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+      <div className="lg:col-span-3">
+        <Card className="border-lime-200 shadow-lg rounded-2xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-lime-500 to-lime-600 px-6 py-4">
+            <CardTitle className="text-white flex items-center gap-2 text-lg">
+              <Shield className="h-5 w-5" />
+              Payment Details
+            </CardTitle>
+            <CardDescription className="text-lime-100 text-sm">
+              Stripe can show the local payment currency from the buyer location, with EUR still available.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="p-6 space-y-5">
+            {!hideCurrencySelector && hasCurrencyOptions ? (
+              <div className="rounded-xl border border-lime-200 bg-lime-50/70 p-4">
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
+                  <Globe2 className="h-4 w-4 text-lime-600" />
+                  Choose payment currency
+                </div>
+                <p className="mb-3 text-xs text-slate-500">
+                  Stripe will suggest the local currency from the buyer location and keep EUR as the fallback option.
+                </p>
+                <CurrencySelectorElement
+                  onLoadError={() => setHideCurrencySelector(true)}
+                />
+              </div>
+            ) : null}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                confirmPay.mutate();
+              }}
+              className="space-y-5"
+            >
+              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                <PaymentElement options={{ layout: "tabs" }} />
+              </div>
+
+              <div className="flex items-center justify-between px-4 py-3 bg-lime-50 border border-lime-200 rounded-xl">
+                <span className="text-sm font-semibold text-slate-700">
+                  Amount due today
+                </span>
+                <span className="text-xl font-extrabold text-lime-700">
+                  {totalLabel}
+                </span>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={confirmPay.isPending}
+                className={cn(
+                  "w-full h-13 text-base font-bold text-white rounded-xl",
+                  "bg-gradient-to-r from-lime-500 via-lime-600 to-lime-700",
+                  "shadow-lg shadow-lime-200 hover:shadow-xl hover:shadow-lime-300",
+                  "hover:from-lime-600 hover:to-lime-800 transition-all duration-300",
+                  "disabled:opacity-60 disabled:cursor-not-allowed",
+                )}
+                size="lg"
+              >
+                {confirmPay.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Processing Payment...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="mr-2 h-5 w-5" />
+                    Pay {totalLabel}
+                  </>
+                )}
+              </Button>
+
+              <p className="text-xs text-slate-400 text-center flex items-center justify-center gap-1.5">
+                <Shield className="h-3.5 w-3.5" />
+                256-bit SSL encrypted · Secured by Stripe
+              </p>
+            </form>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Amount reminder */}
-      <div className="flex items-center justify-between px-4 py-3 bg-lime-50 border border-lime-200 rounded-xl">
-        <span className="text-sm font-semibold text-slate-700">
-          Amount due today
-        </span>
-        <span className="text-xl font-extrabold text-lime-700 flex items-center gap-1">
-          <Euro className="h-4 w-4" />
-          {(finalAmount / 100).toFixed(2)}
-        </span>
+      <div className="lg:col-span-2">
+        <div className="sticky top-24 space-y-4">
+          <Card className="border-lime-200 shadow-lg rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-lime-500 to-lime-600 px-6 py-4">
+              <CardTitle className="text-white flex items-center gap-2 text-lg">
+                <Package className="h-5 w-5" />
+                Order Summary
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Payment currency</span>
+                <Badge className="bg-lime-100 text-lime-700 border-lime-200 font-semibold">
+                  {selectedCurrency}
+                </Badge>
+              </div>
+
+              <div className="space-y-2">
+                {displayItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl"
+                  >
+                    <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                      <Sparkles className="h-4 w-4 text-slate-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 capitalize truncate">
+                        {item.name}
+                      </p>
+                    </div>
+                    <span className="text-sm font-extrabold text-slate-900 shrink-0">
+                      {item.total.amount}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <Separator className="bg-slate-100" />
+
+              {couponCode ? (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-1.5 text-slate-500">
+                    <Tag className="h-3.5 w-3.5 text-lime-600" />
+                    Coupon
+                  </span>
+                  <Badge className="bg-lime-100 text-lime-700 border-lime-200 font-mono font-bold">
+                    {couponCode}
+                  </Badge>
+                </div>
+              ) : null}
+
+              {fallbackBreakdown.planOriginal != null &&
+              fallbackBreakdown.planAfterCoupon != null &&
+              fallbackBreakdown.planAfterCoupon < fallbackBreakdown.planOriginal ? (
+                <div className="flex items-center justify-between text-sm text-green-600">
+                  <span className="flex items-center gap-1">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Discount applied
+                  </span>
+                  <span className="font-semibold">
+                    -{" "}
+                    {formatFallbackEur(
+                      fallbackBreakdown.planOriginal -
+                        fallbackBreakdown.planAfterCoupon,
+                    )}
+                  </span>
+                </div>
+              ) : null}
+
+              <Separator className="bg-lime-100" />
+
+              <div className="flex items-center justify-between">
+                <span className="text-base font-bold text-slate-900">
+                  Total
+                </span>
+                <span className="text-2xl font-extrabold text-lime-700">
+                  {totalLabel}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { icon: Shield, label: "Secure" },
+              { icon: Zap, label: "Instant" },
+              { icon: CheckCircle2, label: "Verified" },
+            ].map(({ icon: Icon, label }) => (
+              <div
+                key={label}
+                className="flex flex-col items-center gap-1.5 p-3 bg-white rounded-xl border border-slate-100 text-center"
+              >
+                <div className="h-7 w-7 rounded-lg bg-lime-50 flex items-center justify-center">
+                  <Icon className="h-3.5 w-3.5 text-lime-600" />
+                </div>
+                <span className="text-xs font-medium text-slate-600">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-
-      {/* Pay button */}
-      <Button
-        type="submit"
-        disabled={!stripe || confirmPay.isPending}
-        className={cn(
-          "w-full h-13 text-base font-bold text-white rounded-xl",
-          "bg-gradient-to-r from-lime-500 via-lime-600 to-lime-700",
-          "shadow-lg shadow-lime-200 hover:shadow-xl hover:shadow-lime-300",
-          "hover:from-lime-600 hover:to-lime-800 transition-all duration-300",
-          "disabled:opacity-60 disabled:cursor-not-allowed",
-        )}
-        size="lg"
-      >
-        {confirmPay.isPending ? (
-          <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Processing Payment...
-          </>
-        ) : (
-          <>
-            <CreditCard className="mr-2 h-5 w-5" />
-            Pay € {(finalAmount / 100).toFixed(2)}
-          </>
-        )}
-      </Button>
-
-      <p className="text-xs text-slate-400 text-center flex items-center justify-center gap-1.5">
-        <Shield className="h-3.5 w-3.5" />
-        256-bit SSL encrypted · Secured by Stripe
-      </p>
-    </form>
+    </div>
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function PaymentPage() {
   const router = useRouter();
   const { planId, addonIds, couponCode, invoiceDetails } = useCheckoutStore();
   const hasItems = !!planId || addonIds.length > 0;
   const invoiceErrors = getInvoiceValidationErrors(invoiceDetails);
 
-  // ── Guard: redirect if store is empty ─────────────────────────────────────
   useEffect(() => {
     if (!hasItems || invoiceErrors.length > 0) {
       router.replace("/checkout");
     }
   }, [hasItems, invoiceErrors.length, router]);
 
-  // ── Create payment intent from store values ────────────────────────────────
   const { data, isLoading, isError, error } = useQuery({
     queryKey: [
       "create-intent",
@@ -166,6 +329,7 @@ export default function PaymentPage() {
         couponCode,
         addonIds,
         invoiceDetails,
+        window.location.origin,
       );
 
       if (result.error) {
@@ -180,22 +344,17 @@ export default function PaymentPage() {
   });
 
   const clientSecret = data?.data?.key;
-  const customerSessionSecret = data?.data?.customerSessionSecret;
   const finalAmount = data?.data?.finalAmount ?? 0;
   const breakdown = {
-    planOriginal: data?.data?.breakdown?.planOriginal ?? 0,
-    planAfterCoupon: data?.data?.breakdown?.planAfterCoupon ?? 0,
+    planOriginal: data?.data?.breakdown?.planOriginal ?? null,
+    planAfterCoupon: data?.data?.breakdown?.planAfterCoupon ?? null,
     addOnsApplied: (data?.data?.breakdown?.addOnsApplied ?? []) as Array<{
       id: string;
       type: string;
       priceCents: number;
     }>,
   };
-  const addOnsApplied = breakdown?.addOnsApplied ?? [];
-  const planOriginal = breakdown?.planOriginal ?? null;
-  const planAfterCoupon = breakdown?.planAfterCoupon ?? null;
 
-  // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading || !hasItems) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-lime-50 via-white to-lime-50/30 flex items-center justify-center p-4">
@@ -216,7 +375,6 @@ export default function PaymentPage() {
     );
   }
 
-  // ── Error ──────────────────────────────────────────────────────────────────
   if (isError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-lime-50 via-white to-lime-50/30 flex items-center justify-center p-4">
@@ -249,7 +407,6 @@ export default function PaymentPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-lime-50 via-white to-lime-50/30">
-      {/* ── Sticky header ── */}
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-lime-100">
         <div className="max-w-5xl mx-auto px-4 md:px-6 py-4 flex items-center gap-4">
           <Button
@@ -276,182 +433,32 @@ export default function PaymentPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* ── LEFT: Payment form ─────────────────────────────────────────── */}
-          <div className="lg:col-span-3">
-            <Card className="border-lime-200 shadow-lg rounded-2xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-lime-500 to-lime-600 px-6 py-4">
-                <CardTitle className="text-white flex items-center gap-2 text-lg">
-                  <Shield className="h-5 w-5" />
-                  Payment Details
-                </CardTitle>
-                <CardDescription className="text-lime-100 text-sm">
-                  Your payment is encrypted and secure
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="p-6">
-                <Elements
-                  stripe={stripePromise}
-                  options={{
-                    clientSecret,
-                    customerSessionClientSecret: customerSessionSecret,
-                    appearance: {
-                      theme: "stripe",
-                      variables: {
-                        colorPrimary: "#84cc16",
-                        colorBackground: "#ffffff",
-                        borderRadius: "12px",
-                        fontFamily: "inherit",
-                      },
-                    },
-                  }}
-                >
-                  <CheckoutForm
-                    clientSecret={clientSecret}
-                    finalAmount={finalAmount}
-                  />
-                </Elements>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* ── RIGHT: Order summary ───────────────────────────────────────── */}
-          <div className="lg:col-span-2">
-            <div className="sticky top-24 space-y-4">
-              <Card className="border-lime-200 shadow-lg rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-lime-500 to-lime-600 px-6 py-4">
-                  <CardTitle className="text-white flex items-center gap-2 text-lg">
-                    <Package className="h-5 w-5" />
-                    Order Summary
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent className="p-5 space-y-4">
-                  {/* Plan row */}
-                  {planOriginal != null && (
-                    <div className="flex items-center gap-3 p-3 bg-lime-50 border border-lime-200 rounded-xl">
-                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shrink-0">
-                        <Zap className="h-4 w-4 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-900 truncate">
-                          Selected Plan
-                        </p>
-                        <p className="text-xs text-slate-500">12 months</p>
-                      </div>
-                      <span className="text-sm font-extrabold text-slate-900 shrink-0">
-                        € {(breakdown.planOriginal / 100).toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Add-on rows */}
-                  {breakdown?.addOnsApplied?.length > 0 && (
-                    <div className="space-y-2">
-                      {breakdown.addOnsApplied.map(
-                        (a: {
-                          id: string;
-                          type: string;
-                          priceCents: number;
-                        }) => (
-                          <div
-                            key={a.id}
-                            className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl"
-                          >
-                            <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                              <Sparkles className="h-4 w-4 text-slate-500" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-slate-800 capitalize truncate">
-                                {a.type} Add-On
-                              </p>
-                              <Badge className="text-xs bg-slate-100 text-slate-600 border-slate-200 mt-0.5">
-                                Add-On
-                              </Badge>
-                            </div>
-                            <span className="text-sm font-extrabold text-slate-900 shrink-0">
-                              € {(a.priceCents / 100).toFixed(2)}
-                            </span>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  )}
-
-                  <Separator className="bg-slate-100" />
-
-                  {/* Coupon */}
-                  {couponCode && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-1.5 text-slate-500">
-                        <Tag className="h-3.5 w-3.5 text-lime-600" />
-                        Coupon
-                      </span>
-                      <Badge className="bg-lime-100 text-lime-700 border-lime-200 font-mono font-bold">
-                        {couponCode}
-                      </Badge>
-                    </div>
-                  )}
-
-                  {/* Discount */}
-                  {planOriginal != null &&
-                    planAfterCoupon != null &&
-                    planAfterCoupon < planOriginal && (
-                      <div className="flex items-center justify-between text-sm text-green-600">
-                        <span className="flex items-center gap-1">
-                          <Sparkles className="h-3.5 w-3.5" />
-                          Discount applied
-                        </span>
-                        <span className="font-semibold">
-                          - €{" "}
-                          {(
-                            (planOriginal -
-                              planAfterCoupon) /
-                            100
-                          ).toFixed(2)}
-                        </span>
-                      </div>
-                    )}
-
-                  <Separator className="bg-lime-100" />
-
-                  {/* Total */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-base font-bold text-slate-900">
-                      Total
-                    </span>
-                    <span className="text-2xl font-extrabold text-lime-700 flex items-center gap-1">
-                      <Euro className="h-5 w-5" />
-                      {(finalAmount / 100).toFixed(2)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* ── Trust badges ── */}
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { icon: Shield, label: "Secure" },
-                  { icon: Zap, label: "Instant" },
-                  { icon: CheckCircle2, label: "Verified" },
-                ].map(({ icon: Icon, label }) => (
-                  <div
-                    key={label}
-                    className="flex flex-col items-center gap-1.5 p-3 bg-white rounded-xl border border-slate-100 text-center"
-                  >
-                    <div className="h-7 w-7 rounded-lg bg-lime-50 flex items-center justify-center">
-                      <Icon className="h-3.5 w-3.5 text-lime-600" />
-                    </div>
-                    <span className="text-xs font-medium text-slate-600">
-                      {label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <CheckoutProvider
+          stripe={stripePromise}
+          options={{
+            fetchClientSecret: async () => clientSecret,
+            adaptivePricing: {
+              allowed: true,
+            },
+            elementsOptions: {
+              appearance: {
+                theme: "stripe",
+                variables: {
+                  colorPrimary: "#84cc16",
+                  colorBackground: "#ffffff",
+                  borderRadius: "12px",
+                  fontFamily: "inherit",
+                },
+              },
+            },
+          } as any}
+        >
+          <CheckoutPane
+            fallbackTotalCents={finalAmount}
+            fallbackBreakdown={breakdown}
+            couponCode={couponCode}
+          />
+        </CheckoutProvider>
       </div>
     </div>
   );

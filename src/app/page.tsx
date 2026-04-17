@@ -25,22 +25,24 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col  ">
       <Script
-        id="tawk-to"
+        id="chatwoot-widget"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
-              window.Tawk_API = window.Tawk_API || {};
-              window.Tawk_LoadStart = new Date();
-              (function(){
-                var s1 = document.createElement("script"),
-                    s0 = document.getElementsByTagName("script")[0];
-                s1.async = true;
-                s1.src = 'https://embed.tawk.to/6999d9f5f093ee1c3c746061/1ji0fmqho';
-                s1.charset = 'UTF-8';
-                s1.setAttribute('crossorigin', '*');
-                s0.parentNode.insertBefore(s1, s0);
-              })();
-            `,
+      (function(d,t) {
+        var BASE_URL="https://ohsitapp-chatwoot.6ybj83.easypanel.host";
+        var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=BASE_URL+"/packs/js/sdk.js";
+        g.async = true;
+        s.parentNode.insertBefore(g,s);
+        g.onload=function(){
+          window.chatwootSDK.run({
+            websiteToken: 'eaeAYuk7x9HrPRrAHsVyMmh2',
+            baseUrl: BASE_URL
+          })
+        }
+      })(document,"script");
+    `,
         }}
       />
       <main className="flex-1">

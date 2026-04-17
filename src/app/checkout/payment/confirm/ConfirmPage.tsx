@@ -1,5 +1,4 @@
 "use client";
-import { loadStripe } from "@stripe/stripe-js";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getSubTokenFirst } from "@/actions/fetch-action";
@@ -21,10 +20,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-);
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -77,28 +72,22 @@ export default function ConfirmPage() {
   const router = useRouter();
   const { clearCheckout } = useCheckoutStore();
 
-  // ✅ Stripe appends this automatically to return_url
-  const clientSecret = params.get("payment_intent_client_secret") ?? "";
+  const sessionId = params.get("session_id") ?? "";
 
   const q = useQuery({
-    queryKey: ["finalize-payment", clientSecret],
-    enabled: !!clientSecret,
+    queryKey: ["finalize-payment", sessionId],
+    enabled: !!sessionId,
     queryFn: async () => {
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error("Stripe init failed");
+      const result = await getSubTokenFirst(undefined, sessionId);
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
 
-      const { paymentIntent, error } =
-        await stripe.retrievePaymentIntent(clientSecret);
-      if (error) throw new Error(error.message ?? "Payment retrieval error");
-      if (!paymentIntent) throw new Error("No PaymentIntent found");
-
-      if (paymentIntent.status === "succeeded") {
-        // ✅ Single unified endpoint — no more type distinction
-        await getSubTokenFirst(paymentIntent.id);
+      if (result.data?.success) {
         return { status: "succeeded" as const };
       }
 
-      return { status: paymentIntent.status as string };
+      return { status: result.data?.status ?? "unknown" };
     },
   });
 
@@ -110,7 +99,7 @@ export default function ConfirmPage() {
   }, [q.data?.status, clearCheckout]);
 
   // ── Missing client secret ─────────────────────────────────────────────────
-  if (!clientSecret) {
+  if (!sessionId) {
     return (
       <FullScreenCard
         icon={XCircle}
@@ -182,9 +171,9 @@ export default function ConfirmPage() {
           onClick={() => router.push("/checkout")}
           className="w-full bg-gradient-to-r from-lime-500 to-lime-600 text-white font-semibold h-11 rounded-xl"
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Try Again
-        </Button>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
         <Button
           onClick={() => router.push("/")}
           variant="outline"
