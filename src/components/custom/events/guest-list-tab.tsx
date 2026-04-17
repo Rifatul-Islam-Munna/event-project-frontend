@@ -69,11 +69,11 @@ type GuestListTabProps = {
   onDeleteGuest: (id: string) => void;
 };
 
+const GUESTS_PER_PAGE = 10;
+
 export function GuestListTab({
-  guests,
   onAddGuest,
   onUpdateGuest,
-  onDeleteGuest,
 }: GuestListTabProps) {
   const [isCreateGuestModalOpen, setIsCreateGuestModalOpen] = useState(false);
   const [isEditGuestModalOpen, setIsEditGuestModalOpen] = useState(false);
@@ -85,6 +85,7 @@ export function GuestListTab({
   const [searchQuery, setSearchQuery] = useState("");
   const [user, SetUser] = useState<User | null>(null);
   const [typeOfUser, setTypeOfUser] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const getuserInfo = async () => {
@@ -168,14 +169,42 @@ export function GuestListTab({
     queryFn: () => GetGuestType(eventId),
   });
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, typeOfUser]);
+
   const filterSearch =
     data?.data?.filter(
       (guest) =>
         guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        guest.email.toLowerCase().includes(searchQuery.toLowerCase()),
+        (guest.email ?? "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()),
     ) || [];
 
   const hasGuests = data?.data && data.data.length > 0;
+  const totalFilteredGuests = filterSearch.length;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(totalFilteredGuests / GUESTS_PER_PAGE),
+  );
+  const pageStartIndex = (currentPage - 1) * GUESTS_PER_PAGE;
+  const paginatedGuests = filterSearch.slice(
+    pageStartIndex,
+    pageStartIndex + GUESTS_PER_PAGE,
+  );
+  const visibleGuestStart = totalFilteredGuests === 0 ? 0 : pageStartIndex + 1;
+  const visibleGuestEnd = Math.min(
+    pageStartIndex + GUESTS_PER_PAGE,
+    totalFilteredGuests,
+  );
+  const hasMultiplePages = totalFilteredGuests > GUESTS_PER_PAGE;
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   return (
     <div className="w-full">
@@ -345,12 +374,12 @@ export function GuestListTab({
                         No guests yet
                       </p>
                       <p className="text-sm mt-1 text-gray-600">
-                        Click "Add Guest" button above to start
+                        Click &quot;Add Guest&quot; button above to start
                       </p>
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : filterSearch?.length === 0 ? (
+              ) : totalFilteredGuests === 0 ? (
                 <TableRow className="hover:bg-white">
                   <TableCell colSpan={6} className="h-48 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-500">
@@ -367,7 +396,7 @@ export function GuestListTab({
                   </TableCell>
                 </TableRow>
               ) : (
-                filterSearch?.map((guest) => (
+                paginatedGuests.map((guest) => (
                   <TableRow
                     key={guest._id}
                     className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
@@ -476,11 +505,11 @@ export function GuestListTab({
                   No guests yet
                 </p>
                 <p className="text-sm mt-1 text-gray-600">
-                  Click "Add Guest" to start
+                  Click &quot;Add Guest&quot; to start
                 </p>
               </div>
             </div>
-          ) : filterSearch.length === 0 ? (
+          ) : totalFilteredGuests === 0 ? (
             <div className="p-8 text-center">
               <div className="flex flex-col items-center justify-center text-gray-500">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
@@ -495,7 +524,7 @@ export function GuestListTab({
               </div>
             </div>
           ) : (
-            filterSearch?.map((guest) => (
+            paginatedGuests.map((guest) => (
               <div
                 key={guest._id}
                 className="p-5 hover:bg-gray-50 transition-colors"
@@ -592,6 +621,48 @@ export function GuestListTab({
             ))
           )}
         </div>
+
+        {hasGuests && totalFilteredGuests > 0 ? (
+          <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-gray-600">
+              Showing {visibleGuestStart}-{visibleGuestEnd} of{" "}
+              {totalFilteredGuests} guest
+              {totalFilteredGuests === 1 ? "" : "s"}
+            </p>
+
+            {hasMultiplePages ? (
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((previous) => Math.max(1, previous - 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="border-gray-300"
+                >
+                  Previous
+                </Button>
+                <span className="min-w-24 text-center text-sm font-medium text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((previous) =>
+                      Math.min(totalPages, previous + 1),
+                    )
+                  }
+                  disabled={currentPage === totalPages}
+                  className="border-gray-300"
+                >
+                  Next
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {/* Edit Guest Modal */}

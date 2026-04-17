@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowRight, ChevronDown, LayoutGrid, Minus, Search, SeparatorVertical, Sparkles, Trash2, User, Users, X } from "lucide-react";
 import Image from "next/image";
@@ -85,6 +85,8 @@ const TABLE_BUTTONS: Array<{
     image: OC.src,
   },
 ];
+
+const INITIAL_VISIBLE_GUESTS = 10;
 
 function SidebarSection({
   title,
@@ -228,6 +230,9 @@ export function Sidebar({
   const isMobile = useIsMobile();
   const [searchUser, setSearchUser] = useState("");
   const [typeOfUser, setTypeOfUser] = useState<string | null>(null);
+  const [visibleGuestCount, setVisibleGuestCount] = useState(
+    INITIAL_VISIBLE_GUESTS,
+  );
   const deferredSearchUser = useDeferredValue(searchUser);
   const pathname = usePathname();
   const eventId = pathname.split("/").pop() as string;
@@ -256,6 +261,13 @@ export function Sidebar({
       return matchesSearch && matchesType;
     });
   }, [deferredSearchUser, typeOfUser, unassignedGuests]);
+
+  useEffect(() => {
+    setVisibleGuestCount(INITIAL_VISIBLE_GUESTS);
+  }, [searchUser, typeOfUser]);
+
+  const visibleGuests = filteredGuests.slice(0, visibleGuestCount);
+  const hasMoreGuests = filteredGuests.length > visibleGuestCount;
 
   const handleDragStart = (
     event: React.DragEvent,
@@ -484,6 +496,15 @@ export function Sidebar({
                 Drag a guest card onto any empty seat to assign them.
               </div>
 
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>
+                  Showing {visibleGuests.length} of {filteredGuests.length}
+                </span>
+                {hasMoreGuests ? (
+                  <span>{filteredGuests.length - visibleGuests.length} more</span>
+                ) : null}
+              </div>
+
               <div className="space-y-1">
                 {filteredGuests.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
@@ -497,7 +518,7 @@ export function Sidebar({
                     </p>
                   </div>
                 ) : (
-                  filteredGuests.map((guest) => (
+                  visibleGuests.map((guest) => (
                     <GuestCard
                       key={guest._id}
                       guest={guest}
@@ -507,6 +528,21 @@ export function Sidebar({
                   ))
                 )}
               </div>
+
+              {hasMoreGuests ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full rounded-2xl border-slate-200 hover:border-emerald-300 hover:bg-emerald-50"
+                  onClick={() =>
+                    setVisibleGuestCount(
+                      (previous) => previous + INITIAL_VISIBLE_GUESTS,
+                    )
+                  }
+                >
+                  Load More
+                </Button>
+              ) : null}
             </div>
           </SidebarSection>
         </div>
