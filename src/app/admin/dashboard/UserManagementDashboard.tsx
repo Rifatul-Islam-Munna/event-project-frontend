@@ -212,11 +212,20 @@ export default function UserManagementDashboard() {
     queryKey: ["plans"],
     queryFn: async () => {
       const result = await getAllThePlans();
+      console.log("getAllThePlans result:", result);
       if (result.error) {
         throw new Error(result.error.message || "Failed to load plans");
       }
-
-      return result.data ?? [];
+      const plansData = result.data;
+      console.log("plansData raw:", plansData);
+      if (Array.isArray(plansData)) {
+        return plansData;
+      }
+      if (plansData && typeof plansData === 'object' && Array.isArray(plansData.data)) {
+        return plansData.data;
+      }
+      console.log("plansData returning empty array, unexpected format");
+      return [];
     },
   });
 
@@ -420,7 +429,7 @@ export default function UserManagementDashboard() {
 
   // Get subscription type name
   const getSubscriptionTypeName = (typeId) => {
-    const type = subscriptionTypes?.find((t) => t._id === typeId);
+    const type = Array.isArray(subscriptionTypes) ? subscriptionTypes.find((t) => t._id === typeId) : undefined;
     return type ? type.title : "Unknown Plan";
   };
 
@@ -853,7 +862,7 @@ export default function UserManagementDashboard() {
                     <SelectValue placeholder="Select a subscription plan" />
                   </SelectTrigger>
                   <SelectContent>
-                    {subscriptionTypes?.map((type) => (
+                    {Array.isArray(subscriptionTypes) && subscriptionTypes.map((type) => (
                       <SelectItem key={type._id} value={type._id}>
                         <div className="flex items-center justify-between w-full">
                           <span>{type?.title}</span>
