@@ -19,10 +19,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { GetGuestType } from "@/actions/vendor-category-actions";
+import { useParams } from "next/navigation";
 
 type UploadCsvFormProps = {
   onClose: () => void;
-  eventId: string;
+  eventId?: string;
 };
 
 type UploadCsvPayload = {
@@ -35,11 +36,13 @@ export function UploadCsvForm({ onClose, eventId }: UploadCsvFormProps) {
   const [selectedGuestType, setSelectedGuestType] =
     useState<string>("from-file");
   const query = useQueryClient();
+  const params = useParams<{ id: string }>();
+  const resolvedEventId = eventId ?? params.id ?? "";
 
   const { data: guestTypeData, isLoading: isLoadingGuestTypes } = useQuery({
-    queryKey: ["guest-types", eventId],
-    queryFn: () => GetGuestType(eventId),
-    enabled: !!eventId,
+    queryKey: ["guest-types", resolvedEventId],
+    queryFn: () => GetGuestType(resolvedEventId),
+    enabled: Boolean(resolvedEventId),
     retry: false,
   });
 
@@ -50,7 +53,7 @@ export function UploadCsvForm({ onClose, eventId }: UploadCsvFormProps) {
     mutationFn: (payload: UploadCsvPayload) =>
       updateMultipleGuest(
         payload.file,
-        eventId,
+        resolvedEventId,
         payload.guestType === "from-file" ? undefined : payload.guestType,
       ),
     onSuccess: (data) => {

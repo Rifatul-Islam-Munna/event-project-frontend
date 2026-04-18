@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -38,22 +37,10 @@ import { format, isValid } from "date-fns";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { deleteVendor, getAllVendor } from "@/actions/fetch-action";
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Vendor } from "@/@types/events-details";
 
-type VendorManagementTabProps = {
-  vendors: Vendor[];
-  onAddVendor: (vendor: Omit<Vendor, "id">) => void;
-  onUpdateVendor: (vendor: Vendor) => void;
-  onDeleteVendor: (id: string) => void;
-};
-
-export function VendorManagementTab({
-  vendors,
-  onAddVendor,
-  onUpdateVendor,
-  onDeleteVendor,
-}: VendorManagementTabProps) {
+export function VendorManagementTab() {
   const [isCreateVendorModalOpen, setIsCreateVendorModalOpen] = useState(false);
   const [isEditVendorModalOpen, setIsEditVendorModalOpen] = useState(false);
   const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] =
@@ -95,10 +82,11 @@ export function VendorManagementTab({
     mutate(vendorToDelete._id);
   };
 
-  const pathName = usePathname();
+  const params = useParams<{ id: string }>();
+  const eventId = params.id;
   const { data, isPending: isLoading } = useQuery({
     queryKey: ["get-all-vendor"],
-    queryFn: () => getAllVendor(pathName.split("/").pop() as string),
+    queryFn: () => getAllVendor(eventId),
   });
 
   const hasVendors = data?.data && data.data.length > 0;
@@ -138,7 +126,7 @@ export function VendorManagementTab({
               </DialogDescription>
             </DialogHeader>
             <CreateVendorForm
-              onAddVendor={onAddVendor}
+              eventId={eventId}
               onClose={() => setIsCreateVendorModalOpen(false)}
             />
           </DialogContent>
@@ -424,7 +412,6 @@ export function VendorManagementTab({
             </DialogHeader>
             <EditVendorForm
               vendor={selectedVendor}
-              onUpdateVendor={onUpdateVendor}
               onClose={() => setIsEditVendorModalOpen(false)}
             />
           </DialogContent>

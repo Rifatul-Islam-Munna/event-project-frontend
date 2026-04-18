@@ -26,19 +26,18 @@ import { Vendor } from "@/@types/events-details";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { postVendor } from "@/actions/fetch-action";
 import { toast } from "sonner";
-import { usePathname } from "next/navigation";
 import {
   getVendorCategory,
   VendorCategory,
 } from "@/actions/vendor-category-actions";
 
 type CreateVendorFormProps = {
-  onAddVendor: (vendor: Omit<Vendor, "id">) => void;
+  eventId: string;
   onClose: () => void;
 };
 
 export function CreateVendorForm({
-  onAddVendor,
+  eventId,
   onClose,
 }: CreateVendorFormProps) {
   const [name, setName] = useState("");
@@ -77,9 +76,6 @@ export function CreateVendorForm({
       });
     },
   });
-
-  const pathName = usePathname();
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -96,7 +92,7 @@ export function CreateVendorForm({
       category,
       reminder_message: reminderMessage,
       starting_date: format(startingDate, "yyyy-MM-dd"),
-      event_id: pathName.split("/").pop(),
+      event_id: eventId,
     };
 
     mutate(newVendor);

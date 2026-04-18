@@ -53,7 +53,7 @@ export default function EventDetailsPage() {
 
   const handleManageEvent = () => {
     router.push(
-      `/dashboard/events/${eventId}?venueWidth=${event?.width}&venueHeight=${event?.height}`
+      `/dashboard/events/${eventId}/guests?venueWidth=${event?.width}&venueHeight=${event?.height}`
     );
   };
   const isSubscriptionActive = user?.subscription?.endDate

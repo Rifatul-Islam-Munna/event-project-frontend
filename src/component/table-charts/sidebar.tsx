@@ -5,7 +5,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowRight, ChevronDown, LayoutGrid, Minus, Search, SeparatorVertical, Sparkles, Trash2, User, Users, X } from "lucide-react";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import type { Guest } from "@/@types/events-details";
 import { GetGuestType } from "@/actions/vendor-category-actions";
 import AddUser from "@/app/dashboard/AddUser";
@@ -234,8 +234,8 @@ export function Sidebar({
     INITIAL_VISIBLE_GUESTS,
   );
   const deferredSearchUser = useDeferredValue(searchUser);
-  const pathname = usePathname();
-  const eventId = pathname.split("/").pop() as string;
+  const params = useParams<{ id: string }>();
+  const eventId = params.id;
 
   const { data: userType } = useQuery({
     queryKey: ["get-all-user-Type", eventId],

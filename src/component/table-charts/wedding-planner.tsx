@@ -5,7 +5,7 @@ import type Konva from "konva";
 import { Group, Layer, Line, Rect, Stage } from "react-konva";
 import { useIdleTimer } from "react-idle-timer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { jsPDF } from "jspdf";
 import { Menu } from "lucide-react";
 import { toast } from "sonner";
@@ -173,8 +173,8 @@ const drawPdfTextBadge = (pdf: jsPDF, badge: PdfTextBadge) => {
 
 function WeddingPlanner() {
   const query = useSearchParams();
-  const pathname = usePathname();
-  const eventId = pathname.split("/").pop() as string;
+  const params = useParams<{ id: string }>();
+  const eventId = params.id;
   const queryClient = useQueryClient();
   const setDirtyCount = useStore((state) => state.setDataLength);
 

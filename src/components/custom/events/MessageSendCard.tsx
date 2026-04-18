@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   getMessageService,
   getMyLimit,
@@ -223,8 +223,8 @@ export function MessageSendCard() {
   const [open, setOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const pathName = usePathname();
-  const eventId = pathName.split("/").pop() as string;
+  const params = useParams<{ id: string }>();
+  const eventId = params.id;
   const queryClient = useQueryClient();
 
   // ── Queries ───────────────────────────────────────────────────────────

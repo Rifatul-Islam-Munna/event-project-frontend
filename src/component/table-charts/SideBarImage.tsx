@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { pdfToPng } from "@/lib/pdf";
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 
 export const ExtrasComponent = () => {
-  const pathname = usePathname();
-  const eventId = pathname.split("/").pop() as string;
+  const params = useParams<{ id: string }>();
+  const eventId = params.id;
   const { imageUrl, setImageUrl, clearImageUrl, isEditMode, hasImageOverride } =
     useZoomResponive(
     (state) => state,

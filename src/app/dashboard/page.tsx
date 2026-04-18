@@ -133,10 +133,10 @@ export default function DashboardPage() {
   const router = useRouter();
   const handleManageEvent = (eventSlug: string, name: number, logo: number) => {
     console.log(
-      `Navigating to manage event: /dashboard/events/${eventSlug}?name=${name}&logo=${logo}`,
+      `Navigating to manage event: /dashboard/events/${eventSlug}/guests?venueWidth=${name}&venueHeight=${logo}`,
     );
     router.push(
-      `/dashboard/events/${eventSlug}?venueWidth=${name}&venueHeight=${logo}`,
+      `/dashboard/events/${eventSlug}/guests?venueWidth=${name}&venueHeight=${logo}`,
     );
   };
 

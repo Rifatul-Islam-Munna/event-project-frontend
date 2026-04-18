@@ -65,7 +65,7 @@ type EventTableProps = {
   }) => void;
   onUpdateEvent: (event: Event & { logoFile?: File | null }) => void;
   onDeleteEvent: (id: string) => void;
-  onManageEvent: (slug: string) => void;
+  onManageEvent: (slug: string, width: number, height: number) => void;
 };
 
 const ITEMS_PER_PAGE = 5;
@@ -323,7 +323,11 @@ export function EventTable({
                         <Button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onManageEvent(event._id, event.width, event.height);
+                            onManageEvent(
+                              event._id,
+                              event.width ?? 50,
+                              event.height ?? 30,
+                            );
                           }}
                           disabled={!isSubscriptionActive}
                           className="bg-lime-600 hover:bg-lime-700 text-white px-5 h-10 font-medium disabled:bg-gray-300 disabled:text-gray-500"
@@ -450,7 +454,11 @@ export function EventTable({
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onManageEvent(event._id, event.width, event.height);
+                      onManageEvent(
+                        event._id,
+                        event.width ?? 50,
+                        event.height ?? 30,
+                      );
                     }}
                     disabled={!isSubscriptionActive}
                     className="w-full bg-lime-600 hover:bg-lime-700 text-white h-11 font-medium text-base disabled:bg-gray-300 disabled:text-gray-500"

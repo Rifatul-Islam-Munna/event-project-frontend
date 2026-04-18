@@ -22,27 +22,23 @@ import { Loader2 } from "lucide-react";
 
 type EditGuestFormProps = {
   guest: Guest;
-  onUpdateGuest: (guest: Guest) => void;
   onClose: () => void;
 };
 
-export function EditGuestForm({
-  guest,
-  onUpdateGuest,
-  onClose,
-}: EditGuestFormProps) {
+export function EditGuestForm({ guest, onClose }: EditGuestFormProps) {
   const [name, setName] = useState(guest.name);
   const [email, setEmail] = useState(guest.email);
   const [phone, setPhone] = useState(guest.phone || "");
   const [type, setType] = useState<string | undefined>(guest.type || undefined);
 
   const query = useQueryClient();
+  const guestEventId = guest.event_id ?? "";
 
   // Fetch guest types for the event
   const { data: guestTypeData, isLoading: isLoadingTypes } = useQuery({
-    queryKey: ["guest-types", guest.event_id],
-    queryFn: () => GetGuestType(guest.event_id),
-    enabled: !!guest.event_id,
+    queryKey: ["guest-types", guestEventId],
+    queryFn: () => GetGuestType(guestEventId),
+    enabled: Boolean(guestEventId),
     retry: false,
   });
 

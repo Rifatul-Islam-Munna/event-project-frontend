@@ -54,7 +54,7 @@ import {
   DownloadGuestPdf,
   getAllGuest,
 } from "@/actions/fetch-action";
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { User } from "@/@types/user-types";
 import { getUserInfo } from "@/actions/auth";
@@ -62,19 +62,9 @@ import { AddUserTypeDialog } from "./AddUserTypeDialog";
 import { Badge } from "@/components/ui/badge";
 import { GetGuestType } from "@/actions/vendor-category-actions";
 
-type GuestListTabProps = {
-  guests: Guest[];
-  onAddGuest: (guest: Omit<Guest, "id">) => void;
-  onUpdateGuest: (guest: Guest) => void;
-  onDeleteGuest: (id: string) => void;
-};
-
 const GUESTS_PER_PAGE = 10;
 
-export function GuestListTab({
-  onAddGuest,
-  onUpdateGuest,
-}: GuestListTabProps) {
+export function GuestListTab() {
   const [isCreateGuestModalOpen, setIsCreateGuestModalOpen] = useState(false);
   const [isEditGuestModalOpen, setIsEditGuestModalOpen] = useState(false);
   const [isViewGuestModalOpen, setIsViewGuestModalOpen] = useState(false);
@@ -112,8 +102,8 @@ export function GuestListTab({
     setIsDeleteConfirmModalOpen(true);
   };
 
-  const pathName = usePathname();
-  const eventId = pathName.split("/").pop() as string;
+  const params = useParams<{ id: string }>();
+  const eventId = params.id;
 
   const { mutate: DownloadImage, isPending: isDownloadPending } = useMutation({
     mutationKey: ["downloadImage"],
@@ -297,7 +287,6 @@ export function GuestListTab({
 
                 <TabsContent value="manual" className="mt-6">
                   <CreateGuestForm
-                    onAddGuest={onAddGuest}
                     onClose={() => setIsCreateGuestModalOpen(false)}
                     eventId={eventId}
                   />
@@ -683,7 +672,6 @@ export function GuestListTab({
             </DialogHeader>
             <EditGuestForm
               guest={selectedGuest}
-              onUpdateGuest={onUpdateGuest}
               onClose={() => setIsEditGuestModalOpen(false)}
             />
           </DialogContent>

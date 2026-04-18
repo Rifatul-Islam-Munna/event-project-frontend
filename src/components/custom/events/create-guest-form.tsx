@@ -19,20 +19,15 @@ import { uploadOneGuest } from "@/actions/fetch-action";
 import { toast } from "sonner";
 import { Guest } from "@/@types/events-details";
 import { Loader2 } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import { GetGuestType } from "@/actions/vendor-category-actions";
 
 type CreateGuestFormProps = {
-  onAddGuest: (guest: Omit<Guest, "id">) => void;
   onClose: () => void;
-  eventId: string;
+  eventId?: string;
 };
 
-export function CreateGuestForm({
-  onAddGuest,
-  onClose,
-  eventId,
-}: CreateGuestFormProps) {
+export function CreateGuestForm({ onClose, eventId }: CreateGuestFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -40,14 +35,15 @@ export function CreateGuestForm({
   const [children, setChildren] = useState(0);
   const [type, setType] = useState<string | undefined>(undefined);
 
-  const pathName = usePathname();
+  const params = useParams<{ id: string }>();
   const query = useQueryClient();
+  const resolvedEventId = eventId ?? params.id ?? "";
 
   // Fetch guest types
   const { data: guestTypeData, isLoading: isLoadingTypes } = useQuery({
-    queryKey: ["guest-types", eventId],
-    queryFn: () => GetGuestType(eventId),
-    enabled: !!eventId,
+    queryKey: ["guest-types", resolvedEventId],
+    queryFn: () => GetGuestType(resolvedEventId),
+    enabled: Boolean(resolvedEventId),
     retry: false,
   });
 
@@ -85,7 +81,7 @@ export function CreateGuestForm({
       phone,
       adults: adults,
       children: children,
-      event_id: pathName.split("/").pop(),
+      event_id: resolvedEventId,
       ...(type && type !== "none" && { type }), // Only include if selected and not "none"
     };
 

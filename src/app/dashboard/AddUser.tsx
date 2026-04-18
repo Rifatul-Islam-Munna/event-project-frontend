@@ -14,11 +14,14 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Upload, UserPlus } from "lucide-react";
+import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const AddUser = () => {
   const [isCreateGuestModalOpen, setIsCreateGuestModalOpen] = useState(false);
   const [user, SetUser] = useState<User | null>(null);
+  const params = useParams<{ id: string }>();
+  const eventId = params.id;
   useEffect(() => {
     const getuserInfo = async () => {
       const info = await getUserInfo();
@@ -64,12 +67,15 @@ const AddUser = () => {
           </TabsList>
           <TabsContent value="manual" className="mt-4">
             <CreateGuestForm
-              onAddGuest={() => {}}
+              eventId={eventId}
               onClose={() => setIsCreateGuestModalOpen(false)}
             />
           </TabsContent>
           <TabsContent value="csv" className="mt-4">
-            <UploadCsvForm onClose={() => setIsCreateGuestModalOpen(false)} />
+            <UploadCsvForm
+              eventId={eventId}
+              onClose={() => setIsCreateGuestModalOpen(false)}
+            />
           </TabsContent>
         </Tabs>
       </DialogContent>

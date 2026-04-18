@@ -17,7 +17,7 @@ import { useZoomResponive } from "@/zustan-fn/zoomResponive";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getVanuSize, postVanuSize, updateEvent } from "@/actions/fetch-action";
 import { toast } from "sonner";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface Point {
   x: number;
@@ -115,6 +115,8 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
     height: venueHeight * SCALE_FACTOR,
   });
   const pathName = usePathname();
+  const params = useParams<{ id: string }>();
+  const eventId = params.id;
   const imageRef = useRef<Konva.Image | null>(null);
   const searchParams = useSearchParams();
   const [activeImageUrl, setActiveImageUrl] = useState<string | null>(null);
@@ -226,7 +228,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
     const fromData = new FormData();
     fromData.append("width", newWidth.toString());
     fromData.append("height", newHeight.toString());
-    fromData.append("id", pathName.split("/")[3]);
+    fromData.append("id", eventId);
 
     UpdateVanue(fromData);
     const currentParams = new URLSearchParams(
@@ -247,6 +249,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
     SCALE_FACTOR,
     onDimensionsChange,
     UpdateVanue,
+    eventId,
     pathName,
     router,
     searchParams,

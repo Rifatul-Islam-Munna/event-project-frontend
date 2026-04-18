@@ -32,15 +32,10 @@ import {
 
 type EditVendorFormProps = {
   vendor: Vendor;
-  onUpdateVendor: (vendor: Vendor) => void;
   onClose: () => void;
 };
 
-export function EditVendorForm({
-  vendor,
-  onUpdateVendor,
-  onClose,
-}: EditVendorFormProps) {
+export function EditVendorForm({ vendor, onClose }: EditVendorFormProps) {
   const [name, setName] = useState(vendor.name);
   const [email, setEmail] = useState(vendor.email);
   const [whatsapp, setWhatsapp] = useState(vendor.whatsapp);
