@@ -3,9 +3,14 @@
 import { DeleteAxios, GetRequestAxios, GetRequestNormal, PatchRequestAxios, PostRequestAxios } from "@/api-fn/api-hook";
 
 
+export interface VendorCategoryItem {
+  name: string;
+  logo?: string;
+}
+
 export interface VendorCategory {
   _id: string;
-  category: string[];
+  category: VendorCategoryItem[];
   createdAt: string;
   updatedAt: string;
 }
@@ -15,14 +20,14 @@ export const getVendorCategory = async () => {
   return { data, error };
 };
 
-export const createVendorCategory = async (payload: { category: string[] }) => {
+export const createVendorCategory = async (payload: { category: VendorCategoryItem[] }) => {
 
     console.log("payload->",payload);
   const [data, error] = await PostRequestAxios('/seo', payload);
   return { data, error };
 };
 
-export const updateVendorCategory = async (id: string, payload: { category: string[] }) => {
+export const updateVendorCategory = async (id: string, payload: { category: VendorCategoryItem[] }) => {
   const [data, error] = await PatchRequestAxios(`/seo/${id}`, payload);
   return { data, error };
 };
@@ -137,5 +142,78 @@ export const updateAddOn = async (payload: any) => {
 
 export const deleteAddOn = async (id: string) => {
   const [data, error] = await DeleteAxios<any>(`/add-ons?id=${id}`);
+  return { data, error };
+};
+
+// ─── Global Vendor Actions ───────────────────────────────────────────────
+
+export interface GlobalVendor {
+  _id: string;
+  name: string;
+  shortDescription?: string;
+  phone?: string;
+  email?: string;
+  facebookLink?: string;
+  website?: string;
+  category: string;
+  logo?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GlobalVendorResponse {
+  data: GlobalVendor[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export const getGlobalVendors = async (
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  category?: string
+): Promise<{ data: GlobalVendorResponse | null; error: any }> => {
+  let url = `/global-vendors?page=${page}&limit=${limit}`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+  if (category) url += `&category=${encodeURIComponent(category)}`;
+  const [data, error] = await GetRequestNormal<GlobalVendorResponse>(url);
+  return { data, error };
+};
+
+export const getGlobalVendorsByCategory = async (
+  category: string,
+  page: number = 1,
+  limit: number = 10
+): Promise<{ data: GlobalVendorResponse | null; error: any }> => {
+  const [data, error] = await GetRequestNormal<GlobalVendorResponse>(
+    `/global-vendors/category/${encodeURIComponent(category)}?page=${page}&limit=${limit}`
+  );
+  return { data, error };
+};
+
+export const getGlobalVendorCategories = async () => {
+  const [data, error] = await GetRequestNormal<string[]>('/global-vendors/categories');
+  return { data, error };
+};
+
+export const getGlobalVendorById = async (id: string): Promise<{ data: GlobalVendor | null; error: any }> => {
+  const [data, error] = await GetRequestNormal<GlobalVendor>(`/global-vendors/${id}`);
+  return { data, error };
+};
+
+export const createGlobalVendor = async (payload: Omit<GlobalVendor, '_id' | 'createdAt' | 'updatedAt'>) => {
+  const [data, error] = await PostRequestAxios<GlobalVendor>('/global-vendors', payload);
+  return { data, error };
+};
+
+export const updateGlobalVendor = async (id: string, payload: Partial<GlobalVendor>) => {
+  const [data, error] = await PatchRequestAxios<GlobalVendor>(`/global-vendors/${id}`, payload);
+  return { data, error };
+};
+
+export const deleteGlobalVendor = async (id: string) => {
+  const [data, error] = await DeleteAxios<GlobalVendor>(`/global-vendors/${id}`);
   return { data, error };
 };

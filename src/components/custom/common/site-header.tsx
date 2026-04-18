@@ -14,6 +14,7 @@ import {
   User,
   Mail,
   ChevronDown,
+  Building2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -129,9 +130,10 @@ export function SiteHeader() {
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent
-                  className="w-72 sm:w-80 p-0"
+                  className="w-72 sm:w-80 p-0 bg-white border-slate-200 shadow-xl rounded-xl overflow-hidden"
                   align="end"
                   forceMount
+                  sideOffset={8}
                 >
                   {/* User Info Section */}
                   <div className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
@@ -196,6 +198,8 @@ export function SiteHeader() {
                         </div>
                       </Link>
                     </DropdownMenuItem>
+
+                    
 
                     <DropdownMenuSeparator className="my-2" />
 

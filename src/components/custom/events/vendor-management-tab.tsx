@@ -29,6 +29,7 @@ import {
   Calendar,
   AlertTriangle,
   Building2,
+  ExternalLink,
 } from "lucide-react";
 
 import { CreateVendorForm } from "./create-vendor-form";
@@ -37,18 +38,30 @@ import { format, isValid } from "date-fns";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { deleteVendor, getAllVendor } from "@/actions/fetch-action";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Vendor } from "@/@types/events-details";
+import { getVendorCategory, VendorCategory } from "@/actions/vendor-category-actions";
 
 export function VendorManagementTab() {
+  const router = useRouter();
   const [isCreateVendorModalOpen, setIsCreateVendorModalOpen] = useState(false);
   const [isEditVendorModalOpen, setIsEditVendorModalOpen] = useState(false);
   const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] =
     useState(false);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const query = useQueryClient();
+
+  // Fetch vendor categories for the global vendors section
+  const { data: categoryData } = useQuery({
+    queryKey: ["vendor-category"],
+    queryFn: getVendorCategory,
+  });
+  const vendorCategory = categoryData?.data as VendorCategory | undefined;
+  const categories = vendorCategory?.category || [];
 
   const handleEditClick = (vendor: Vendor) => {
     setSelectedVendor(vendor);
@@ -132,6 +145,8 @@ export function VendorManagementTab() {
           </DialogContent>
         </Dialog>
       </div>
+
+      
 
       {/* Table Container */}
       <div className="border-y border-gray-200 bg-white overflow-hidden">
@@ -393,6 +408,31 @@ export function VendorManagementTab() {
           )}
         </div>
       </div>
+
+      {/* Global Vendor Categories - Below Table */}
+      {categories.length > 0 && (
+        <div className="border-t border-gray-200 bg-gray-50 px-4 py-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-4">Browse Global Vendors</h2>
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {categories.map((cat, index) => (
+              <Link
+                key={index}
+                href={`/dashboard/global-vendors/${encodeURIComponent(cat.name)}`}
+                className="flex-shrink-0"
+              >
+                <div className="w-16 h-16 rounded border border-gray-200 bg-white flex items-center justify-center overflow-hidden">
+                  {cat.logo ? (
+                    <img src={cat.logo} alt={cat.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <Building2 className="h-6 w-6 text-gray-400" />
+                  )}
+                </div>
+                <p className="text-xs text-center text-gray-600 mt-2 max-w-[64px] truncate">{cat.name}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Edit Vendor Modal */}
       {selectedVendor && (

@@ -83,7 +83,7 @@ const data = {
     },
     {
       title: "Vendor Category",
-      url: "/admin/dashboard/seo",
+      url: "/admin/dashboard/vendor-categories",
       icon: ArrowLeftCircle,
     },
     {
