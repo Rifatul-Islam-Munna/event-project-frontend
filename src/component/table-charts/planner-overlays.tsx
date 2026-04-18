@@ -2,7 +2,11 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import {
+  ChevronDown,
   Download,
+  FileText,
+  LayoutTemplate,
+  List,
   Loader2,
   Pencil,
   RotateCw,
@@ -13,6 +17,12 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const MOTION_CLASS =
@@ -22,9 +32,12 @@ interface PlannerActionBarProps {
   pendingChanges: number;
   guestCount: number;
   unassignedGuestCount: number;
-  isPdfDownloading: boolean;
+  isExporting: boolean;
+  activeExportLabel: string;
   onSave: () => void;
-  onDownloadPdf: () => void;
+  onDownloadLayoutPdf: () => void;
+  onDownloadGuestListPdf: () => void;
+  onDownloadGuestListCsv: () => void;
 }
 
 function StatusChip({
@@ -46,9 +59,12 @@ export function PlannerActionBar({
   pendingChanges,
   guestCount,
   unassignedGuestCount,
-  isPdfDownloading,
+  isExporting,
+  activeExportLabel,
   onSave,
-  onDownloadPdf,
+  onDownloadLayoutPdf,
+  onDownloadGuestListPdf,
+  onDownloadGuestListCsv,
 }: PlannerActionBarProps) {
   const hasPendingChanges = pendingChanges > 0;
 
@@ -70,20 +86,71 @@ export function PlannerActionBar({
           />
         ) : null}
 
-        <Button
-          type="button"
-          variant="ghost"
-          className={`h-8 gap-1.5 rounded-md px-2.5 text-[13px] text-slate-600 hover:bg-slate-100 hover:text-slate-900 ${MOTION_CLASS}`}
-          onClick={onDownloadPdf}
-          disabled={isPdfDownloading}
-        >
-          {isPdfDownloading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Download className="h-4 w-4" />
-          )}
-          <span>{isPdfDownloading ? "Exporting" : "PDF"}</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className={`h-8 gap-1.5 rounded-md px-2.5 text-[13px] text-slate-600 hover:bg-slate-100 hover:text-slate-900 ${MOTION_CLASS}`}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              <span>{activeExportLabel}</span>
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="w-[260px] rounded-2xl border-slate-200 p-2 shadow-xl"
+          >
+            <DropdownMenuItem
+              className="cursor-pointer rounded-xl px-3 py-2.5"
+              onSelect={onDownloadLayoutPdf}
+            >
+              <LayoutTemplate className="mt-0.5 h-4 w-4 text-slate-500" />
+              <div className="space-y-0.5">
+                <p className="text-[13px] font-medium text-slate-900">
+                  Layout PDF
+                </p>
+                <p className="text-xs text-slate-500">
+                  Full seating map with tables and guest labels.
+                </p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer rounded-xl px-3 py-2.5"
+              onSelect={onDownloadGuestListPdf}
+            >
+              <FileText className="mt-0.5 h-4 w-4 text-slate-500" />
+              <div className="space-y-0.5">
+                <p className="text-[13px] font-medium text-slate-900">
+                  Guest List PDF
+                </p>
+                <p className="text-xs text-slate-500">
+                  Clean printable list grouped by table.
+                </p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer rounded-xl px-3 py-2.5"
+              onSelect={onDownloadGuestListCsv}
+            >
+              <List className="mt-0.5 h-4 w-4 text-slate-500" />
+              <div className="space-y-0.5">
+                <p className="text-[13px] font-medium text-slate-900">
+                  Guest List CSV
+                </p>
+                <p className="text-xs text-slate-500">
+                  Spreadsheet-friendly table and guest export.
+                </p>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Button
           type="button"
@@ -98,7 +165,13 @@ export function PlannerActionBar({
   );
 }
 
-export function PlannerExportOverlay() {
+export function PlannerExportOverlay({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
   return (
     <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-white/30 backdrop-blur-[2px]">
       <div className="flex max-w-sm items-center gap-3 rounded-2xl border border-slate-900/10 bg-white/96 px-4 py-3 shadow-md">
@@ -106,12 +179,8 @@ export function PlannerExportOverlay() {
           <Loader2 className="h-5 w-5 animate-spin" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-900">
-            Generating seating PDF
-          </p>
-          <p className="text-xs text-slate-500">
-            Sharpening layout, names, and venue details.
-          </p>
+          <p className="text-sm font-semibold text-slate-900">{title}</p>
+          <p className="text-xs text-slate-500">{description}</p>
         </div>
       </div>
     </div>

@@ -84,6 +84,30 @@ const PDF_EXPORT_TOP_MARGIN_MM = 12;
 const PDF_EXPORT_FOOTER_MM = 12;
 const PDF_EXPORT_TITLE_LINE_HEIGHT_MM = 8;
 const PDF_POINT_TO_MM = 0.352778;
+const GUEST_LIST_SORTER = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
+
+type ExportType = "layout-pdf" | "guest-list-pdf" | "guest-list-csv";
+
+interface GuestListExportRow {
+  groupLabel: string;
+  seatLabel: string;
+  guestName: string;
+  email: string;
+  phone: string;
+  guestType: string;
+  adults: string;
+  children: string;
+  status: "Assigned" | "Unassigned";
+}
+
+interface GuestListExportGroup {
+  label: string;
+  rows: GuestListExportRow[];
+  status: "assigned" | "unassigned";
+}
 
 const convertImageToPngDataUrl = (image: HTMLImageElement) => {
   const canvas = document.createElement("canvas");
@@ -188,6 +212,153 @@ const drawPdfTextBadge = (pdf: jsPDF, badge: PdfTextBadge) => {
   });
 };
 
+const getExportBaseName = (title: string) =>
+  title.replace(/[^a-z0-9]/gi, "_").replace(/^_+|_+$/g, "").toLowerCase() ||
+  "wedding_planner";
+
+const escapeCsvValue = (value: string) =>
+  `"${value.replace(/"/g, '""')}"`;
+
+const downloadFileBlob = (blob: Blob, fileName: string) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
+
+const normalizeExportValue = (value: string | number | null | undefined) =>
+  value === null || value === undefined ? "" : String(value).trim();
+
+const buildGuestListGroups = (
+  nodes: PlannerNode[],
+  guests: Guest[],
+): GuestListExportGroup[] => {
+  const guestById = new Map<string, Guest>();
+  const guestByName = new Map<string, Guest>();
+  const assignedGuestIds = new Set<string>();
+
+  guests.forEach((guest) => {
+    const guestKey = guest._id ?? guest.id;
+    const guestName = guest.name.trim().toLowerCase();
+
+    if (guestKey) {
+      guestById.set(guestKey, guest);
+    }
+
+    if (guestName) {
+      guestByName.set(guestName, guest);
+    }
+  });
+
+  const seatingNodes = nodes
+    .filter(
+      (node): node is SeatingPlannerNode =>
+        node.type === "tableNode" || node.type === "chairNode",
+    )
+    .sort((left, right) => {
+      const labelCompare = GUEST_LIST_SORTER.compare(
+        left.data.label,
+        right.data.label,
+      );
+
+      if (labelCompare !== 0) {
+        return labelCompare;
+      }
+
+      if (left.position.y !== right.position.y) {
+        return left.position.y - right.position.y;
+      }
+
+      return left.position.x - right.position.x;
+    });
+
+  const assignedGroups = seatingNodes.flatMap((node) => {
+    const seats = isChairNode(node) ? node.data.chairs : node.data.seats;
+    const seatPrefix = isChairNode(node) ? "Chair" : "Seat";
+    const label = node.data.label.trim() || `Area ${node.id.slice(-4)}`;
+    const rows = seats.flatMap((seat, index) => {
+      const guestName = seat.occupiedByName?.trim();
+
+      if (!guestName) {
+        return [];
+      }
+
+      if (seat.occupiedBy) {
+        assignedGuestIds.add(seat.occupiedBy);
+      }
+
+      const guest =
+        (seat.occupiedBy ? guestById.get(seat.occupiedBy) : undefined) ??
+        guestByName.get(guestName.toLowerCase());
+
+      return [
+        {
+          groupLabel: label,
+          seatLabel: `${seatPrefix} ${index + 1}`,
+          guestName,
+          email: normalizeExportValue(guest?.email),
+          phone: normalizeExportValue(guest?.phone),
+          guestType: normalizeExportValue(guest?.type),
+          adults: normalizeExportValue(guest?.adults),
+          children: normalizeExportValue(guest?.children),
+          status: "Assigned" as const,
+        },
+      ];
+    });
+
+    if (rows.length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        label,
+        rows,
+        status: "assigned" as const,
+      },
+    ];
+  });
+
+  const unassignedRows = guests
+    .filter((guest) => {
+      const guestKey = guest._id ?? guest.id;
+
+      if (guestKey) {
+        return !assignedGuestIds.has(guestKey);
+      }
+
+      return !guest.isAssigned;
+    })
+    .sort((left, right) => GUEST_LIST_SORTER.compare(left.name, right.name))
+    .map((guest) => ({
+      groupLabel: "Unassigned Guests",
+      seatLabel: "",
+      guestName: guest.name.trim(),
+      email: normalizeExportValue(guest.email),
+      phone: normalizeExportValue(guest.phone),
+      guestType: normalizeExportValue(guest.type),
+      adults: normalizeExportValue(guest.adults),
+      children: normalizeExportValue(guest.children),
+      status: "Unassigned" as const,
+    }));
+
+  return unassignedRows.length > 0
+    ? [
+        ...assignedGroups,
+        {
+          label: "Unassigned Guests",
+          rows: unassignedRows,
+          status: "unassigned" as const,
+        },
+      ]
+    : assignedGroups;
+};
+
 function WeddingPlanner() {
   const query = useSearchParams();
   const params = useParams<{ id: string }>();
@@ -242,7 +413,7 @@ function WeddingPlanner() {
   const [lineResizeState, setLineResizeState] = useState<LineResizeState | null>(
     null,
   );
-  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
+  const [activeExportType, setActiveExportType] = useState<ExportType | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [panState, setPanState] = useState<{
     startClientX: number;
@@ -323,6 +494,21 @@ function WeddingPlanner() {
     queryFn: () => getHeader(),
     gcTime: 1000 * 60 * 60,
   });
+
+  const plannerTitle = companyInfo?.data?.title?.trim() || "Wedding Planner";
+  const plannerLogoUrl = companyInfo?.data?.imageUrl || "";
+  const guestListGroups = useMemo(
+    () => buildGuestListGroups(nodes, guests),
+    [guests, nodes],
+  );
+  const guestListRowCount = useMemo(
+    () =>
+      guestListGroups.reduce(
+        (total, group) => total + group.rows.length,
+        0,
+      ),
+    [guestListGroups],
+  );
 
   const clearTrackedNode = useCallback((nodeId: string) => {
     setChangedObjects((previous) => ({
@@ -968,13 +1154,21 @@ function WeddingPlanner() {
     }
   }, [changedObjects, updateAllGuests, updateDecorativeNodes, updateSeatPlanNodes]);
 
-  const handleDownloadPdf = useCallback(async () => {
-    if (!stageRef.current || stageSize.width === 0 || stageSize.height === 0) {
-      toast.error("Planner stage not ready.");
+  const handleDownloadLayoutPdf = useCallback(async () => {
+    if (
+      activeExportType ||
+      !stageRef.current ||
+      stageSize.width === 0 ||
+      stageSize.height === 0
+    ) {
+      if (!stageRef.current || stageSize.width === 0 || stageSize.height === 0) {
+        toast.error("Planner stage not ready.");
+      }
+
       return;
     }
 
-    setIsPdfDownloading(true);
+    setActiveExportType("layout-pdf");
     setIsExporting(true);
     setSelectedNodeId(null);
 
@@ -1055,8 +1249,8 @@ function WeddingPlanner() {
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
-      const title = companyInfo?.data?.title || "Wedding Planner";
-      const logoUrl = companyInfo?.data?.imageUrl || "";
+      const title = plannerTitle;
+      const logoUrl = plannerLogoUrl;
       const logoBoxSize = logoUrl ? 38 : 0;
       const logoSize = logoUrl ? 28 : 0;
       const headerStartY = PDF_EXPORT_TOP_MARGIN_MM;
@@ -1268,9 +1462,7 @@ function WeddingPlanner() {
         { align: "right" },
       );
 
-      pdf.save(
-        `${title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}-layout.pdf`,
-      );
+      pdf.save(`${getExportBaseName(title)}-layout.pdf`);
       toast.success("Layout downloaded.");
     } catch (error) {
       console.error(error);
@@ -1278,15 +1470,367 @@ function WeddingPlanner() {
     } finally {
       setViewport(previousViewport);
       setIsExporting(false);
-      setIsPdfDownloading(false);
+      setActiveExportType(null);
     }
   }, [
-    companyInfo?.data?.imageUrl,
-    companyInfo?.data?.title,
+    activeExportType,
     getContentBounds,
     getViewportForBounds,
+    plannerLogoUrl,
+    plannerTitle,
     stageSize.height,
     stageSize.width,
+  ]);
+
+  const handleDownloadGuestListCsv = useCallback(() => {
+    if (activeExportType) {
+      return;
+    }
+
+    if (guestListRowCount === 0) {
+      toast.error("No guests to export.");
+      return;
+    }
+
+    setActiveExportType("guest-list-csv");
+
+    try {
+      const csvRows = [
+        [
+          "Area",
+          "Seat",
+          "Guest Name",
+          "Email",
+          "Phone",
+          "Guest Type",
+          "Adults",
+          "Children",
+          "Status",
+        ],
+        ...guestListGroups.flatMap((group) =>
+          group.rows.map((row) => [
+            row.groupLabel,
+            row.seatLabel,
+            row.guestName,
+            row.email,
+            row.phone,
+            row.guestType,
+            row.adults,
+            row.children,
+            row.status,
+          ]),
+        ),
+      ];
+      const csvContent = csvRows
+        .map((row) => row.map((value) => escapeCsvValue(value)).join(","))
+        .join("\r\n");
+
+      downloadFileBlob(
+        new Blob([csvContent], { type: "text/csv;charset=utf-8;" }),
+        `${getExportBaseName(plannerTitle)}-guest-list.csv`,
+      );
+      toast.success("Guest list CSV downloaded.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download guest list CSV.");
+    } finally {
+      setActiveExportType(null);
+    }
+  }, [activeExportType, guestListGroups, guestListRowCount, plannerTitle]);
+
+  const handleDownloadGuestListPdf = useCallback(async () => {
+    if (activeExportType) {
+      return;
+    }
+
+    if (guestListRowCount === 0) {
+      toast.error("No guests to export.");
+      return;
+    }
+
+    setActiveExportType("guest-list-pdf");
+
+    try {
+      if ("fonts" in document) {
+        await document.fonts.ready;
+      }
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        compress: true,
+      });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const marginX = 16;
+      const contentWidth = pageWidth - marginX * 2;
+      const footerY = pageHeight - 8;
+      const assignedGroups = guestListGroups.filter(
+        (group) => group.status === "assigned",
+      );
+      const assignedGuestCount = assignedGroups.reduce(
+        (total, group) => total + group.rows.length,
+        0,
+      );
+      const unassignedGuestCount =
+        guestListGroups.find((group) => group.status === "unassigned")?.rows.length ?? 0;
+      const generatedOn = new Date().toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+      const toLines = (value: string | string[]) =>
+        Array.isArray(value) ? value : [value];
+
+      let logo: HTMLImageElement | null = null;
+
+      if (plannerLogoUrl) {
+        try {
+          logo = await loadImageElement(plannerLogoUrl);
+        } catch {
+          logo = null;
+        }
+      }
+
+      const drawHeader = (showSummary: boolean) => {
+        const dateRightX = logo ? pageWidth - marginX - 18 : pageWidth - marginX;
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(20);
+        pdf.setTextColor(15, 23, 42);
+        pdf.text(plannerTitle, marginX, 17);
+
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(11);
+        pdf.setTextColor(71, 85, 105);
+        pdf.text("Guest Seating List", marginX, 23);
+        pdf.setFontSize(9);
+        pdf.text(`Generated on ${generatedOn}`, dateRightX, 23, {
+          align: "right",
+        });
+
+        if (logo) {
+          const logoBoxSize = 14;
+          const logoSize = 10;
+          const logoBoxX = pageWidth - marginX - logoBoxSize;
+          const logoBoxY = 10;
+          const logoX = logoBoxX + (logoBoxSize - logoSize) / 2;
+          const logoY = logoBoxY + (logoBoxSize - logoSize) / 2;
+
+          pdf.setFillColor(248, 250, 252);
+          pdf.setDrawColor(203, 213, 225);
+          pdf.roundedRect(
+            logoBoxX,
+            logoBoxY,
+            logoBoxSize,
+            logoBoxSize,
+            3,
+            3,
+            "FD",
+          );
+
+          try {
+            const logoDataUrl = convertImageToPngDataUrl(logo);
+            pdf.addImage(
+              logoDataUrl,
+              "PNG",
+              logoX,
+              logoY,
+              logoSize,
+              logoSize,
+            );
+          } catch {
+            pdf.addImage(
+              logo,
+              getPdfImageFormatFromSource(logo.currentSrc || plannerLogoUrl),
+              logoX,
+              logoY,
+              logoSize,
+              logoSize,
+            );
+          }
+        }
+
+        pdf.setDrawColor(203, 213, 225);
+        pdf.setLineWidth(0.45);
+        pdf.line(marginX, 28, pageWidth - marginX, 28);
+
+        let nextY = 34;
+
+        if (showSummary) {
+          pdf.setFillColor(248, 250, 252);
+          pdf.setDrawColor(226, 232, 240);
+          pdf.roundedRect(marginX, nextY, contentWidth, 14, 4, 4, "FD");
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(10);
+          pdf.setTextColor(15, 23, 42);
+          pdf.text(`${guestListRowCount} guests`, marginX + 4, nextY + 5.8);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(71, 85, 105);
+          pdf.text(
+            `${assignedGuestCount} seated | ${unassignedGuestCount} unassigned | ${assignedGroups.length} sections`,
+            marginX + 4,
+            nextY + 10.8,
+          );
+          nextY += 19;
+        }
+
+        return nextY;
+      };
+
+      const addPage = () => {
+        pdf.addPage();
+        return drawHeader(false);
+      };
+
+      let cursorY = drawHeader(true);
+
+      const drawGroupHeader = (
+        group: GuestListExportGroup,
+        isContinuation = false,
+      ) => {
+        if (group.status === "unassigned") {
+          pdf.setFillColor(255, 251, 235);
+          pdf.setDrawColor(253, 230, 138);
+          pdf.setTextColor(146, 64, 14);
+        } else {
+          pdf.setFillColor(236, 253, 245);
+          pdf.setDrawColor(167, 243, 208);
+          pdf.setTextColor(6, 95, 70);
+        }
+
+        pdf.roundedRect(marginX, cursorY, contentWidth, 10, 3, 3, "FD");
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(11);
+        pdf.text(
+          `${group.label}${isContinuation ? " (cont.)" : ""}`,
+          marginX + 4,
+          cursorY + 6.2,
+        );
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(9);
+        pdf.text(
+          `${group.rows.length} guests`,
+          pageWidth - marginX - 4,
+          cursorY + 6.2,
+          { align: "right" },
+        );
+        pdf.setTextColor(15, 23, 42);
+        cursorY += 13;
+      };
+
+      for (const group of guestListGroups) {
+        if (cursorY + 13 > footerY) {
+          cursorY = addPage();
+        }
+
+        drawGroupHeader(group);
+
+        for (const row of group.rows) {
+          const badgeText = row.seatLabel || "Open";
+          const metaParts = [
+            row.email,
+            row.phone,
+            row.guestType,
+            row.adults ? `Adults ${row.adults}` : "",
+            row.children ? `Children ${row.children}` : "",
+          ].filter(Boolean);
+          const badgeWidth = Math.max(
+            18,
+            Math.min(28, pdf.getTextWidth(badgeText) + 8),
+          );
+          const textX = marginX + badgeWidth + 8;
+          const textWidth = Math.max(40, contentWidth - badgeWidth - 12);
+          const nameLines = toLines(
+            pdf.splitTextToSize(row.guestName, textWidth),
+          ).slice(0, 2);
+          const metaLines =
+            metaParts.length > 0
+              ? toLines(pdf.splitTextToSize(metaParts.join(" | "), textWidth)).slice(
+                  0,
+                  3,
+                )
+              : [];
+          const rowHeight =
+            7 + nameLines.length * 4 + (metaLines.length > 0 ? metaLines.length * 3.4 + 1 : 0);
+
+          if (cursorY + rowHeight + 2 > footerY) {
+            cursorY = addPage();
+            drawGroupHeader(group, true);
+          }
+
+          pdf.setFillColor(255, 255, 255);
+          pdf.setDrawColor(226, 232, 240);
+          pdf.roundedRect(marginX, cursorY, contentWidth, rowHeight, 3, 3, "FD");
+
+          if (row.status === "Assigned") {
+            pdf.setFillColor(220, 252, 231);
+            pdf.setDrawColor(167, 243, 208);
+            pdf.setTextColor(6, 95, 70);
+          } else {
+            pdf.setFillColor(254, 243, 199);
+            pdf.setDrawColor(252, 211, 77);
+            pdf.setTextColor(146, 64, 14);
+          }
+
+          pdf.roundedRect(marginX + 3, cursorY + 3, badgeWidth, 6.5, 3, 3, "FD");
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(8.5);
+          pdf.text(badgeText, marginX + 3 + badgeWidth / 2, cursorY + 7.4, {
+            align: "center",
+          });
+
+          pdf.setTextColor(15, 23, 42);
+          pdf.setFontSize(11);
+          pdf.text(nameLines, textX, cursorY + 7);
+
+          if (metaLines.length > 0) {
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(8.5);
+            pdf.setTextColor(100, 116, 139);
+            pdf.text(
+              metaLines,
+              textX,
+              cursorY + 8 + nameLines.length * 4,
+            );
+          }
+
+          cursorY += rowHeight + 3;
+        }
+
+        cursorY += 1;
+      }
+
+      const totalPages = pdf.getNumberOfPages();
+
+      for (let page = 1; page <= totalPages; page += 1) {
+        pdf.setPage(page);
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(8.5);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(
+          `Page ${page} of ${totalPages}`,
+          pageWidth - marginX,
+          footerY,
+          { align: "right" },
+        );
+      }
+
+      pdf.save(`${getExportBaseName(plannerTitle)}-guest-list.pdf`);
+      toast.success("Guest list PDF downloaded.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download guest list PDF.");
+    } finally {
+      setActiveExportType(null);
+    }
+  }, [
+    activeExportType,
+    guestListGroups,
+    guestListRowCount,
+    plannerLogoUrl,
+    plannerTitle,
   ]);
 
   const pendingChangesCount =
@@ -1294,6 +1838,29 @@ function WeddingPlanner() {
     changedObjects.node.length +
     changedObjects.decorativeItems.length;
   const unassignedGuestCount = guests.filter((guest) => !guest.isAssigned).length;
+  const activeExportLabel =
+    activeExportType === "layout-pdf"
+      ? "Exporting layout"
+      : activeExportType === "guest-list-pdf"
+        ? "Exporting guest PDF"
+        : activeExportType === "guest-list-csv"
+          ? "Exporting CSV"
+          : "Export";
+  const exportOverlayCopy =
+    activeExportType === "guest-list-pdf"
+      ? {
+          title: "Generating guest list PDF",
+          description: "Grouping guests by table for a clean printable list.",
+        }
+      : activeExportType === "guest-list-csv"
+        ? {
+            title: "Preparing guest list CSV",
+            description: "Building a spreadsheet-ready export with table names.",
+          }
+        : {
+            title: "Generating layout PDF",
+            description: "Sharpening layout, names, and venue details.",
+          };
   const canInteractWithNodes = !guestDragState && !lineResizeState;
   const handleSelectNode = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId);
@@ -1539,12 +2106,20 @@ function WeddingPlanner() {
           pendingChanges={pendingChangesCount}
           guestCount={guests.length}
           unassignedGuestCount={unassignedGuestCount}
-          isPdfDownloading={isPdfDownloading}
+          isExporting={Boolean(activeExportType)}
+          activeExportLabel={activeExportLabel}
           onSave={handleSaveChanges}
-          onDownloadPdf={handleDownloadPdf}
+          onDownloadLayoutPdf={handleDownloadLayoutPdf}
+          onDownloadGuestListPdf={handleDownloadGuestListPdf}
+          onDownloadGuestListCsv={handleDownloadGuestListCsv}
         />
 
-        {isPdfDownloading ? <PlannerExportOverlay /> : null}
+        {activeExportType ? (
+          <PlannerExportOverlay
+            title={exportOverlayCopy.title}
+            description={exportOverlayCopy.description}
+          />
+        ) : null}
 
         {!isExporting && (
           <>

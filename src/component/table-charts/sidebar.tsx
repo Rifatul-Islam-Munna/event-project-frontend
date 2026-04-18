@@ -132,58 +132,6 @@ function SidebarSection({
   );
 }
 
-function GuestRow({
-  guest,
-  onDragStart,
-  onRemoveGuest,
-}: {
-  guest: Guest;
-  onDragStart: (event: React.DragEvent, guestId: string, guestName: string) => void;
-  onRemoveGuest: (guestId: string) => void;
-}) {
-  const initials = guest.name
-    .split(" ")
-    .map((part) => part[0] ?? "")
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-  return (
-    <div
-      className={`group flex h-9 cursor-grab items-center gap-2 rounded-lg border border-transparent px-1.5 active:cursor-grabbing hover:bg-slate-50 ${MOTION_CLASS}`}
-      draggable
-      onDragStart={(event) => onDragStart(event, guest._id!, guest.name)}
-    >
-      <Avatar className="h-6 w-6 shrink-0">
-        <AvatarFallback className="bg-slate-100 text-[10px] font-semibold text-slate-700">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-medium text-slate-900">
-          {guest.name}
-        </p>
-      </div>
-
-      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400/90" />
-
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className={`h-6 w-6 shrink-0 rounded-full text-slate-400 opacity-0 hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 ${MOTION_CLASS}`}
-        onClick={(event) => {
-          event.stopPropagation();
-          onRemoveGuest(guest._id ?? "");
-        }}
-      >
-        <X className="h-3.5 w-3.5" />
-      </Button>
-    </div>
-  );
-}
-
 function TableTypeCard({
   label,
   image,
@@ -243,6 +191,62 @@ function QuickItemButton({
   );
 }
 
+function GuestRow({
+  guest,
+  onDragStart,
+  onRemoveGuest,
+}: {
+  guest: Guest;
+  onDragStart: (event: React.DragEvent, guestId: string, guestName: string) => void;
+  onRemoveGuest: (guestId: string) => void;
+}) {
+  const initials = guest.name
+    .split(" ")
+    .map((part) => part[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  return (
+    <div
+      className={`group flex h-11 cursor-grab items-center gap-2 rounded-xl border border-transparent px-1.5 active:cursor-grabbing hover:bg-slate-50 ${MOTION_CLASS}`}
+      draggable
+      onDragStart={(event) => onDragStart(event, guest._id!, guest.name)}
+    >
+      <Avatar className="h-8 w-8 border border-slate-200 bg-white">
+        <AvatarFallback className="bg-slate-100 text-[11px] font-semibold text-slate-700">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="truncate text-[13px] font-medium text-slate-900">
+            {guest.name}
+          </p>
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+        </div>
+        <p className="truncate text-[11px] text-slate-500">
+          Drag to any open seat
+        </p>
+      </div>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className={`h-7 w-7 shrink-0 rounded-full text-slate-400 opacity-0 hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 ${MOTION_CLASS}`}
+        onClick={(event) => {
+          event.stopPropagation();
+          onRemoveGuest(guest._id ?? "");
+        }}
+      >
+        <X className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
+
 export function Sidebar({
   onAddTableClick,
   guests = [],
@@ -292,6 +296,13 @@ export function Sidebar({
   const visibleGuests = filteredGuests.slice(0, visibleGuestCount);
   const hasMoreGuests = filteredGuests.length > visibleGuestCount;
 
+  const handleQuickAdd = (type: TableType) => {
+    onAddTableClick(type);
+    if (isMobile) {
+      setShowSidebar(false);
+    }
+  };
+
   const handleDragStart = (
     event: React.DragEvent,
     guestId: string,
@@ -300,13 +311,6 @@ export function Sidebar({
     event.dataTransfer.setData("guestId", guestId);
     event.dataTransfer.setData("guestName", guestName);
     event.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleQuickAdd = (type: TableType) => {
-    onAddTableClick(type);
-    if (isMobile) {
-      setShowSidebar(false);
-    }
   };
 
   const body = (
@@ -401,91 +405,91 @@ export function Sidebar({
           </SidebarSection>
 
           <SidebarSection title="Unassigned Guests">
-            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr),auto]">
+            <div className="space-y-3">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   placeholder="Search guests"
                   value={searchUser}
                   onChange={(event) => setSearchUser(event.target.value)}
-                  className="h-9 rounded-lg border-slate-900/10 pl-9 text-[13px] focus-visible:ring-emerald-500"
+                  className="h-10 rounded-xl border-slate-200 bg-slate-50 pl-9 text-[13px] focus-visible:ring-emerald-500"
                 />
               </div>
-              <AddUser />
-            </div>
 
-            <Select
-              value={typeOfUser ?? "all"}
-              onValueChange={(value) =>
-                setTypeOfUser(value === "all" ? null : value)
-              }
-            >
-              <SelectTrigger className="h-9 rounded-lg border-slate-900/10 text-[13px]">
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {userType?.data?.type?.map((type: string) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <div className="grid grid-cols-[minmax(0,1fr),auto] gap-2">
+                <Select
+                  value={typeOfUser ?? "all"}
+                  onValueChange={(value) =>
+                    setTypeOfUser(value === "all" ? null : value)
+                  }
+                >
+                  <SelectTrigger className="h-10 rounded-xl border-slate-200 bg-slate-50 text-[13px]">
+                    <SelectValue placeholder="Filter by type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {userType?.data?.type?.map((type: string) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <AddUser />
+              </div>
 
-            <div className="rounded-lg bg-slate-50 px-3 py-2 text-[12px] text-slate-500">
-              Drag a guest onto any open seat to assign them.
-            </div>
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-3 py-2 text-[12px] text-slate-500">
+                Drag a guest onto any open seat to assign them.
+              </div>
 
-            <div className="flex items-center justify-between text-[12px] text-slate-500">
-              <span>
-                Showing {visibleGuests.length} of {filteredGuests.length}
-              </span>
+              <div className="flex items-center justify-between text-[12px] text-slate-500">
+                <span>
+                  Showing {visibleGuests.length} of {filteredGuests.length}
+                </span>
+                <span>{unassignedGuests.length} total unassigned</span>
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                {filteredGuests.length === 0 ? (
+                  <div className="px-4 py-8 text-center">
+                    <p className="text-sm font-medium text-slate-900">
+                      {searchUser ? "No matching guests" : "All guests assigned"}
+                    </p>
+                    <p className="mt-1 text-[12px] text-slate-500">
+                      {searchUser
+                        ? "Try another name, email, or type."
+                        : "New guests will appear here automatically."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-100">
+                    {visibleGuests.map((guest) => (
+                      <GuestRow
+                        key={guest._id}
+                        guest={guest}
+                        onDragStart={handleDragStart}
+                        onRemoveGuest={onRemoveGuest}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {hasMoreGuests ? (
-                <span>{filteredGuests.length - visibleGuests.length} more</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={`h-9 w-full rounded-xl border-slate-200 text-[13px] text-slate-700 hover:bg-slate-50 ${MOTION_CLASS}`}
+                  onClick={() =>
+                    setVisibleGuestCount(
+                      (previous) => previous + INITIAL_VISIBLE_GUESTS,
+                    )
+                  }
+                >
+                  Load More
+                </Button>
               ) : null}
             </div>
-
-            <div className="rounded-xl border border-slate-900/8">
-              {filteredGuests.length === 0 ? (
-                <div className="px-4 py-8 text-center">
-                  <p className="text-sm font-medium text-slate-700">
-                    {searchUser ? "No matching guests" : "All guests are seated"}
-                  </p>
-                  <p className="mt-1 text-[12px] text-slate-500">
-                    {searchUser
-                      ? "Try another name, email, or guest type."
-                      : "Add more guests or free seats to continue."}
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-900/6 px-2 py-1">
-                  {visibleGuests.map((guest) => (
-                    <GuestRow
-                      key={guest._id}
-                      guest={guest}
-                      onDragStart={handleDragStart}
-                      onRemoveGuest={onRemoveGuest}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {hasMoreGuests ? (
-              <Button
-                type="button"
-                variant="ghost"
-                className={`h-8 w-full rounded-lg border border-slate-900/10 text-[12px] font-medium text-slate-700 hover:bg-slate-100 ${MOTION_CLASS}`}
-                onClick={() =>
-                  setVisibleGuestCount(
-                    (previous) => previous + INITIAL_VISIBLE_GUESTS,
-                  )
-                }
-              >
-                Load More
-              </Button>
-            ) : null}
           </SidebarSection>
         </div>
       </ScrollArea>

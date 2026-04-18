@@ -83,6 +83,93 @@ function ExportTextBadge({
   );
 }
 
+interface GuestSeatControlsProps {
+  x: number;
+  y: number;
+  onDragHandleDown: (event: Konva.KonvaEventObject<MouseEvent>) => void;
+  onRemove: () => void;
+}
+
+function GuestSeatControls({
+  x,
+  y,
+  onDragHandleDown,
+  onRemove,
+}: GuestSeatControlsProps) {
+  return (
+    <Group x={x} y={y}>
+      <Rect
+        width={64}
+        height={24}
+        cornerRadius={12}
+        fill="rgba(255,255,255,0.98)"
+        stroke="rgba(148,163,184,0.42)"
+        strokeWidth={1}
+        shadowColor="#0f172a"
+        shadowBlur={12}
+        shadowOpacity={0.14}
+        shadowOffsetY={3}
+      />
+      <Rect
+        x={4}
+        y={4}
+        width={26}
+        height={16}
+        cornerRadius={8}
+        fill="rgba(5,150,105,0.11)"
+        onMouseDown={(event) => {
+          event.cancelBubble = true;
+          onDragHandleDown(event);
+        }}
+      />
+      {[0, 1, 2].flatMap((column) =>
+        [0, 1].map((row) => (
+          <Circle
+            key={`drag-dot-${column}-${row}`}
+            x={12 + column * 5}
+            y={9 + row * 5}
+            radius={1.2}
+            fill="#047857"
+            listening={false}
+          />
+        )),
+      )}
+      <Rect
+        x={31.5}
+        y={5}
+        width={1}
+        height={14}
+        cornerRadius={1}
+        fill="rgba(148,163,184,0.4)"
+        listening={false}
+      />
+      <Rect
+        x={34}
+        y={4}
+        width={26}
+        height={16}
+        cornerRadius={8}
+        fill="rgba(244,63,94,0.1)"
+        onMouseDown={(event) => {
+          event.cancelBubble = true;
+          onRemove();
+        }}
+      />
+      <Text
+        text="x"
+        x={34}
+        y={5}
+        width={26}
+        align="center"
+        fontSize={10}
+        fontStyle="bold"
+        fill="#be123c"
+        listening={false}
+      />
+    </Group>
+  );
+}
+
 interface DecorativeCanvasNodeProps {
   node: DecorativePlannerNode;
   isSelected: boolean;
@@ -490,67 +577,27 @@ function TableCanvasNodeInner({
                 />
               ) : null}
 
-              {showDragHandle ? (
-                <>
-                  <Rect
-                    x={-12}
-                    y={-12}
-                    width={22}
-                    height={22}
-                    cornerRadius={7}
-                    fill="#334155"
-                    onMouseDown={(event) =>
-                      onGuestHandleDown(
-                        event,
-                        seatGeometry.seat.occupiedBy!,
-                        seatGeometry.seat.occupiedByName ?? "",
-                        seatGeometry.seat.id,
-                        node.id,
-                      )
-                    }
-                  />
-                  <Text
-                    text="::"
-                    x={-12}
-                    y={-4}
-                    width={22}
-                    align="center"
-                    fontSize={10}
-                    fontStyle="bold"
-                    fill="#ffffff"
-                    listening={false}
-                  />
-                </>
-              ) : null}
-
-              {showRemoveControl ? (
-                <>
-                  <Circle
-                    x={TABLE_SEAT_SIZE + 10}
-                    y={4}
-                    radius={9}
-                    fill="#ef4444"
-                    onMouseDown={(event) => {
-                      event.cancelBubble = true;
-                      onRemoveGuest(
-                        node.id,
-                        seatGeometry.seat.id,
-                        seatGeometry.seat.occupiedBy!,
-                      );
-                    }}
-                  />
-                  <Text
-                    text="x"
-                    x={TABLE_SEAT_SIZE + 2}
-                    y={-4}
-                    width={16}
-                    align="center"
-                    fontSize={12}
-                    fontStyle="bold"
-                    fill="#ffffff"
-                    listening={false}
-                  />
-                </>
+              {showDragHandle || showRemoveControl ? (
+                <GuestSeatControls
+                  x={seatRadius - 32}
+                  y={-34}
+                  onDragHandleDown={(event) =>
+                    onGuestHandleDown(
+                      event,
+                      seatGeometry.seat.occupiedBy!,
+                      seatGeometry.seat.occupiedByName ?? "",
+                      seatGeometry.seat.id,
+                      node.id,
+                    )
+                  }
+                  onRemove={() =>
+                    onRemoveGuest(
+                      node.id,
+                      seatGeometry.seat.id,
+                      seatGeometry.seat.occupiedBy!,
+                    )
+                  }
+                />
               ) : null}
             </Group>
           );
@@ -753,67 +800,27 @@ function ChairCanvasNodeInner({
                 />
               ) : null}
 
-              {showDragHandle ? (
-                <>
-                  <Rect
-                    x={-14}
-                    y={-13}
-                    width={24}
-                    height={24}
-                    cornerRadius={7}
-                    fill="#334155"
-                    onMouseDown={(event) =>
-                      onGuestHandleDown(
-                        event,
-                        chairGeometry.seat.occupiedBy!,
-                        chairGeometry.seat.occupiedByName ?? "",
-                        chairGeometry.seat.id,
-                        node.id,
-                      )
-                    }
-                  />
-                  <Text
-                    text="::"
-                    x={-14}
-                    y={-4}
-                    width={24}
-                    align="center"
-                    fontSize={10}
-                    fontStyle="bold"
-                    fill="#ffffff"
-                    listening={false}
-                  />
-                </>
-              ) : null}
-
-              {showRemoveControl ? (
-                <>
-                  <Circle
-                    x={CHAIR_SIZE + 8}
-                    y={4}
-                    radius={10}
-                    fill="#ef4444"
-                    onMouseDown={(event) => {
-                      event.cancelBubble = true;
-                      onRemoveGuest(
-                        node.id,
-                        chairGeometry.seat.id,
-                        chairGeometry.seat.occupiedBy!,
-                      );
-                    }}
-                  />
-                  <Text
-                    text="x"
-                    x={CHAIR_SIZE}
-                    y={-4}
-                    width={16}
-                    align="center"
-                    fontSize={12}
-                    fontStyle="bold"
-                    fill="#ffffff"
-                    listening={false}
-                  />
-                </>
+              {showDragHandle || showRemoveControl ? (
+                <GuestSeatControls
+                  x={CHAIR_SIZE / 2 - 32}
+                  y={-32}
+                  onDragHandleDown={(event) =>
+                    onGuestHandleDown(
+                      event,
+                      chairGeometry.seat.occupiedBy!,
+                      chairGeometry.seat.occupiedByName ?? "",
+                      chairGeometry.seat.id,
+                      node.id,
+                    )
+                  }
+                  onRemove={() =>
+                    onRemoveGuest(
+                      node.id,
+                      chairGeometry.seat.id,
+                      chairGeometry.seat.occupiedBy!,
+                    )
+                  }
+                />
               ) : null}
             </Group>
           );
