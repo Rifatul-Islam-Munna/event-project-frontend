@@ -84,7 +84,7 @@ export type MessageSend = {
   isMessageSend: boolean;
 };
 
-// ─── Timezones ────────────────────────────────────────────────────────────────
+// ─── Timezones ──────────────────────────────────────────────────────────────
 const MAJOR_TIMEZONES = {
   european: [
     { value: "Europe/London", label: "London (United Kingdom)" },
@@ -180,42 +180,37 @@ const formatTimezone = (tz: string) => {
   }
 };
 
-// ─── Limit Credit Pill ────────────────────────────────────────────────────────
-function CreditPill({
+// ─── Credit Row ─────────────────────────────────────────────────────────────
+function CreditRow({
   icon: Icon,
   label,
   value,
-  color,
   isEmpty,
 }: {
   icon: React.ElementType;
   label: string;
   value: number | string;
-  color: string;
   isEmpty: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all",
-        isEmpty ? "bg-slate-50 border-slate-200 text-slate-400" : color,
-      )}
-    >
-      <Icon className="h-3.5 w-3.5 shrink-0" />
-      <span className="text-xs opacity-75">{label}</span>
+    <div className="flex items-center justify-between py-1.5">
+      <div className="flex items-center gap-2 text-zinc-500">
+        <Icon className="h-3.5 w-3.5" />
+        <span className="text-xs">{label}</span>
+      </div>
       <span
         className={cn(
-          "ml-auto font-bold tabular-nums",
-          isEmpty && "text-slate-400",
+          "text-xs font-semibold tabular-nums",
+          isEmpty ? "text-zinc-300" : "text-zinc-800",
         )}
       >
-        {isEmpty ? "—" : value}
+        {isEmpty ? "\u2014" : value}
       </span>
     </div>
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Main Component ──────────────────────────────────────────────────────────
 export function MessageSendCard() {
   const [localDateTime, setLocalDateTime] = useState<string>("");
   const [selectedTimezone, setSelectedTimezone] =
@@ -227,7 +222,6 @@ export function MessageSendCard() {
   const eventId = params.id;
   const queryClient = useQueryClient();
 
-  // ── Queries ───────────────────────────────────────────────────────────
   const {
     data: response,
     isPending,
@@ -246,13 +240,11 @@ export function MessageSendCard() {
   const data = response?.data;
   const limitData = userLimitRes?.data;
 
-  // ── Extracted limits ──────────────────────────────────────────────────
   const smsLimit = limitData?.message ?? 0;
   const whatsappLimit = limitData?.whatsapp ?? 0;
   const emailLimit = limitData?.email ?? 0;
   const flushCardCoupon = limitData?.flushCardCoupon ?? null;
 
-  // ── Mutations ─────────────────────────────────────────────────────────
   const resendMutation = useMutation({
     mutationFn: () => RequestForResend(eventId),
     onSuccess: () => {
@@ -286,7 +278,6 @@ export function MessageSendCard() {
     }
   }, [data?.startingDate]);
 
-  // ── Derived ───────────────────────────────────────────────────────────
   const hasPending = useMemo(() => {
     if (!data) return false;
     const n = data.numberOfNotSend ?? {};
@@ -322,38 +313,37 @@ export function MessageSendCard() {
     if (!data)
       return {
         label: "Loading",
-        cls: "bg-slate-100 text-slate-600 border-slate-200",
+        cls: "bg-zinc-100 text-zinc-500 border-zinc-200",
         icon: Clock,
       };
     if (data.isMessageSend && !hasPending)
       return {
         label: "All Sent",
-        cls: "bg-lime-100 text-lime-700 border-lime-200",
+        cls: "bg-lime-50 text-lime-700 border-lime-200",
         icon: CheckCircle2,
       };
     if (hasPending)
       return {
-        label: "Partially Sent",
-        cls: "bg-amber-100 text-amber-700 border-amber-200",
+        label: "Partial",
+        cls: "bg-zinc-100 text-zinc-600 border-zinc-200",
         icon: AlertCircle,
       };
     return {
-      label: "Ready to Send",
-      cls: "bg-blue-100 text-blue-700 border-blue-200",
+      label: "Scheduled",
+      cls: "bg-zinc-100 text-zinc-600 border-zinc-200",
       icon: Clock,
     };
   }, [data, hasPending]);
 
   const StatusIcon = statusConfig.icon;
 
-  // ── Loading ───────────────────────────────────────────────────────────
   if (isPending)
     return (
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="flex items-center justify-center py-14">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-9 h-9 border-[3px] border-lime-200 border-t-lime-600 rounded-full animate-spin" />
-            <p className="text-sm text-slate-400">Loading schedule...</p>
+      <Card className="border-zinc-200 shadow-sm rounded-xl">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-2.5">
+            <div className="w-7 h-7 border-2 border-zinc-200 border-t-lime-500 rounded-full animate-spin" />
+            <p className="text-xs text-zinc-400">Loading schedule\u2026</p>
           </div>
         </CardContent>
       </Card>
@@ -361,16 +351,12 @@ export function MessageSendCard() {
 
   if (!data)
     return (
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="flex flex-col items-center justify-center py-14 gap-2">
-          <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center">
-            <MessageSquare className="h-6 w-6 text-slate-400" />
-          </div>
-          <p className="text-sm font-medium text-slate-600">
-            No message schedule found
-          </p>
-          <p className="text-xs text-slate-400">
-            Place some guests first to activate messaging
+      <Card className="border-zinc-200 shadow-sm rounded-xl">
+        <CardContent className="flex flex-col items-center justify-center py-12 gap-2">
+          <MessageSquare className="h-8 w-8 text-zinc-300" />
+          <p className="text-sm font-medium text-zinc-500">No schedule found</p>
+          <p className="text-xs text-zinc-400">
+            Add guests to activate messaging
           </p>
         </CardContent>
       </Card>
@@ -378,270 +364,218 @@ export function MessageSendCard() {
 
   return (
     <>
-      <Card className="border-slate-200 bg-white shadow-md rounded-2xl overflow-hidden">
-        {/* ── Top accent ── */}
-        <div className="h-1 w-full bg-gradient-to-r from-lime-500 to-lime-600" />
+      <Card className="border-zinc-200 bg-white shadow-sm rounded-xl overflow-hidden">
+        {/* Top lime accent line */}
+        <div className="h-[3px] w-full bg-lime-500" />
 
-        {/* ── Header ── */}
+        {/* Header */}
         <CardHeader className="px-5 pt-4 pb-3">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-lg bg-lime-100 flex items-center justify-center">
-                <CalendarClock className="h-4.5 w-4.5 text-lime-600" />
-              </div>
+              <CalendarClock className="h-4 w-4 text-lime-600" />
               <div>
-                <CardTitle className="text-base text-slate-900 leading-tight">
+                <CardTitle className="text-sm font-semibold text-zinc-900">
                   Message Schedule
                 </CardTitle>
-                <CardDescription className="text-xs text-slate-400">
+                <CardDescription className="text-xs text-zinc-400 mt-0.5">
                   Sending status for this event
                 </CardDescription>
               </div>
             </div>
             <Badge
+              variant="outline"
               className={cn(
-                "flex items-center gap-1 border text-xs font-medium px-2.5 py-1",
+                "flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md",
                 statusConfig.cls,
               )}
             >
-              <StatusIcon className="h-3 w-3" />
+              <StatusIcon className="h-2.5 w-2.5" />
               {statusConfig.label}
             </Badge>
           </div>
         </CardHeader>
 
-        <Separator />
+        <Separator className="bg-zinc-100" />
 
         <CardContent className="px-5 py-4 space-y-4">
-          {/* ── Available Credits ─────────────────────────────────────── */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Wallet className="h-3.5 w-3.5 text-slate-400" />
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          {/* Credits */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <Wallet className="h-3 w-3 text-zinc-400" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
                 Available Credits
-              </p>
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <CreditPill
+            <div className="bg-zinc-50 border border-zinc-100 rounded-lg px-3 py-0.5 divide-y divide-zinc-100">
+              <CreditRow
                 icon={MessageSquare}
                 label="SMS"
                 value={smsLimit}
-                color="bg-blue-50 border-blue-200 text-blue-700"
                 isEmpty={smsLimit === 0}
               />
-              <CreditPill
+              <CreditRow
                 icon={Phone}
                 label="WhatsApp"
                 value={whatsappLimit}
-                color="bg-green-50 border-green-200 text-green-700"
                 isEmpty={whatsappLimit === 0}
               />
-              <CreditPill
+              <CreditRow
                 icon={Mail}
                 label="Email"
                 value={emailLimit}
-                color="bg-purple-50 border-purple-200 text-purple-700"
                 isEmpty={emailLimit === 0}
               />
 
-              {/* Flush Card Coupon */}
-              <a
-                href="https://flashback.camera/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-200",
-                  "group hover:shadow-md active:scale-[0.98]",
-                  flushCardCoupon
-                    ? "bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-300"
-                    : "bg-slate-50 border-slate-200 hover:bg-slate-100 hover:border-slate-300",
-                )}
-              >
-                {/* Left icon */}
-                <div
-                  className={cn(
-                    "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
-                    flushCardCoupon ? "bg-orange-100" : "bg-slate-100",
-                  )}
-                >
-                  <CreditCard
-                    className={cn(
-                      "h-4 w-4",
-                      flushCardCoupon ? "text-orange-500" : "text-slate-400",
-                    )}
-                  />
+              {/* Flush Card */}
+              <div className="flex items-center justify-between py-1.5">
+                <div className="flex items-center gap-2 text-zinc-500">
+                  <CreditCard className="h-3.5 w-3.5" />
+                  <span className="text-xs">Flush Card</span>
                 </div>
-
-                {/* Text block */}
-                <div className="flex flex-col min-w-0">
-                  <span
-                    className={cn(
-                      "text-xs font-semibold",
-                      flushCardCoupon ? "text-orange-700" : "text-slate-500",
-                    )}
-                  >
-                    Flush Card
-                  </span>
-                  <span
-                    className={cn(
-                      "font-mono font-bold text-xs tracking-wider truncate",
-                      flushCardCoupon ? "text-orange-600" : "text-slate-400",
-                    )}
-                  >
-                    {flushCardCoupon ?? "—"}
-                  </span>
-                </div>
-
-                {/* Right — visit label + icon */}
-                <div
+                <a
+                  href="https://flashback.camera/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={cn(
-                    "ml-auto flex items-center gap-1 text-xs font-semibold shrink-0",
-                    "px-2 py-1 rounded-lg transition-colors duration-200",
+                    "flex items-center gap-1 text-xs font-semibold transition-colors",
                     flushCardCoupon
-                      ? "bg-orange-100 text-orange-600 group-hover:bg-orange-200"
-                      : "bg-slate-100 text-slate-400 group-hover:bg-slate-200",
+                      ? "text-lime-700 hover:text-lime-800"
+                      : "text-zinc-300 pointer-events-none",
                   )}
                 >
-                  Visit
-                  <ExternalLink className="h-3 w-3" />
-                </div>
-              </a>
+                  {flushCardCoupon ?? "\u2014"}
+                  {flushCardCoupon && <ExternalLink className="h-2.5 w-2.5" />}
+                </a>
+              </div>
             </div>
 
-            {/* No credits at all warning */}
             {smsLimit === 0 &&
               whatsappLimit === 0 &&
               emailLimit === 0 &&
               !flushCardCoupon && (
-                <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                  You have no credits. Purchase an add-on below to start
-                  sending.
+                <p className="mt-2 text-[11px] text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-md px-3 py-2 flex items-center gap-1.5">
+                  <AlertCircle className="h-3 w-3 shrink-0 text-zinc-400" />
+                  No credits available. Purchase an add-on below.
                 </p>
               )}
           </div>
 
-          <Separator />
+          <Separator className="bg-zinc-100" />
 
-          {/* ── Schedule info ── */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400 flex items-center gap-1.5 text-xs">
-                <Clock className="h-3.5 w-3.5" /> Scheduled for
+          {/* Schedule info */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-xs text-zinc-400">
+                <Clock className="h-3 w-3" /> Scheduled for
               </span>
-              <span className="font-semibold text-slate-800 text-xs">
+              <span className="text-xs font-medium text-zinc-700">
                 {formattedDisplayDate}
               </span>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400 flex items-center gap-1.5 text-xs">
-                <CheckCircle2 className="h-3.5 w-3.5" /> All messages sent
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-xs text-zinc-400">
+                <CheckCircle2 className="h-3 w-3" /> All sent
               </span>
               <span
                 className={cn(
-                  "text-xs font-semibold",
-                  data.isMessageSend ? "text-lime-600" : "text-slate-500",
+                  "text-xs font-medium",
+                  data.isMessageSend ? "text-lime-600" : "text-zinc-400",
                 )}
               >
-                {data.isMessageSend ? "Yes ✓" : "No"}
+                {data.isMessageSend ? "Yes" : "No"}
               </span>
             </div>
           </div>
 
-          {/* ── Pending breakdown ── */}
+          {/* Pending breakdown */}
           <div
             className={cn(
-              "rounded-xl border p-3 space-y-2.5",
+              "rounded-lg border px-3 py-2.5",
               hasPending
-                ? "bg-amber-50 border-amber-200"
-                : "bg-lime-50 border-lime-200",
+                ? "bg-zinc-50 border-zinc-200"
+                : "bg-lime-50 border-lime-100",
             )}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-2">
               <span
                 className={cn(
-                  "text-xs font-semibold",
-                  hasPending ? "text-amber-700" : "text-lime-700",
+                  "text-xs font-medium",
+                  hasPending ? "text-zinc-600" : "text-lime-700",
                 )}
               >
                 {hasPending ? "Pending messages" : "No pending messages"}
               </span>
               {hasPending && (
-                <span className="text-xs font-bold bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">
-                  {totalPending} total
+                <span className="text-[10px] font-bold bg-zinc-200 text-zinc-600 px-1.5 py-0.5 rounded-full">
+                  {totalPending}
                 </span>
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {[
                 {
                   label: "SMS",
                   value: data.numberOfNotSend?.sms ?? 0,
                   icon: MessageSquare,
-                  color: "text-blue-600 bg-blue-50 border-blue-200",
                 },
                 {
                   label: "Mail",
                   value: data.numberOfNotSend?.mail ?? 0,
                   icon: Mail,
-                  color: "text-purple-600 bg-purple-50 border-purple-200",
                 },
                 {
                   label: "WhatsApp",
                   value: data.numberOfNotSend?.whatsapp ?? 0,
                   icon: Phone,
-                  color: "text-green-600 bg-green-50 border-green-200",
                 },
-              ].map(({ label, value, icon: Icon, color }) => (
+              ].map(({ label, value, icon: Icon }) => (
                 <div
                   key={label}
-                  className={cn(
-                    "flex flex-col items-center gap-0.5 rounded-lg border py-2 px-1",
-                    color,
-                  )}
+                  className="flex flex-col items-center gap-0.5 bg-white border border-zinc-100 rounded-md py-2"
                 >
-                  <Icon className="h-3.5 w-3.5" />
-                  <span className="text-base font-bold leading-tight">
+                  <Icon className="h-3 w-3 text-zinc-400" />
+                  <span
+                    className={cn(
+                      "text-sm font-bold leading-tight tabular-nums",
+                      value > 0 ? "text-zinc-800" : "text-zinc-300",
+                    )}
+                  >
                     {value}
                   </span>
-                  <span className="text-[10px] font-medium opacity-70">
-                    {label}
-                  </span>
+                  <span className="text-[10px] text-zinc-400">{label}</span>
                 </div>
               ))}
             </div>
           </div>
         </CardContent>
 
-        <Separator />
+        <Separator className="bg-zinc-100" />
 
-        {/* ── Footer actions ── */}
+        {/* Footer */}
         <CardFooter className="px-5 py-3 flex items-center justify-between gap-2">
-          <span className="text-[10px] text-slate-400 hidden sm:block">
-            ID:{" "}
-            <span className="font-mono">{String(data.event_id).slice(-8)}</span>
+          <span className="text-[10px] text-zinc-300 font-mono hidden sm:block">
+            {String(data.event_id).slice(-8)}
           </span>
 
           <div className="flex items-center gap-2 ml-auto">
-            {/* ── Resend AlertDialog ── */}
+            {/* Resend */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
                   disabled={resendMutation.isPending}
-                  className="h-8 text-xs border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5"
+                  className="h-8 text-xs border-zinc-200 text-zinc-600 hover:bg-zinc-50 gap-1.5"
                 >
                   {resendMutation.isPending ? (
                     <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />{" "}
-                      Sending...
+                      <Loader2 className="h-3 w-3 animate-spin" /> Sending\u2026
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="h-3.5 w-3.5" /> Resend
+                      <RefreshCw className="h-3 w-3" /> Resend
                     </>
                   )}
                 </Button>
@@ -650,61 +584,72 @@ export function MessageSendCard() {
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <div className="flex items-center gap-3 mb-1">
-                    <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                      <RefreshCw className="h-5 w-5 text-amber-600" />
+                    <div className="h-9 w-9 rounded-lg bg-zinc-100 flex items-center justify-center">
+                      <RefreshCw className="h-4 w-4 text-zinc-500" />
                     </div>
-                    <AlertDialogTitle>Resend messages?</AlertDialogTitle>
+                    <AlertDialogTitle className="text-sm font-semibold text-zinc-900">
+                      Resend messages?
+                    </AlertDialogTitle>
                   </div>
-                  <AlertDialogDescription className="text-slate-600 leading-relaxed">
-                    This will re-queue <strong>all pending messages</strong> —
-                    SMS <strong>({data.numberOfNotSend?.sms ?? 0})</strong>,{" "}
-                    Mail <strong>({data.numberOfNotSend?.mail ?? 0})</strong>,{" "}
-                    WhatsApp{" "}
-                    <strong>({data.numberOfNotSend?.whatsapp ?? 0})</strong>.
-                    <br />
-                    <br />
-                    Recipients who already received a message{" "}
-                    <strong>may receive it again</strong>.
+                  <AlertDialogDescription className="text-sm text-zinc-500 leading-relaxed">
+                    This will re-queue all pending messages \u2014 SMS{" "}
+                    <strong className="text-zinc-700">
+                      ({data.numberOfNotSend?.sms ?? 0})
+                    </strong>
+                    , Mail{" "}
+                    <strong className="text-zinc-700">
+                      ({data.numberOfNotSend?.mail ?? 0})
+                    </strong>
+                    , WhatsApp{" "}
+                    <strong className="text-zinc-700">
+                      ({data.numberOfNotSend?.whatsapp ?? 0})
+                    </strong>
+                    . Recipients who already received a message may receive it
+                    again.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel className="text-xs h-8">
+                    Cancel
+                  </AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => resendMutation.mutate()}
-                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                    className="h-8 text-xs bg-zinc-900 hover:bg-zinc-700 text-white"
                   >
-                    <RefreshCw className="h-4 w-4 mr-2" /> Yes, resend all
+                    <RefreshCw className="h-3 w-3 mr-1.5" /> Yes, resend all
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
 
-            {/* ── Update schedule ── */}
+            {/* Update schedule */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button
                   size="sm"
                   className="h-8 text-xs bg-lime-600 hover:bg-lime-700 text-white gap-1.5"
                 >
-                  <CalendarClock className="h-3.5 w-3.5" /> Update schedule
+                  <CalendarClock className="h-3 w-3" /> Update Schedule
                 </Button>
               </DialogTrigger>
 
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="sm:max-w-[460px]">
                 <DialogHeader>
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-lime-100 flex items-center justify-center">
-                      <CalendarClock className="h-5 w-5 text-lime-600" />
+                    <div className="h-9 w-9 rounded-lg bg-lime-50 border border-lime-100 flex items-center justify-center">
+                      <CalendarClock className="h-4 w-4 text-lime-600" />
                     </div>
-                    <DialogTitle>Update starting date & time</DialogTitle>
+                    <DialogTitle className="text-sm font-semibold text-zinc-900">
+                      Update starting date & time
+                    </DialogTitle>
                   </div>
                 </DialogHeader>
 
                 <div className="space-y-4 py-2">
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label
                       htmlFor="datetime"
-                      className="text-slate-700 font-medium"
+                      className="text-xs font-medium text-zinc-600"
                     >
                       Starting at
                     </Label>
@@ -713,12 +658,12 @@ export function MessageSendCard() {
                       type="datetime-local"
                       value={localDateTime}
                       onChange={(e) => setLocalDateTime(e.target.value)}
-                      className="h-11 border-slate-300 focus-visible:ring-lime-500"
+                      className="h-9 text-sm border-zinc-200 focus-visible:ring-lime-500"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-slate-700 font-medium">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-zinc-600">
                       Time zone
                     </Label>
                     <Popover open={open} onOpenChange={setOpen}>
@@ -726,38 +671,40 @@ export function MessageSendCard() {
                         <Button
                           variant="outline"
                           role="combobox"
-                          className="w-full justify-between h-11 border-slate-300"
+                          className="w-full justify-between h-9 text-sm border-zinc-200 font-normal"
                         >
-                          <span className="truncate">
+                          <span className="truncate text-xs">
                             {getSelectedLabel(selectedTimezone)}
                           </span>
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-40" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[450px] p-0" align="start">
+                      <PopoverContent className="w-[440px] p-0" align="start">
                         <Command>
-                          <CommandInput placeholder="Search timezone..." />
+                          <CommandInput
+                            placeholder="Search timezone\u2026"
+                            className="text-sm"
+                          />
                           <CommandList>
-                            <CommandEmpty>No timezone found.</CommandEmpty>
+                            <CommandEmpty className="text-xs text-zinc-400 py-4 text-center">
+                              No timezone found.
+                            </CommandEmpty>
                             {[
                               {
-                                heading: "🇪🇺 Europe",
+                                heading: "Europe",
                                 list: MAJOR_TIMEZONES.european,
                               },
                               {
-                                heading: "🌎 Americas",
+                                heading: "Americas",
                                 list: MAJOR_TIMEZONES.americas,
                               },
+                              { heading: "Asia", list: MAJOR_TIMEZONES.asia },
                               {
-                                heading: "🌏 Asia",
-                                list: MAJOR_TIMEZONES.asia,
-                              },
-                              {
-                                heading: "🌍 Africa",
+                                heading: "Africa",
                                 list: MAJOR_TIMEZONES.africa,
                               },
                               {
-                                heading: "🌊 Oceania",
+                                heading: "Oceania",
                                 list: MAJOR_TIMEZONES.oceania,
                               },
                             ].map(({ heading, list }) => (
@@ -770,16 +717,20 @@ export function MessageSendCard() {
                                       setSelectedTimezone(tz.value);
                                       setOpen(false);
                                     }}
+                                    className="text-xs"
                                   >
                                     <Check
                                       className={cn(
-                                        "mr-2 h-4 w-4",
+                                        "mr-2 h-3.5 w-3.5",
                                         selectedTimezone === tz.value
-                                          ? "opacity-100"
+                                          ? "opacity-100 text-lime-600"
                                           : "opacity-0",
                                       )}
                                     />
-                                    {tz.label} {formatTimezone(tz.value)}
+                                    {tz.label}{" "}
+                                    <span className="text-zinc-400 ml-1">
+                                      {formatTimezone(tz.value)}
+                                    </span>
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
@@ -788,29 +739,31 @@ export function MessageSendCard() {
                         </Command>
                       </PopoverContent>
                     </Popover>
-                    <p className="text-xs text-slate-400">
-                      Selected: {selectedTimezone}
+                    <p className="text-[10px] text-zinc-400">
+                      {selectedTimezone}
                     </p>
                   </div>
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="gap-2">
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => setIsDialogOpen(false)}
-                    className="border-slate-300"
+                    className="h-8 text-xs border-zinc-200 text-zinc-600"
                   >
                     Cancel
                   </Button>
                   <Button
+                    size="sm"
                     onClick={handleSave}
                     disabled={!localDateTime || updateMutation.isPending}
-                    className="bg-lime-600 hover:bg-lime-700 text-white min-w-[110px]"
+                    className="h-8 text-xs bg-lime-600 hover:bg-lime-700 text-white min-w-[100px]"
                   >
                     {updateMutation.isPending ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                        Saving...
+                        <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />{" "}
+                        Saving\u2026
                       </>
                     ) : (
                       "Save schedule"
@@ -823,7 +776,6 @@ export function MessageSendCard() {
         </CardFooter>
       </Card>
 
-      {/* ── Add-on cards below ── */}
       <AddOnCards />
     </>
   );

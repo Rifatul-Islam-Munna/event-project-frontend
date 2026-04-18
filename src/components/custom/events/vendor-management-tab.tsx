@@ -41,7 +41,10 @@ import { deleteVendor, getAllVendor } from "@/actions/fetch-action";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Vendor } from "@/@types/events-details";
-import { getVendorCategory, VendorCategory } from "@/actions/vendor-category-actions";
+import {
+  getVendorCategory,
+  VendorCategory,
+} from "@/actions/vendor-category-actions";
 
 export function VendorManagementTab() {
   const router = useRouter();
@@ -145,8 +148,6 @@ export function VendorManagementTab() {
           </DialogContent>
         </Dialog>
       </div>
-
-      
 
       {/* Table Container */}
       <div className="border-y border-gray-200 bg-white overflow-hidden">
@@ -411,23 +412,44 @@ export function VendorManagementTab() {
 
       {/* Global Vendor Categories - Below Table */}
       {categories.length > 0 && (
-        <div className="border-t border-gray-200 bg-gray-50 px-4 py-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Browse Global Vendors</h2>
-          <div className="flex gap-4 overflow-x-auto pb-2">
+        <div className="border-t border-zinc-100 bg-white px-5 py-5">
+          {/* Section header */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-zinc-800">
+              Global Vendors
+            </h2>
+            <span className="text-xs text-zinc-400">
+              {categories.length} categories
+            </span>
+          </div>
+
+          {/* Scrollable row */}
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
             {categories.map((cat, index) => (
               <Link
                 key={index}
                 href={`/dashboard/global-vendors/${encodeURIComponent(cat.name)}`}
-                className="flex-shrink-0"
+                className="flex-shrink-0 group"
               >
-                <div className="w-16 h-16 rounded border border-gray-200 bg-white flex items-center justify-center overflow-hidden">
-                  {cat.logo ? (
-                    <img src={cat.logo} alt={cat.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <Building2 className="h-6 w-6 text-gray-400" />
-                  )}
+                <div className="flex flex-col items-center gap-2 w-20">
+                  {/* Image / icon */}
+                  <div className="w-20 h-20 rounded-xl border border-zinc-200 bg-zinc-50 flex items-center justify-center overflow-hidden group-hover:border-lime-500 transition-colors duration-150">
+                    {cat.logo ? (
+                      <img
+                        src={cat.logo}
+                        alt={cat.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Building2 className="h-7 w-7 text-zinc-300 group-hover:text-lime-500 transition-colors duration-150" />
+                    )}
+                  </div>
+
+                  {/* Name */}
+                  <span className="text-xs font-medium text-zinc-600 text-center w-full truncate leading-tight group-hover:text-zinc-900 transition-colors duration-150">
+                    {cat.name}
+                  </span>
                 </div>
-                <p className="text-xs text-center text-gray-600 mt-2 max-w-[64px] truncate">{cat.name}</p>
               </Link>
             ))}
           </div>
