@@ -65,6 +65,9 @@ interface VenueConfigDB {
   };
 }
 
+const MOTION_CLASS =
+  "transition-all duration-[180ms] ease-[cubic-bezier(0.16,1,0.3,1)]";
+
 const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
   venueWidth: initialVenueWidth,
   venueHeight: initialVenueHeight,
@@ -483,11 +486,11 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
 
             <Line
               points={generateBorderPath()}
-              stroke="#84cc16"
-              strokeWidth={Math.max(2, 3 * zoom)}
-              dash={[Math.max(8, 12 * zoom), Math.max(4, 6 * zoom)]}
+              stroke="rgba(101,163,13,0.6)"
+              strokeWidth={1.5}
+              dash={[8, 6]}
               closed={false}
-              opacity={isEditMode ? 1 : 0.92}
+              opacity={0.9}
               listening={false}
             />
 
@@ -631,11 +634,11 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
 
       {/* NEW: Enhanced Venue Label with Editable Dimensions */}
       <div
-        className="absolute bg-white/90 px-3 py-2 rounded-lg shadow-sm border flex items-center gap-3"
+        className="absolute flex items-center gap-2 rounded-2xl border border-slate-900/10 bg-white/96 px-3 py-2 shadow-sm backdrop-blur"
         style={{
-          left: `${x}px`,
-          top: `${y - 70 * zoom}px`,
-          transform: `scale(${Math.max(0.8, zoom)})`,
+          left: `${x + 8}px`,
+          top: `${Math.max(12, y - 52)}px`,
+          transform: `scale(${Math.max(0.9, Math.min(1, zoom + 0.15))})`,
           transformOrigin: "left top",
           zIndex: 9,
         }}
@@ -643,7 +646,7 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
         {isEditMode ? (
           <>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-slate-700">
+              <span className="inline-flex h-7 items-center rounded-full border border-slate-900/10 px-2.5 text-[12px] font-medium text-slate-700">
                 Venue:
               </span>
               <input
@@ -651,36 +654,33 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
                 value={editableWidth}
                 onChange={(e) => setEditableWidth(e.target.value)}
                 onBlur={() => validateDimensions(editableWidth, editableHeight)}
-                className="w-16 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-lime-500"
+                className={`h-8 w-16 rounded-md border border-slate-900/10 px-2 text-[13px] text-slate-700 outline-none focus:ring-2 focus:ring-lime-500 ${MOTION_CLASS}`}
                 placeholder="Width"
                 step="0.1"
                 min="0.1"
               />
-              <span className="text-sm text-slate-600">x</span>
+              <span className="text-[13px] text-slate-500">x</span>
               <input
                 type="number"
                 value={editableHeight}
                 onChange={(e) => setEditableHeight(e.target.value)}
                 onBlur={() => validateDimensions(editableWidth, editableHeight)}
-                className="w-16 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-lime-500"
+                className={`h-8 w-16 rounded-md border border-slate-900/10 px-2 text-[13px] text-slate-700 outline-none focus:ring-2 focus:ring-lime-500 ${MOTION_CLASS}`}
                 placeholder="Height"
                 step="0.1"
                 min="0.1"
               />
-              <span className="text-sm text-slate-600">m</span>
+              <span className="text-[13px] text-slate-500">m</span>
 
-              {/* Tick/Check button to apply dimension changes */}
               <button
+                type="button"
                 onClick={applyDimensionChanges}
                 disabled={!!dimensionError}
-                className={`
-                  flex items-center justify-center p-1 rounded transition-all
-                  ${
-                    dimensionError
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-green-500 hover:bg-green-600 text-white"
-                  }
-                `}
+                className={`flex h-8 w-8 items-center justify-center rounded-md ${
+                  dimensionError
+                    ? "cursor-not-allowed bg-slate-200 text-slate-400"
+                    : "bg-emerald-700 text-white hover:bg-emerald-800"
+                } ${MOTION_CLASS}`}
                 title="Apply dimension changes"
               >
                 <Check size={16} />
@@ -688,37 +688,35 @@ const SmoothDraggableVenueShape: React.FC<SmoothDraggableVenueShapeProps> = ({
             </div>
           </>
         ) : (
-          <span className="text-sm font-semibold text-slate-700">
+          <span className="inline-flex h-7 items-center rounded-full border border-slate-900/10 px-2.5 text-[12px] font-medium text-slate-700">
             Venue: {venueWidth}m x {venueHeight}m
           </span>
         )}
 
         <button
+          type="button"
           onClick={toggleEditMode}
-          className={`
-            flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all
-            ${
-              isEditMode
-                ? "bg-lime-800 hover:bg-lime-900 text-white"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-            }
-          `}
+          className={`flex h-8 items-center gap-1 rounded-md px-2.5 text-[13px] font-medium ${
+            isEditMode
+              ? "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+          } ${MOTION_CLASS}`}
         >
           <Edit3 size={12} />
           {isEditMode ? "Done" : "Edit"}
         </button>
 
         <button
+          type="button"
           onClick={() => saveVenueConfiguration()}
           disabled={IsUpdateing}
-          className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-lime-800 hover:bg-lime-900 text-white disabled:bg-gray-400"
+          className={`flex h-8 items-center gap-1 rounded-md bg-emerald-700 px-3 text-[13px] font-medium text-white hover:bg-emerald-800 disabled:bg-emerald-300 ${MOTION_CLASS}`}
         >
           {IsUpdateing ? "Saving..." : "Save"}
         </button>
 
-        {/* Error message display */}
         {dimensionError && isEditMode && (
-          <span className="text-xs text-red-500 font-medium">
+          <span className="text-[12px] font-medium text-red-500">
             {dimensionError}
           </span>
         )}

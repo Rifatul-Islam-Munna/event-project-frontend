@@ -68,6 +68,7 @@ interface BasePlannerNode<TData> {
   type: NodeKind;
   event_id: string;
   position: Point;
+  rotation?: number;
   data: TData;
   style?: {
     width?: string;
@@ -95,6 +96,7 @@ export interface PersistedSeatPlanNode {
   type: "tableNode" | "chairNode";
   event_id: string;
   position: Point;
+  rotation?: number;
   data: {
     event_id: string;
     label: string;
@@ -118,6 +120,7 @@ export interface PersistedDecorativeNode {
   type: "decorativeNode";
   event_id: string;
   position: Point;
+  rotation?: number;
   data: {
     event_id: string;
     label: string;
@@ -175,6 +178,8 @@ export interface SeatGeometry {
   y: number;
   width: number;
   height: number;
+  centerX: number;
+  centerY: number;
   labelX: number;
   labelY: number;
 }
@@ -188,3 +193,4 @@ export const SNAP_GRID = 15;
 export const LARGE_CANVAS_SIZE = 20000;
 export const CHAIR_SIZE = 40;
 export const CHAIR_GAP = 10;
+export const TABLE_SEAT_SIZE = 28;

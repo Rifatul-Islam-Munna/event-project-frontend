@@ -1,18 +1,25 @@
 "use client";
 
-import type React from "react";
+import type { ReactNode } from "react";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowRight, ChevronDown, LayoutGrid, Minus, Search, SeparatorVertical, Sparkles, Trash2, User, Users, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowRight,
+  ChevronDown,
+  Minus,
+  Search,
+  SeparatorVertical,
+  Users,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import type { Guest } from "@/@types/events-details";
 import { GetGuestType } from "@/actions/vendor-category-actions";
 import AddUser from "@/app/dashboard/AddUser";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
@@ -57,80 +64,67 @@ const TABLE_BUTTONS: Array<{
     "rectangular" | "square" | "circular" | "rectangular-one-sided"
   >;
   label: string;
-  description: string;
   image: string;
 }> = [
   {
     type: "rectangular",
     label: "Rectangular",
-    description: "Classic long table",
     image: RT.src,
   },
   {
     type: "square",
     label: "Square",
-    description: "Balanced group seating",
     image: SQ.src,
   },
   {
     type: "circular",
     label: "Round",
-    description: "Conversation-friendly",
     image: CQ.src,
   },
   {
     type: "rectangular-one-sided",
     label: "Head Table",
-    description: "One-sided focal table",
     image: OC.src,
   },
 ];
 
 const INITIAL_VISIBLE_GUESTS = 10;
+const MOTION_CLASS =
+  "transition-all duration-[180ms] ease-[cubic-bezier(0.16,1,0.3,1)]";
 
 function SidebarSection({
   title,
-  description,
-  icon,
   children,
   defaultOpen = true,
 }: {
   title: string;
-  description: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
+  children: ReactNode;
   defaultOpen?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 p-3.5 shadow-sm">
-        <div className="mb-2.5 flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
-            {icon}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-            <p className="text-xs text-slate-500">{description}</p>
-          </div>
+      <section className="border-b border-slate-900/6 pb-4 last:border-b-0 last:pb-0">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.05em] text-slate-500">
+            {title}
+          </h2>
           <CollapsibleTrigger asChild>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 shrink-0 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              className={`h-7 w-7 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 ${MOTION_CLASS}`}
               aria-label={isOpen ? `Collapse ${title}` : `Expand ${title}`}
             >
               <ChevronDown
-                className={`h-4 w-4 transition-transform ${
-                  isOpen ? "rotate-180" : ""
-                }`}
+                className={`h-4 w-4 ${MOTION_CLASS} ${isOpen ? "rotate-180" : ""}`}
               />
             </Button>
           </CollapsibleTrigger>
         </div>
-        <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+        <CollapsibleContent className="space-y-3 overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
           {children}
         </CollapsibleContent>
       </section>
@@ -138,7 +132,7 @@ function SidebarSection({
   );
 }
 
-function GuestCard({
+function GuestRow({
   guest,
   onDragStart,
   onRemoveGuest,
@@ -149,74 +143,103 @@ function GuestCard({
 }) {
   const initials = guest.name
     .split(" ")
-    .map((namePart) => namePart[0])
+    .map((part) => part[0] ?? "")
     .join("")
     .toUpperCase()
     .slice(0, 2);
-  const guestMeta: string[] = [];
-
-  if (guest.type) {
-    guestMeta.push(guest.type);
-  }
-
-  if (guest.adults || guest.children) {
-    guestMeta.push(`${guest.adults ?? 0}A · ${guest.children ?? 0}C`);
-  }
-
-  const displayGuestMeta = guestMeta.map((item) => {
-    const guestCountsMatch = item.match(/^(\d+)A.*?(\d+)C$/);
-
-    if (!guestCountsMatch) {
-      return item;
-    }
-
-    return `${guestCountsMatch[1]} adults / ${guestCountsMatch[2]} children`;
-  });
-  const compactMeta = displayGuestMeta
-    .map((item) =>
-      item
-        .replace(/ adults \/ /g, "A/")
-        .replace(/ children/g, "C"),
-    )
-    .join(" | ");
 
   return (
-    <Card
-      className="flex cursor-grab items-center gap-1.5 rounded-md border border-slate-200 bg-white px-1.5 py-1 shadow-none transition-all hover:border-emerald-300 hover:bg-emerald-50/60 active:cursor-grabbing"
+    <div
+      className={`group flex h-9 cursor-grab items-center gap-2 rounded-lg border border-transparent px-1.5 active:cursor-grabbing hover:bg-slate-50 ${MOTION_CLASS}`}
       draggable
       onDragStart={(event) => onDragStart(event, guest._id!, guest.name)}
     >
-      <Avatar className="h-6 w-6">
-        <AvatarFallback className="bg-emerald-100 text-[8px] font-semibold text-emerald-700">
+      <Avatar className="h-6 w-6 shrink-0">
+        <AvatarFallback className="bg-slate-100 text-[10px] font-semibold text-slate-700">
           {initials}
         </AvatarFallback>
       </Avatar>
 
-      <div className="min-w-0 flex-1 overflow-hidden">
-        <div className="flex items-center gap-1 overflow-hidden">
-          <p className="truncate text-[11px] font-medium leading-none text-slate-900">
-            {guest.name}
-          </p>
-          {compactMeta ? (
-            <p className="truncate text-[9px] leading-none text-slate-500">
-              {compactMeta}
-            </p>
-          ) : null}
-        </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-medium text-slate-900">
+          {guest.name}
+        </p>
       </div>
 
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400/90" />
+
       <Button
+        type="button"
         variant="ghost"
         size="icon"
-        className="h-5 w-5 shrink-0 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600"
+        className={`h-6 w-6 shrink-0 rounded-full text-slate-400 opacity-0 hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 ${MOTION_CLASS}`}
         onClick={(event) => {
           event.stopPropagation();
           onRemoveGuest(guest._id ?? "");
         }}
       >
-        <Trash2 className="h-2.5 w-2.5" />
+        <X className="h-3.5 w-3.5" />
       </Button>
-    </Card>
+    </div>
+  );
+}
+
+function TableTypeCard({
+  label,
+  image,
+  onAdd,
+}: {
+  label: string;
+  image: string;
+  onAdd: () => void;
+}) {
+  return (
+    <div
+      className={`group relative rounded-xl p-2 text-center hover:bg-slate-100/70 ${MOTION_CLASS}`}
+    >
+      <button
+        type="button"
+        onClick={onAdd}
+        className="flex w-full flex-col items-center gap-2"
+      >
+        <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100/80 group-hover:bg-emerald-50/70">
+          <Image src={image} alt={label} fill className="object-contain p-1.5" />
+        </span>
+        <span className="text-[11px] font-medium text-slate-700">{label}</span>
+      </button>
+
+      <Button
+        type="button"
+        variant="ghost"
+        className={`absolute right-1 top-1 h-6 rounded-md border border-slate-900/10 bg-transparent px-1.5 text-[12px] text-slate-600 opacity-0 hover:bg-white group-hover:opacity-100 ${MOTION_CLASS}`}
+        onClick={onAdd}
+      >
+        Add
+      </Button>
+    </div>
+  );
+}
+
+function QuickItemButton({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[12px] font-medium text-slate-700 hover:bg-slate-100/80 ${MOTION_CLASS}`}
+    >
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+        {icon}
+      </span>
+      <span>{label}</span>
+    </button>
   );
 }
 
@@ -287,24 +310,22 @@ export function Sidebar({
   };
 
   const body = (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-gradient-to-b from-white via-white to-slate-50">
-      <div className="border-b border-slate-200 px-3 py-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
-            <LayoutGrid className="h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-slate-900">Planner tools</p>
-            <p className="text-[11px] text-slate-500">
-              Tables, chairs, decor, and guest seating
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white">
+      <div className="border-b border-slate-900/8 px-4 py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-900">Planner</p>
+            <p className="text-[12px] text-slate-500">
+              Tables, seating, decor, and guest placement
             </p>
           </div>
 
           {isMobile ? (
             <Button
+              type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-full text-slate-500 hover:bg-white"
+              className={`h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 ${MOTION_CLASS}`}
               onClick={() => setShowSidebar(false)}
             >
               <X className="h-4 w-4" />
@@ -313,237 +334,158 @@ export function Sidebar({
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5">
+          <div className="inline-flex h-8 items-center gap-1.5 rounded-full bg-slate-100 px-3 text-[12px] font-medium text-slate-700">
             <Users className="h-3.5 w-3.5 text-slate-500" />
-            <span className="text-[11px] font-medium text-slate-700">
-              {guests.length} guests
-            </span>
+            <span>{guests.length} guests</span>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5">
-            <User className="h-3.5 w-3.5 text-emerald-700" />
-            <span className="text-[11px] font-medium text-emerald-800">
-              {unassignedGuests.length} unassigned
-            </span>
+          <div className="inline-flex h-8 items-center gap-1.5 rounded-full bg-emerald-50 px-3 text-[12px] font-medium text-emerald-800">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span>{unassignedGuests.length} unassigned</span>
           </div>
         </div>
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        <div className="space-y-5 p-4 pb-8">
-          <SidebarSection
-            title="Tables"
-            description="Choose the table style that fits the room."
-            icon={<LayoutGrid className="h-5 w-5" />}
-            defaultOpen
-          >
-            <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-5 px-4 py-4 pb-8">
+          <SidebarSection title="Tables">
+            <div className="grid grid-cols-2 gap-2">
               {TABLE_BUTTONS.map((item) => (
-                <button
+                <TableTypeCard
                   key={item.type}
-                  type="button"
-                  onClick={() => handleQuickAdd(item.type)}
-                  className="rounded-2xl border border-slate-200 bg-white p-3 text-left transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50/50"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="relative h-11 w-11 overflow-hidden rounded-2xl bg-slate-50">
-                      <Image
-                        src={item.image}
-                        alt={item.label}
-                        fill
-                        className="object-contain p-1.5"
-                      />
-                    </div>
-                    <Badge
-                      variant="secondary"
-                      className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600"
-                    >
-                      Add
-                    </Badge>
-                  </div>
-                  <p className="mt-3 text-sm font-semibold text-slate-900">
-                    {item.label}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">{item.description}</p>
-                </button>
+                  label={item.label}
+                  image={item.image}
+                  onAdd={() => handleQuickAdd(item.type)}
+                />
               ))}
             </div>
           </SidebarSection>
 
-          <SidebarSection
-            title="Seating and Dividers"
-            description="Create rows, columns, and room boundaries."
-            icon={<Sparkles className="h-5 w-5" />}
-            defaultOpen={false}
-          >
-            <div className="grid gap-2">
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  className="h-auto justify-start rounded-2xl border-slate-200 px-4 py-3 text-left hover:border-emerald-300 hover:bg-emerald-50"
-                  onClick={() => handleQuickAdd("chair-row")}
-                >
-                  <ArrowRight className="mr-2 h-4 w-4 shrink-0" />
-                  <span>
-                    <span className="block text-sm font-medium">Chair Row</span>
-                    <span className="block text-xs text-slate-500">
-                      Horizontal seating
-                    </span>
-                  </span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-auto justify-start rounded-2xl border-slate-200 px-4 py-3 text-left hover:border-emerald-300 hover:bg-emerald-50"
-                  onClick={() => handleQuickAdd("chair-column")}
-                >
-                  <ArrowDown className="mr-2 h-4 w-4 shrink-0" />
-                  <span>
-                    <span className="block text-sm font-medium">Chair Column</span>
-                    <span className="block text-xs text-slate-500">
-                      Vertical seating
-                    </span>
-                  </span>
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  className="h-auto justify-start rounded-2xl border-slate-200 px-4 py-3 text-left hover:border-emerald-300 hover:bg-emerald-50"
-                  onClick={() => handleQuickAdd("line-horizontal")}
-                >
-                  <Minus className="mr-2 h-4 w-4 shrink-0" />
-                  <span>
-                    <span className="block text-sm font-medium">Horizontal Wall</span>
-                    <span className="block text-xs text-slate-500">
-                      Split wide spaces
-                    </span>
-                  </span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-auto justify-start rounded-2xl border-slate-200 px-4 py-3 text-left hover:border-emerald-300 hover:bg-emerald-50"
-                  onClick={() => handleQuickAdd("line-vertical")}
-                >
-                  <SeparatorVertical className="mr-2 h-4 w-4 shrink-0" />
-                  <span>
-                    <span className="block text-sm font-medium">Vertical Wall</span>
-                    <span className="block text-xs text-slate-500">
-                      Shape room flow
-                    </span>
-                  </span>
-                </Button>
-              </div>
+          <SidebarSection title="Seating and Dividers" defaultOpen={false}>
+            <div className="grid grid-cols-2 gap-2">
+              <QuickItemButton
+                icon={<ArrowRight className="h-4 w-4" />}
+                label="Chair Row"
+                onClick={() => handleQuickAdd("chair-row")}
+              />
+              <QuickItemButton
+                icon={<ArrowDown className="h-4 w-4" />}
+                label="Chair Column"
+                onClick={() => handleQuickAdd("chair-column")}
+              />
+              <QuickItemButton
+                icon={<Minus className="h-4 w-4" />}
+                label="Horizontal Wall"
+                onClick={() => handleQuickAdd("line-horizontal")}
+              />
+              <QuickItemButton
+                icon={<SeparatorVertical className="h-4 w-4" />}
+                label="Vertical Wall"
+                onClick={() => handleQuickAdd("line-vertical")}
+              />
             </div>
           </SidebarSection>
 
-          <SidebarSection
-            title="Decor and Templates"
-            description="Drag decorative pieces or apply a reference layout."
-            icon={<Sparkles className="h-5 w-5" />}
-            defaultOpen={false}
-          >
-            <DecorativeDrawer
-              onAddDecorativeItem={() => {
-                if (isMobile) {
-                  setShowSidebar(false);
-                }
-              }}
-            />
-            <div className="mt-3">
+          <SidebarSection title="Decor and Templates" defaultOpen={false}>
+            <div className="rounded-xl border border-slate-900/8 p-3">
+              <DecorativeDrawer
+                onAddDecorativeItem={() => {
+                  if (isMobile) {
+                    setShowSidebar(false);
+                  }
+                }}
+              />
+            </div>
+            <div className="rounded-xl border border-slate-900/8 p-3">
               <ExtrasComponent />
             </div>
           </SidebarSection>
 
-          <SidebarSection
-            title="Unassigned Guests"
-            description="Search and drag guests directly onto seats."
-            icon={<Users className="h-5 w-5" />}
-            defaultOpen
-          >
-            <div className="space-y-3">
-              <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr),auto]">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    placeholder="Search guests"
-                    value={searchUser}
-                    onChange={(event) => setSearchUser(event.target.value)}
-                    className="rounded-2xl border-slate-200 pl-9 focus-visible:ring-emerald-500"
-                  />
+          <SidebarSection title="Unassigned Guests">
+            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr),auto]">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  placeholder="Search guests"
+                  value={searchUser}
+                  onChange={(event) => setSearchUser(event.target.value)}
+                  className="h-9 rounded-lg border-slate-900/10 pl-9 text-[13px] focus-visible:ring-emerald-500"
+                />
+              </div>
+              <AddUser />
+            </div>
+
+            <Select
+              value={typeOfUser ?? "all"}
+              onValueChange={(value) =>
+                setTypeOfUser(value === "all" ? null : value)
+              }
+            >
+              <SelectTrigger className="h-9 rounded-lg border-slate-900/10 text-[13px]">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {userType?.data?.type?.map((type: string) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="rounded-lg bg-slate-50 px-3 py-2 text-[12px] text-slate-500">
+              Drag a guest onto any open seat to assign them.
+            </div>
+
+            <div className="flex items-center justify-between text-[12px] text-slate-500">
+              <span>
+                Showing {visibleGuests.length} of {filteredGuests.length}
+              </span>
+              {hasMoreGuests ? (
+                <span>{filteredGuests.length - visibleGuests.length} more</span>
+              ) : null}
+            </div>
+
+            <div className="rounded-xl border border-slate-900/8">
+              {filteredGuests.length === 0 ? (
+                <div className="px-4 py-8 text-center">
+                  <p className="text-sm font-medium text-slate-700">
+                    {searchUser ? "No matching guests" : "All guests are seated"}
+                  </p>
+                  <p className="mt-1 text-[12px] text-slate-500">
+                    {searchUser
+                      ? "Try another name, email, or guest type."
+                      : "Add more guests or free seats to continue."}
+                  </p>
                 </div>
-                <AddUser />
-              </div>
-
-              <Select
-                value={typeOfUser ?? "all"}
-                onValueChange={(value) =>
-                  setTypeOfUser(value === "all" ? null : value)
-                }
-              >
-                <SelectTrigger className="w-full rounded-2xl border-slate-200">
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {userType?.data?.type?.map((type: string) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <div className="rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                Drag a guest card onto any empty seat to assign them.
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>
-                  Showing {visibleGuests.length} of {filteredGuests.length}
-                </span>
-                {hasMoreGuests ? (
-                  <span>{filteredGuests.length - visibleGuests.length} more</span>
-                ) : null}
-              </div>
-
-              <div className="space-y-1">
-                {filteredGuests.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
-                    <p className="text-sm font-medium text-slate-700">
-                      {searchUser ? "No matching guests" : "All guests are seated"}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {searchUser
-                        ? "Try another name, email, or guest type."
-                        : "Add more guests or free up seats to continue."}
-                    </p>
-                  </div>
-                ) : (
-                  visibleGuests.map((guest) => (
-                    <GuestCard
+              ) : (
+                <div className="divide-y divide-slate-900/6 px-2 py-1">
+                  {visibleGuests.map((guest) => (
+                    <GuestRow
                       key={guest._id}
                       guest={guest}
                       onDragStart={handleDragStart}
                       onRemoveGuest={onRemoveGuest}
                     />
-                  ))
-                )}
-              </div>
-
-              {hasMoreGuests ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full rounded-2xl border-slate-200 hover:border-emerald-300 hover:bg-emerald-50"
-                  onClick={() =>
-                    setVisibleGuestCount(
-                      (previous) => previous + INITIAL_VISIBLE_GUESTS,
-                    )
-                  }
-                >
-                  Load More
-                </Button>
-              ) : null}
+                  ))}
+                </div>
+              )}
             </div>
+
+            {hasMoreGuests ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className={`h-8 w-full rounded-lg border border-slate-900/10 text-[12px] font-medium text-slate-700 hover:bg-slate-100 ${MOTION_CLASS}`}
+                onClick={() =>
+                  setVisibleGuestCount(
+                    (previous) => previous + INITIAL_VISIBLE_GUESTS,
+                  )
+                }
+              >
+                Load More
+              </Button>
+            ) : null}
           </SidebarSection>
         </div>
       </ScrollArea>
@@ -560,7 +502,7 @@ export function Sidebar({
           <SheetHeader className="sr-only">
             <SheetTitle>Planner Sidebar</SheetTitle>
             <SheetDescription>
-              Add tables, decor, and guests to the wedding planner.
+              Add tables, decor, and guests to the seating planner.
             </SheetDescription>
           </SheetHeader>
           {body}
@@ -574,7 +516,7 @@ export function Sidebar({
   }
 
   return (
-    <aside className="hidden h-[100dvh] min-h-0 w-full max-w-[360px] shrink-0 overflow-hidden border-r border-slate-200 bg-white/90 md:flex">
+    <aside className="hidden h-[100dvh] min-h-0 w-full max-w-[320px] shrink-0 overflow-hidden border-r border-slate-900/8 bg-white md:flex">
       <div className="min-h-0 w-full">{body}</div>
     </aside>
   );

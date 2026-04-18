@@ -945,6 +945,7 @@ export function usePlannerActions({
         type: "decorativeNode",
         event_id: eventId,
         position: snapPoint(point),
+        rotation: 0,
         data: {
           event_id: eventId,
           label,
@@ -1015,6 +1016,7 @@ export function usePlannerActions({
         type: "chairNode",
         event_id: eventId,
         position: snapPoint(point),
+        rotation: 0,
         data: {
           event_id: eventId,
           label: newTableLabel,
@@ -1056,6 +1058,7 @@ export function usePlannerActions({
       type: "tableNode",
       event_id: eventId,
       position: snapPoint(point),
+      rotation: 0,
       data: {
         event_id: eventId,
         label: newTableLabel,

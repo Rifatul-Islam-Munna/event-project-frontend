@@ -6,6 +6,7 @@ import {
   CHAIR_SIZE,
   ChairNodeData,
   DecorativePlannerNode,
+  Point,
   PersistedDecorativeNode,
   PersistedSeatPlanNode,
   PlannerNode,
@@ -13,6 +14,7 @@ import {
   SeatingPlannerNode,
   SeatGeometry,
   SNAP_GRID,
+  TABLE_SEAT_SIZE,
   TableNodeData,
 } from "./planner-types";
 
@@ -36,6 +38,71 @@ export const isTableNode = (
 
 export const getNodeWidth = (node: PlannerNode) => node.data.width;
 export const getNodeHeight = (node: PlannerNode) => node.data.height;
+export const getNodeRotation = (node: Pick<PlannerNode, "rotation">) =>
+  ((node.rotation ?? 0) % 360 + 360) % 360;
+export const getNodeCenter = (node: Pick<PlannerNode, "position" | "data">) => ({
+  x: node.position.x + node.data.width / 2,
+  y: node.position.y + node.data.height / 2,
+});
+
+export const rotatePoint = (
+  point: Point,
+  center: Point,
+  angleDegrees: number,
+): Point => {
+  const angleRadians = (angleDegrees * Math.PI) / 180;
+  const cos = Math.cos(angleRadians);
+  const sin = Math.sin(angleRadians);
+  const dx = point.x - center.x;
+  const dy = point.y - center.y;
+
+  return {
+    x: center.x + dx * cos - dy * sin,
+    y: center.y + dx * sin + dy * cos,
+  };
+};
+
+export const getNodeWorldBounds = (
+  node: Pick<PlannerNode, "position" | "data" | "rotation">,
+) => {
+  const center = getNodeCenter(node);
+  const rotation = getNodeRotation(node);
+  const corners = [
+    { x: node.position.x, y: node.position.y },
+    { x: node.position.x + node.data.width, y: node.position.y },
+    {
+      x: node.position.x + node.data.width,
+      y: node.position.y + node.data.height,
+    },
+    { x: node.position.x, y: node.position.y + node.data.height },
+  ].map((corner) => rotatePoint(corner, center, rotation));
+
+  const xs = corners.map((corner) => corner.x);
+  const ys = corners.map((corner) => corner.y);
+
+  return {
+    left: Math.min(...xs),
+    right: Math.max(...xs),
+    top: Math.min(...ys),
+    bottom: Math.max(...ys),
+    centerX: center.x,
+    centerY: center.y,
+  };
+};
+
+export const transformPointToNodeSpace = (
+  point: Point,
+  node: Pick<PlannerNode, "position" | "data" | "rotation">,
+) => rotatePoint(point, getNodeCenter(node), -getNodeRotation(node));
+
+export const getTransformedSeatCenter = (
+  node: Pick<PlannerNode, "position" | "data" | "rotation">,
+  seatGeometry: Pick<SeatGeometry, "centerX" | "centerY">,
+) => rotatePoint(
+  { x: seatGeometry.centerX, y: seatGeometry.centerY },
+  getNodeCenter(node),
+  getNodeRotation(node),
+);
 
 export const getDecorativeAsset = (category: string, label: string) =>
   decorativeItems.find(
@@ -83,9 +150,9 @@ export const calculateTableDimensions = (
   type: TableNodeData["type"],
   numSeats: number,
 ) => {
-  const seatDiameter = 30;
-  const seatSpacing = 15;
-  const tablePadding = 44;
+  const seatDiameter = TABLE_SEAT_SIZE;
+  const seatSpacing = 12;
+  const tablePadding = 40;
 
   if (type === "circular-single-seat") {
     return { width: 100, height: 100 };
@@ -157,6 +224,7 @@ export const serializeSeatPlanNode = (
       type: "chairNode",
       event_id: node.event_id,
       position: node.position,
+      rotation: node.rotation ?? 0,
       data: {
         event_id: node.data.event_id,
         label: node.data.label,
@@ -178,6 +246,7 @@ export const serializeSeatPlanNode = (
     type: "tableNode",
     event_id: node.event_id,
     position: node.position,
+    rotation: node.rotation ?? 0,
     data: {
       event_id: node.data.event_id,
       label: node.data.label,
@@ -204,6 +273,7 @@ export const serializeDecorativeNode = (
   type: "decorativeNode",
   event_id: node.event_id,
   position: node.position,
+  rotation: node.rotation ?? 0,
   data: {
     event_id: node.data.event_id,
     label: node.data.label,
@@ -236,10 +306,11 @@ export const hydrateSeatPlanNode = (
       type: "chairNode",
       event_id: rawNode.event_id,
       position: rawNode.position ?? { x: 0, y: 0 },
+      rotation: rawNode.rotation ?? 0,
       data: {
         event_id: rawNode.data.event_id,
         label: rawNode.data.label,
-        type: rawNode.data.type,
+        type: rawNode.data.type as ChairNodeData["type"],
         chairs: rawNode.data.chairs ?? rawNode.data.seats ?? [],
         width: rawNode.data.width,
         height: rawNode.data.height,
@@ -254,10 +325,11 @@ export const hydrateSeatPlanNode = (
     type: "tableNode",
     event_id: rawNode.event_id,
     position: rawNode.position ?? { x: 0, y: 0 },
+    rotation: rawNode.rotation ?? 0,
     data: {
       event_id: rawNode.data.event_id,
       label: rawNode.data.label,
-      type: rawNode.data.type,
+      type: rawNode.data.type as TableNodeData["type"],
       seats: rawNode.data.seats ?? [],
       width: rawNode.data.width,
       height: rawNode.data.height,
@@ -277,6 +349,7 @@ export const hydrateDecorativeNode = (
   type: "decorativeNode",
   event_id: rawNode.event_id,
   position: rawNode.position ?? { x: 0, y: 0 },
+  rotation: rawNode.rotation ?? 0,
   data: {
     event_id: rawNode.data.event_id,
     label: rawNode.data.label,
@@ -295,14 +368,14 @@ export const getTableSeatPosition = (
   tableWidth: number,
   tableHeight: number,
 ) => {
-  const seatDiameter = 30;
+  const seatDiameter = TABLE_SEAT_SIZE;
   const seatRadius = seatDiameter / 2;
-  const tableEdgeOffset = 15;
-  const seatSpacing = 15;
+  const edgeOverlapInset = seatRadius * 0.45;
+  const seatSpacing = 12;
 
   if (tableType === "circular") {
     const tableRadius = Math.min(tableWidth, tableHeight) / 2;
-    const circleRadius = tableRadius + tableEdgeOffset;
+    const circleRadius = tableRadius - edgeOverlapInset;
     const angle = (index / totalSeats) * Math.PI * 2;
 
     return {
@@ -326,7 +399,7 @@ export const getTableSeatPosition = (
 
     return {
       left: startX + index * (seatDiameter + seatSpacing),
-      top: -tableEdgeOffset,
+      top: edgeOverlapInset - seatRadius,
     };
   }
 
@@ -355,19 +428,19 @@ export const getTableSeatPosition = (
 
   if (index < topSeats) {
     xCenter = startXTopBottom + index * (seatDiameter + seatSpacing) + seatRadius;
-    yCenter = -tableEdgeOffset;
+    yCenter = edgeOverlapInset;
   } else if (index < topSeats + rightSeats) {
     const rightIndex = index - topSeats;
-    xCenter = tableWidth + tableEdgeOffset;
+    xCenter = tableWidth - edgeOverlapInset;
     yCenter = startYLeftRight + rightIndex * (seatDiameter + seatSpacing) + seatRadius;
   } else if (index < topSeats + rightSeats + bottomSeats) {
     const bottomIndex = index - topSeats - rightSeats;
     xCenter =
       startXTopBottom + bottomIndex * (seatDiameter + seatSpacing) + seatRadius;
-    yCenter = tableHeight + tableEdgeOffset;
+    yCenter = tableHeight - edgeOverlapInset;
   } else {
     const leftIndex = index - topSeats - rightSeats - bottomSeats;
-    xCenter = -tableEdgeOffset;
+    xCenter = edgeOverlapInset;
     yCenter = startYLeftRight + leftIndex * (seatDiameter + seatSpacing) + seatRadius;
   }
 
@@ -394,6 +467,8 @@ export const getSeatGeometries = (node: SeatingPlannerNode): SeatGeometry[] => {
         y,
         width: CHAIR_SIZE,
         height: CHAIR_SIZE,
+        centerX: x + CHAIR_SIZE / 2,
+        centerY: y + CHAIR_SIZE / 2,
         labelX: x + CHAIR_SIZE / 2,
         labelY: y + CHAIR_SIZE + 10,
       };
@@ -413,11 +488,13 @@ export const getSeatGeometries = (node: SeatingPlannerNode): SeatGeometry[] => {
       seat,
       x: node.position.x + seatPosition.left,
       y: node.position.y + seatPosition.top,
-      width: 30,
-      height: 30,
-      labelX: node.position.x + seatPosition.left + 15,
+      width: TABLE_SEAT_SIZE,
+      height: TABLE_SEAT_SIZE,
+      centerX: node.position.x + seatPosition.left + TABLE_SEAT_SIZE / 2,
+      centerY: node.position.y + seatPosition.top + TABLE_SEAT_SIZE / 2,
+      labelX: node.position.x + seatPosition.left + TABLE_SEAT_SIZE / 2,
       labelY:
-        node.position.y + seatPosition.top + (index % 2 === 0 ? 42 : -18),
+        node.position.y + seatPosition.top + (index % 2 === 0 ? 40 : -20),
     };
   });
 };

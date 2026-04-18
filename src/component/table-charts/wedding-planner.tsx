@@ -49,11 +49,28 @@ import type {
   LineResizeState, PersistedDecorativeNode, PersistedSeatPlanNode, PlannerNode,
   PlannerViewport, Point, SeatHitTarget, SeatingPlannerNode, TableType,
 } from "./planner-types";
-import { FOCUS_ZOOM, GRID_GAP, LARGE_CANVAS_SIZE, MAX_ZOOM, MIN_ZOOM, ZOOM_STEP } from "./planner-types";
 import {
-  clamp, getNodeHeight, getNodeWidth, getSeatGeometries, hydrateDecorativeNode,
-  hydrateSeatPlanNode, isChairNode, isTableNode, loadImageElement,
-  serializeDecorativeNode, serializeSeatPlanNode,
+  FOCUS_ZOOM,
+  GRID_GAP,
+  LARGE_CANVAS_SIZE,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  ZOOM_STEP,
+} from "./planner-types";
+import {
+  clamp,
+  getNodeRotation,
+  getNodeWorldBounds,
+  getSeatGeometries,
+  getTransformedSeatCenter,
+  hydrateDecorativeNode,
+  hydrateSeatPlanNode,
+  isChairNode,
+  isTableNode,
+  loadImageElement,
+  serializeDecorativeNode,
+  serializeSeatPlanNode,
+  transformPointToNodeSpace,
 } from "./planner-utils";
 
 export type { TableNodeData, TableType } from "./planner-types";
@@ -196,6 +213,13 @@ function WeddingPlanner() {
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [showSidebar, setShowSidebar] = useState(true);
   const [hoveredSeatKey, setHoveredSeatKey] = useState<string | null>(null);
+  const [selectedSeatKey, setSelectedSeatKey] = useState<string | null>(null);
+  const [seatTooltip, setSeatTooltip] = useState<{
+    label: string;
+    left: number;
+    top: number;
+    visible: boolean;
+  } | null>(null);
   const [isAddTableDialogOpen, setIsAddTableDialogOpen] = useState(false);
   const [newTableType, setNewTableType] = useState<TableType | null>(null);
   const [newTableNumSeats, setNewTableNumSeats] = useState(8);
@@ -488,12 +512,16 @@ function WeddingPlanner() {
   const getContentBounds = useCallback(
     (items: PlannerNode[]) =>
       items.reduce(
-        (bounds, node) => ({
-          minX: Math.min(bounds.minX, node.position.x - 60),
-          minY: Math.min(bounds.minY, node.position.y - 60),
-          maxX: Math.max(bounds.maxX, node.position.x + getNodeWidth(node) + 60),
-          maxY: Math.max(bounds.maxY, node.position.y + getNodeHeight(node) + 60),
-        }),
+        (bounds, node) => {
+          const nodeBounds = getNodeWorldBounds(node);
+
+          return {
+            minX: Math.min(bounds.minX, nodeBounds.left - 60),
+            minY: Math.min(bounds.minY, nodeBounds.top - 60),
+            maxX: Math.max(bounds.maxX, nodeBounds.right + 60),
+            maxY: Math.max(bounds.maxY, nodeBounds.bottom + 60),
+          };
+        },
         {
           minX: -40,
           minY: -40,
@@ -615,30 +643,79 @@ function WeddingPlanner() {
     [nodes, selectedNodeId],
   );
 
+  const hoveredSeatOverlay = useMemo(() => {
+    if (!hoveredSeatKey) {
+      return null;
+    }
+
+    const [nodeId, seatId] = hoveredSeatKey.split(":");
+    const node = nodes.find(
+      (item): item is SeatingPlannerNode =>
+        item.id === nodeId && item.type !== "decorativeNode",
+    );
+
+    if (!node || !seatId) {
+      return null;
+    }
+
+    const seatGeometry = getSeatGeometries(node).find(
+      (geometry) => geometry.seat.id === seatId,
+    );
+
+    if (!seatGeometry?.seat.occupiedByName) {
+      return null;
+    }
+
+    const seatCenter = getTransformedSeatCenter(node, seatGeometry);
+    const screenPoint = worldToScreen(seatCenter);
+
+    return {
+      label: seatGeometry.seat.occupiedByName,
+      left: screenPoint.x,
+      top:
+        screenPoint.y -
+        (Math.max(seatGeometry.width, seatGeometry.height) * viewport.zoom) / 2 -
+        16,
+    };
+  }, [hoveredSeatKey, nodes, viewport.zoom, worldToScreen]);
+
   const selectedNodeActionStyle = useMemo(() => {
     if (!selectedNode) {
       return null;
     }
 
-    const anchor =
-      selectedNode.type === "decorativeNode"
-        ? {
-            x: selectedNode.position.x + selectedNode.data.width / 2,
-            y: selectedNode.position.y - 20,
-          }
-        : {
-            x: selectedNode.position.x + selectedNode.data.width / 2,
-            y: selectedNode.position.y + selectedNode.data.height + 20,
-          };
-
-    const screen = worldToScreen(anchor);
+    const bounds = getNodeWorldBounds(selectedNode);
+    const screenLeft = worldToScreen({ x: bounds.left, y: bounds.centerY }).x;
+    const screenCenterY = worldToScreen({
+      x: bounds.centerX,
+      y: bounds.centerY,
+    }).y;
 
     return {
-      left: screen.x,
-      top: screen.y,
-      transform: "translate(-50%, -50%)",
+      left: Math.max(12, Math.min(stageSize.width - 56, screenLeft - 52)),
+      top: Math.max(56, Math.min(stageSize.height - 56, screenCenterY)),
+      transform: "translateY(-50%)",
     } as const;
-  }, [selectedNode, worldToScreen]);
+  }, [selectedNode, stageSize.height, stageSize.width, worldToScreen]);
+
+  useEffect(() => {
+    if (hoveredSeatOverlay) {
+      setSeatTooltip({
+        ...hoveredSeatOverlay,
+        visible: true,
+      });
+      return;
+    }
+
+    setSeatTooltip((previous) =>
+      previous
+        ? {
+            ...previous,
+            visible: false,
+          }
+        : null,
+    );
+  }, [hoveredSeatOverlay]);
 
   const findSeatTarget = useCallback((point: Point): SeatHitTarget | null => {
     const seatingNodes = nodesRef.current.filter(
@@ -647,16 +724,17 @@ function WeddingPlanner() {
 
     for (let nodeIndex = seatingNodes.length - 1; nodeIndex >= 0; nodeIndex -= 1) {
       const node = seatingNodes[nodeIndex];
+      const pointInNodeSpace = transformPointToNodeSpace(point, node);
       const seatGeometries = getSeatGeometries(node);
 
       for (let seatIndex = seatGeometries.length - 1; seatIndex >= 0; seatIndex -= 1) {
         const seatGeometry = seatGeometries[seatIndex];
 
         if (
-          point.x >= seatGeometry.x &&
-          point.x <= seatGeometry.x + seatGeometry.width &&
-          point.y >= seatGeometry.y &&
-          point.y <= seatGeometry.y + seatGeometry.height
+          pointInNodeSpace.x >= seatGeometry.x &&
+          pointInNodeSpace.x <= seatGeometry.x + seatGeometry.width &&
+          pointInNodeSpace.y >= seatGeometry.y &&
+          pointInNodeSpace.y <= seatGeometry.y + seatGeometry.height
         ) {
           return { nodeId: node.id, seatId: seatGeometry.seat.id };
         }
@@ -774,6 +852,45 @@ function WeddingPlanner() {
     };
   }, [panState]);
 
+  useEffect(() => {
+    if (!selectedSeatKey) {
+      return;
+    }
+
+    const [nodeId, seatId] = selectedSeatKey.split(":");
+    const node = nodes.find(
+      (item): item is SeatingPlannerNode =>
+        item.id === nodeId && item.type !== "decorativeNode",
+    );
+    const seatExists = node
+      ? getSeatGeometries(node).some((seatGeometry) => seatGeometry.seat.id === seatId)
+      : false;
+
+    if (!seatExists) {
+      setSelectedSeatKey(null);
+    }
+  }, [nodes, selectedSeatKey]);
+
+  const handleRotateSelectedNode = useCallback(() => {
+    if (!selectedNode || selectedNode.type === "decorativeNode") {
+      return;
+    }
+
+    const nextRotation = (getNodeRotation(selectedNode) + 15) % 360;
+    const updatedNode = {
+      ...selectedNode,
+      rotation: nextRotation,
+    };
+
+    setNodes((previous) =>
+      previous.map((node) =>
+        node.id === selectedNode.id ? updatedNode : node,
+      ),
+    );
+    setSelectedSeatKey(null);
+    trackSeatPlanChange(updatedNode);
+  }, [selectedNode, setNodes, trackSeatPlanChange]);
+
   const handleStageMouseDown = useCallback(
     (event: Konva.KonvaEventObject<MouseEvent>) => {
       const targetName = event.target?.name?.() ?? "";
@@ -786,6 +903,8 @@ function WeddingPlanner() {
       }
 
       setSelectedNodeId(null);
+      setSelectedSeatKey(null);
+      setHoveredSeatKey(null);
       setPanState({
         startClientX: event.evt.clientX,
         startClientY: event.evt.clientY,
@@ -1050,6 +1169,10 @@ function WeddingPlanner() {
 
       nodesRef.current.forEach((node) => {
         if (node.type === "tableNode") {
+          if (getNodeRotation(node) !== 0) {
+            return;
+          }
+
           const tableLabelWidth = Math.max(76, node.data.width - 28);
           const tableLabelX = node.position.x + (node.data.width - tableLabelWidth) / 2;
           const tableLabelBadge = worldRectToPdfBadge(
@@ -1098,6 +1221,10 @@ function WeddingPlanner() {
         }
 
         if (node.type !== "chairNode") {
+          return;
+        }
+
+        if (getNodeRotation(node) !== 0) {
           return;
         }
 
@@ -1168,9 +1295,13 @@ function WeddingPlanner() {
     changedObjects.decorativeItems.length;
   const unassignedGuestCount = guests.filter((guest) => !guest.isAssigned).length;
   const canInteractWithNodes = !guestDragState && !lineResizeState;
-  const handleSelectNode = (nodeId: string) => setSelectedNodeId(nodeId);
+  const handleSelectNode = useCallback((nodeId: string) => {
+    setSelectedNodeId(nodeId);
+    setSelectedSeatKey(null);
+  }, []);
   const handleSeatHover = (seatKey: string) => setHoveredSeatKey(seatKey);
   const handleSeatLeave = () => setHoveredSeatKey(null);
+  const handleSeatSelect = (seatKey: string) => setSelectedSeatKey(seatKey);
   const handleZoomIn = () =>
     setViewport((previous) => ({
       ...previous,
@@ -1189,7 +1320,7 @@ function WeddingPlanner() {
   });
 
   return (
-    <div className="relative flex h-[100dvh] min-h-[100dvh] w-full overflow-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#eef6f2_100%)]">
+    <div className="relative flex h-[100dvh] min-h-[100dvh] w-full overflow-hidden bg-slate-50">
       <Sidebar
         onAddTableClick={handleAddTableClick}
         guests={guests}
@@ -1204,7 +1335,7 @@ function WeddingPlanner() {
         onDragOver={(event) => event.preventDefault()}
         onDrop={handleDrop}
       >
-        <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_top,#ffffff,#f8fafc_55%,#eef2f7)]">
+        <div className="absolute inset-0 overflow-hidden bg-[#f7f7f2]">
           <ZoomResponsiveBoundary
             venueWidth={venueWidth}
             venueHeight={venueHeight}
@@ -1235,14 +1366,14 @@ function WeddingPlanner() {
                   y={-LARGE_CANVAS_SIZE / 2}
                   width={LARGE_CANVAS_SIZE}
                   height={LARGE_CANVAS_SIZE}
-                  fill="#ffffff"
+                  fill="#fbfbf7"
                 />
 
                 {gridLines.map((line, index) => (
                   <Line
                     key={`${line.points.join("-")}-${index}`}
                     points={line.points}
-                    stroke="#edf2f7"
+                    stroke="rgba(15,23,42,0.06)"
                     strokeWidth={1}
                     listening={false}
                   />
@@ -1253,7 +1384,7 @@ function WeddingPlanner() {
                   y={0}
                   width={venueWidthPx}
                   height={venueHeightPx}
-                  fill="rgba(248,250,252,0.35)"
+                  fill="rgba(255,255,255,0.72)"
                   listening={false}
                 />
 
@@ -1272,12 +1403,18 @@ function WeddingPlanner() {
                             ? hoveredSeatKey
                             : null
                         }
+                        selectedSeatKey={
+                          selectedSeatKey?.startsWith(`${node.id}:`)
+                            ? selectedSeatKey
+                            : null
+                        }
                         canInteract={canInteractWithNodes}
                         onSelect={handleSelectNode}
                         onDragMove={handleNodeDragMove}
                         onDragEnd={handleNodeDragEnd}
                         onSeatHover={handleSeatHover}
                         onSeatLeave={handleSeatLeave}
+                        onSeatSelect={handleSeatSelect}
                         onGuestHandleDown={handleGuestHandleDown}
                         onRemoveGuest={handleRemoveGuestFromSeat}
                       />
@@ -1296,12 +1433,18 @@ function WeddingPlanner() {
                             ? hoveredSeatKey
                             : null
                         }
+                        selectedSeatKey={
+                          selectedSeatKey?.startsWith(`${node.id}:`)
+                            ? selectedSeatKey
+                            : null
+                        }
                         canInteract={canInteractWithNodes}
                         onSelect={handleSelectNode}
                         onDragMove={handleNodeDragMove}
                         onDragEnd={handleNodeDragEnd}
                         onSeatHover={handleSeatHover}
                         onSeatLeave={handleSeatLeave}
+                        onSeatSelect={handleSeatSelect}
                         onGuestHandleDown={handleGuestHandleDown}
                         onRemoveGuest={handleRemoveGuestFromSeat}
                       />
@@ -1334,7 +1477,7 @@ function WeddingPlanner() {
         <Button
           variant="outline"
           size="icon"
-          className="absolute left-4 top-4 z-20 rounded-2xl border-white/70 bg-white/90 shadow-lg backdrop-blur hover:bg-white"
+          className="absolute left-4 top-4 z-20 rounded-xl border-slate-900/10 bg-white/96 shadow-sm backdrop-blur hover:bg-white"
           onClick={() => setShowSidebar((previous) => !previous)}
         >
           <Menu className="h-5 w-5" />
@@ -1350,14 +1493,34 @@ function WeddingPlanner() {
               (selectedNode.data.category !== "line-horizontal" &&
                 selectedNode.data.category !== "line-vertical")
             }
+            canRotate={selectedNode.type !== "decorativeNode"}
             onEdit={() => openEditDialog(selectedNode)}
             onDelete={() =>
               selectedNode.type === "decorativeNode"
                 ? handleDeleteDecorative(selectedNode.id)
                 : handleDeleteSeatPlanNode(selectedNode.id)
             }
+            onRotate={handleRotateSelectedNode}
           />
         )}
+
+        {!isExporting && seatTooltip ? (
+          <div
+            className="pointer-events-none absolute z-30 rounded-md bg-slate-900 px-2.5 py-1.5 text-[12px] font-medium text-white shadow-sm transition-all duration-150 ease-out"
+            style={{
+              left: seatTooltip.left,
+              top: seatTooltip.top,
+              opacity: seatTooltip.visible ? 1 : 0,
+              transform: seatTooltip.visible
+                ? "translate(-50%, -100%) translateY(0)"
+                : "translate(-50%, -100%) translateY(6px)",
+            }}
+          >
+            <span className="block max-w-[180px] truncate">
+              {seatTooltip.label}
+            </span>
+          </div>
+        ) : null}
 
         {!isExporting && guestDragState && (
           <div
@@ -1398,7 +1561,7 @@ function WeddingPlanner() {
               stageSize={stageSize}
               venueWidthPx={venueWidthPx}
               venueHeightPx={venueHeightPx}
-              className="absolute bottom-4 right-4 z-20 hidden rounded-3xl border border-white/70 bg-white/92 p-2 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.4)] backdrop-blur md:block"
+              className="absolute bottom-4 right-4 z-20 hidden rounded-2xl border border-slate-900/10 bg-white/96 p-2 shadow-sm backdrop-blur md:block"
             />
           </>
         )}

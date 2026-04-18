@@ -11,8 +11,26 @@ import type {
   Point,
   TablePlannerNode,
 } from "./planner-types";
-import { CHAIR_SIZE, type PlannerNode } from "./planner-types";
-import { getDecorativeAsset, getSeatGeometries, getNodeHeight, getNodeWidth } from "./planner-utils";
+import { CHAIR_SIZE, TABLE_SEAT_SIZE, type PlannerNode } from "./planner-types";
+import {
+  getDecorativeAsset,
+  getNodeRotation,
+  getNodeWorldBounds,
+  getSeatGeometries,
+} from "./planner-utils";
+
+const ACCENT_COLOR = "#059669";
+const ACCENT_GLOW = "rgba(5,150,105,0.16)";
+const NEUTRAL_BORDER = "rgba(15,23,42,0.1)";
+const TRANSITION_GHOST_FILL = "rgba(15,23,42,0.035)";
+
+const getGuestInitials = (name: string | null) =>
+  name
+    ?.split(" ")
+    .map((part) => part.trim()[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "";
 
 interface ExportTextBadgeProps {
   text: string;
@@ -125,9 +143,9 @@ function DecorativeCanvasNodeInner({
             stroke={isSelected ? "#0f766e" : undefined}
             strokeWidth={isSelected ? 2 : 0}
             cornerRadius={2}
-            shadowColor="#0f172a"
-            shadowBlur={6}
-            shadowOpacity={0.16}
+            shadowColor="#000000"
+            shadowBlur={4}
+            shadowOpacity={0.08}
           />
           {isSelected && (
             <>
@@ -203,6 +221,7 @@ function DecorativeCanvasNodeInner({
 interface SeatingCanvasNodeBaseProps {
   isSelected: boolean;
   hoveredSeatKey: string | null;
+  selectedSeatKey: string | null;
   canInteract: boolean;
   isExporting?: boolean;
   onSelect: (nodeId: string) => void;
@@ -210,6 +229,7 @@ interface SeatingCanvasNodeBaseProps {
   onDragEnd: (nodeId: string, position: Point) => void;
   onSeatHover: (seatKey: string) => void;
   onSeatLeave: () => void;
+  onSeatSelect: (seatKey: string) => void;
   onGuestHandleDown: (
     event: Konva.KonvaEventObject<MouseEvent>,
     guestId: string,
@@ -228,6 +248,7 @@ function TableCanvasNodeInner({
   node,
   isSelected,
   hoveredSeatKey,
+  selectedSeatKey,
   canInteract,
   isExporting = false,
   onSelect,
@@ -235,21 +256,25 @@ function TableCanvasNodeInner({
   onDragEnd,
   onSeatHover,
   onSeatLeave,
+  onSeatSelect,
   onGuestHandleDown,
   onRemoveGuest,
 }: TableCanvasNodeProps) {
   const seatGeometries = getSeatGeometries(node);
   const isCircle =
     node.data.type === "circular" || node.data.type === "circular-single-seat";
+  const rotation = getNodeRotation(node);
   const tableMeta =
     node.data.widthTable && node.data.heightTable && node.data.measurementType
       ? `${node.data.widthTable} x ${node.data.heightTable} ${node.data.measurementType}`
       : "";
-  const tableLabelFontSize = isExporting ? 22 : 14;
-  const tableMetaFontSize = isExporting ? 12 : 8;
+  const tableLabelFontSize = isExporting ? 22 : 13;
+  const tableMetaFontSize = isExporting ? 12 : 11;
   const seatNameFontSize = isExporting ? 10 : 7;
   const exportTableLabelWidth = Math.max(76, node.data.width - 28);
   const exportTableLabelX = (node.data.width - exportTableLabelWidth) / 2;
+  const selectionGlowOffset = 4;
+  const seatRadius = TABLE_SEAT_SIZE / 2;
 
   return (
     <Group
@@ -275,124 +300,186 @@ function TableCanvasNodeInner({
         onDragEnd(node.id, { x: event.target.x(), y: event.target.y() })
       }
     >
-      {isCircle ? (
-        <Circle
-          x={node.data.width / 2}
-          y={node.data.height / 2}
-          radius={Math.min(node.data.width, node.data.height) / 2}
-          fill="#fffdf8"
-          stroke={isSelected ? "#0f766e" : "#1f2937"}
-          strokeWidth={isSelected ? 2 : 1}
-          shadowColor="#0f172a"
-          shadowBlur={14}
-          shadowOpacity={0.12}
-        />
-      ) : (
-        <Rect
-          width={node.data.width}
-          height={node.data.height}
-          cornerRadius={12}
-          fill="#fffdf8"
-          stroke={isSelected ? "#0f766e" : "#1f2937"}
-          strokeWidth={isSelected ? 2 : 1}
-          shadowColor="#0f172a"
-          shadowBlur={14}
-          shadowOpacity={0.12}
-        />
-      )}
-
-      {isExporting ? (
-        <Rect
-          x={exportTableLabelX}
-          y={node.data.height / 2 - 31}
-          width={exportTableLabelWidth}
-          height={28}
-          cornerRadius={14}
-          fill="rgba(255,255,255,0.94)"
-          stroke="#e2e8f0"
-          strokeWidth={1}
-          shadowColor="#0f172a"
-          shadowBlur={8}
-          shadowOpacity={0.08}
-        />
-      ) : null}
-
-      <Text
-        text={node.data.label}
-        x={0}
-        y={node.data.height / 2 - (isExporting ? 27 : 14)}
-        width={node.data.width}
-        align="center"
-        fontSize={tableLabelFontSize}
-        fontStyle="bold"
-        fill="#0f172a"
-        stroke={isExporting ? "#ffffff" : undefined}
-        strokeWidth={isExporting ? 0.75 : 0}
-      />
-
-      {tableMeta ? (
-        <Text
-          text={tableMeta}
-          x={0}
-          y={node.data.height / 2 + (isExporting ? 4 : 7)}
-          width={node.data.width}
-          align="center"
-          fontSize={tableMetaFontSize}
-          fill={isExporting ? "#475569" : "#64748b"}
-          fontStyle={isExporting ? "bold" : "normal"}
-        />
-      ) : null}
-
-      {seatGeometries.map((seatGeometry, index) => {
-        const seatKey = `${node.id}:${seatGeometry.seat.id}`;
-        const isHovered = hoveredSeatKey === seatKey;
-        const isOccupied = Boolean(seatGeometry.seat.occupiedBy);
-        const showRemoveControl =
-          isOccupied && Boolean(seatGeometry.seat.occupiedBy) && (isHovered || isSelected);
-        const showDragHandle =
-          isHovered && isOccupied && Boolean(seatGeometry.seat.occupiedBy);
-        const localX = seatGeometry.x - node.position.x;
-        const localY = seatGeometry.y - node.position.y;
-
-        return (
-          <Group
-            key={seatGeometry.seat.id}
-            x={localX}
-            y={localY}
-            onMouseEnter={() => onSeatHover(seatKey)}
-            onMouseLeave={onSeatLeave}
-          >
-            {isOccupied ? (
-              <Rect
-                x={-18}
-                y={-18}
-                width={72}
-                height={74}
-                cornerRadius={18}
-                fill="rgba(15,23,42,0.001)"
-              />
-            ) : null}
+      <Group
+        x={node.data.width / 2}
+        y={node.data.height / 2}
+        offsetX={node.data.width / 2}
+        offsetY={node.data.height / 2}
+        rotation={rotation}
+      >
+        {isSelected ? (
+          isCircle ? (
             <Circle
-              x={15}
-              y={15}
-              radius={15}
-              fill={isOccupied ? "#dcfce7" : "#e5e7eb"}
-              stroke={isOccupied ? "#16a34a" : "#94a3b8"}
-              strokeWidth={1.5}
+              x={node.data.width / 2}
+              y={node.data.height / 2}
+              radius={
+                Math.min(node.data.width, node.data.height) / 2 + selectionGlowOffset
+              }
+              stroke={ACCENT_GLOW}
+              strokeWidth={8}
+              listening={false}
             />
-            <Text
-              text={isOccupied ? "U" : "+"}
-              x={0}
-              y={7}
-              width={30}
-              align="center"
-              fontSize={isOccupied ? 12 : 13}
-              fontStyle="bold"
-              fill={isOccupied ? "#166534" : "#6b7280"}
+          ) : (
+            <Rect
+              x={-selectionGlowOffset}
+              y={-selectionGlowOffset}
+              width={node.data.width + selectionGlowOffset * 2}
+              height={node.data.height + selectionGlowOffset * 2}
+              cornerRadius={12}
+              stroke={ACCENT_GLOW}
+              strokeWidth={8}
+              listening={false}
             />
+          )
+        ) : null}
 
-            {isOccupied && seatGeometry.seat.occupiedByName ? (
-              isExporting ? (
+        {isCircle ? (
+          <Circle
+            x={node.data.width / 2}
+            y={node.data.height / 2}
+            radius={Math.min(node.data.width, node.data.height) / 2}
+            fill="#ffffff"
+            stroke={isSelected ? ACCENT_COLOR : NEUTRAL_BORDER}
+            strokeWidth={isSelected ? 2 : 1}
+            shadowColor="#000000"
+            shadowBlur={8}
+            shadowOffsetY={2}
+            shadowOpacity={0.06}
+          />
+        ) : (
+          <Rect
+            width={node.data.width}
+            height={node.data.height}
+            cornerRadius={8}
+            fill="#ffffff"
+            stroke={isSelected ? ACCENT_COLOR : NEUTRAL_BORDER}
+            strokeWidth={isSelected ? 2 : 1}
+            shadowColor="#000000"
+            shadowBlur={8}
+            shadowOffsetY={2}
+            shadowOpacity={0.06}
+          />
+        )}
+
+        {isExporting ? (
+          <Rect
+            x={exportTableLabelX}
+            y={node.data.height / 2 - 31}
+            width={exportTableLabelWidth}
+            height={28}
+            cornerRadius={14}
+            fill="rgba(255,255,255,0.94)"
+            stroke="#e2e8f0"
+            strokeWidth={1}
+            shadowColor="#000000"
+            shadowBlur={6}
+            shadowOffsetY={2}
+            shadowOpacity={0.05}
+          />
+        ) : null}
+
+        <Text
+          text={node.data.label}
+          x={8}
+          y={node.data.height / 2 - (tableMeta ? 18 : 9)}
+          width={node.data.width - 16}
+          align="center"
+          fontSize={tableLabelFontSize}
+          fontStyle="bold"
+          fill="#0f172a"
+          stroke={isExporting ? "#ffffff" : undefined}
+          strokeWidth={isExporting ? 0.75 : 0}
+          ellipsis
+        />
+
+        {tableMeta ? (
+          <Text
+            text={tableMeta}
+            x={10}
+            y={node.data.height / 2 + (isExporting ? 4 : 0)}
+            width={node.data.width - 20}
+            align="center"
+            fontSize={tableMetaFontSize}
+            fill={isExporting ? "#475569" : "rgba(15,23,42,0.58)"}
+            fontStyle={isExporting ? "bold" : "normal"}
+            ellipsis
+          />
+        ) : null}
+
+        {seatGeometries.map((seatGeometry, index) => {
+          const seatKey = `${node.id}:${seatGeometry.seat.id}`;
+          const isHovered = hoveredSeatKey === seatKey;
+          const isSelectedSeat = selectedSeatKey === seatKey;
+          const isOccupied = Boolean(seatGeometry.seat.occupiedBy);
+          const showRemoveControl =
+            isOccupied && Boolean(seatGeometry.seat.occupiedBy) && (isHovered || isSelectedSeat);
+          const showDragHandle =
+            isOccupied && Boolean(seatGeometry.seat.occupiedBy) && (isHovered || isSelectedSeat);
+          const localX = seatGeometry.x - node.position.x;
+          const localY = seatGeometry.y - node.position.y;
+          const initials = getGuestInitials(seatGeometry.seat.occupiedByName);
+
+          return (
+            <Group
+              key={seatGeometry.seat.id}
+              x={localX}
+              y={localY}
+              onMouseEnter={() => onSeatHover(seatKey)}
+              onMouseLeave={onSeatLeave}
+              onClick={(event) => {
+                event.cancelBubble = true;
+                onSelect(node.id);
+                onSeatSelect(seatKey);
+              }}
+              onTap={(event) => {
+                event.cancelBubble = true;
+                onSelect(node.id);
+                onSeatSelect(seatKey);
+              }}
+            >
+              {isHovered || isSelectedSeat ? (
+                <Rect
+                  x={-10}
+                  y={-10}
+                  width={TABLE_SEAT_SIZE + 20}
+                  height={TABLE_SEAT_SIZE + 20}
+                  cornerRadius={18}
+                  fill={isSelectedSeat ? "rgba(5,150,105,0.08)" : TRANSITION_GHOST_FILL}
+                />
+              ) : null}
+
+              {isSelectedSeat ? (
+                <Circle
+                  x={seatRadius}
+                  y={seatRadius}
+                  radius={seatRadius + 3}
+                  stroke={ACCENT_COLOR}
+                  strokeWidth={2}
+                  listening={false}
+                />
+              ) : null}
+
+              <Circle
+                x={seatRadius}
+                y={seatRadius}
+                radius={seatRadius}
+                fill={isOccupied ? "#ecfdf5" : "#f3f4f6"}
+                stroke={isOccupied ? "rgba(5,150,105,0.28)" : NEUTRAL_BORDER}
+                strokeWidth={1}
+              />
+              <Text
+                text={isOccupied ? initials || "G" : "+"}
+                x={0}
+                y={isOccupied ? 9 : 7}
+                width={TABLE_SEAT_SIZE}
+                align="center"
+                fontSize={isOccupied ? 10 : 12}
+                fontStyle="bold"
+                fill={isOccupied ? "#065f46" : "rgba(15,23,42,0.42)"}
+                ellipsis
+              />
+
+              {isOccupied && seatGeometry.seat.occupiedByName && isExporting ? (
                 <ExportTextBadge
                   text={seatGeometry.seat.occupiedByName}
                   x={-40}
@@ -401,84 +488,74 @@ function TableCanvasNodeInner({
                   height={30}
                   fontSize={seatNameFontSize}
                 />
-              ) : (
-                <Text
-                  text={seatGeometry.seat.occupiedByName}
-                  x={-26}
-                  y={index % 2 === 0 ? 34 : -28}
-                  width={82}
-                  align="center"
-                  fontSize={seatNameFontSize}
-                  fill="#334155"
-                />
-              )
-            ) : null}
+              ) : null}
 
-            {showDragHandle ? (
-              <>
-                <Rect
-                  x={-14}
-                  y={-13}
-                  width={24}
-                  height={24}
-                  cornerRadius={7}
-                  fill="#334155"
-                  onMouseDown={(event) =>
-                    onGuestHandleDown(
-                      event,
-                      seatGeometry.seat.occupiedBy!,
-                      seatGeometry.seat.occupiedByName ?? "",
-                      seatGeometry.seat.id,
-                      node.id,
-                    )
-                  }
-                />
-                <Text
-                  text="::"
-                  x={-14}
-                  y={-4}
-                  width={24}
-                  align="center"
-                  fontSize={10}
-                  fontStyle="bold"
-                  fill="#ffffff"
-                  listening={false}
-                />
-              </>
-            ) : null}
+              {showDragHandle ? (
+                <>
+                  <Rect
+                    x={-12}
+                    y={-12}
+                    width={22}
+                    height={22}
+                    cornerRadius={7}
+                    fill="#334155"
+                    onMouseDown={(event) =>
+                      onGuestHandleDown(
+                        event,
+                        seatGeometry.seat.occupiedBy!,
+                        seatGeometry.seat.occupiedByName ?? "",
+                        seatGeometry.seat.id,
+                        node.id,
+                      )
+                    }
+                  />
+                  <Text
+                    text="::"
+                    x={-12}
+                    y={-4}
+                    width={22}
+                    align="center"
+                    fontSize={10}
+                    fontStyle="bold"
+                    fill="#ffffff"
+                    listening={false}
+                  />
+                </>
+              ) : null}
 
-            {showRemoveControl ? (
-              <>
-                <Circle
-                  x={42}
-                  y={4}
-                  radius={10}
-                  fill="#ef4444"
-                  onMouseDown={(event) => {
-                    event.cancelBubble = true;
-                    onRemoveGuest(
-                      node.id,
-                      seatGeometry.seat.id,
-                      seatGeometry.seat.occupiedBy!,
-                    );
-                  }}
-                />
-                <Text
-                  text="x"
-                  x={34}
-                  y={-4}
-                  width={16}
-                  align="center"
-                  fontSize={12}
-                  fontStyle="bold"
-                  fill="#ffffff"
-                  listening={false}
-                />
-              </>
-            ) : null}
-          </Group>
-        );
-      })}
+              {showRemoveControl ? (
+                <>
+                  <Circle
+                    x={TABLE_SEAT_SIZE + 10}
+                    y={4}
+                    radius={9}
+                    fill="#ef4444"
+                    onMouseDown={(event) => {
+                      event.cancelBubble = true;
+                      onRemoveGuest(
+                        node.id,
+                        seatGeometry.seat.id,
+                        seatGeometry.seat.occupiedBy!,
+                      );
+                    }}
+                  />
+                  <Text
+                    text="x"
+                    x={TABLE_SEAT_SIZE + 2}
+                    y={-4}
+                    width={16}
+                    align="center"
+                    fontSize={12}
+                    fontStyle="bold"
+                    fill="#ffffff"
+                    listening={false}
+                  />
+                </>
+              ) : null}
+            </Group>
+          );
+        })}
+      </Group>
     </Group>
   );
 }
@@ -491,6 +568,7 @@ function ChairCanvasNodeInner({
   node,
   isSelected,
   hoveredSeatKey,
+  selectedSeatKey,
   canInteract,
   isExporting = false,
   onSelect,
@@ -498,12 +576,15 @@ function ChairCanvasNodeInner({
   onDragEnd,
   onSeatHover,
   onSeatLeave,
+  onSeatSelect,
   onGuestHandleDown,
   onRemoveGuest,
 }: ChairCanvasNodeProps) {
   const seatGeometries = getSeatGeometries(node);
+  const rotation = getNodeRotation(node);
   const chairLabelFontSize = isExporting ? 15 : 12;
   const chairGuestNameFontSize = isExporting ? 10 : 8;
+  const seatRadius = TABLE_SEAT_SIZE / 2;
 
   return (
     <Group
@@ -529,75 +610,139 @@ function ChairCanvasNodeInner({
         onDragEnd(node.id, { x: event.target.x(), y: event.target.y() })
       }
     >
-      <Rect
-        width={node.data.width}
-        height={node.data.height}
-        cornerRadius={12}
-        fill="#f8fafc"
-        stroke={isSelected ? "#0f766e" : "#cbd5e1"}
-        strokeWidth={isSelected ? 2 : 1}
-        dash={[6, 4]}
-      />
-      <Text
-        text={node.data.label}
-        x={8}
-        y={7}
-        width={node.data.width - 16}
-        fontSize={chairLabelFontSize}
-        fontStyle="bold"
-        fill="#334155"
-      />
+      <Group
+        x={node.data.width / 2}
+        y={node.data.height / 2}
+        offsetX={node.data.width / 2}
+        offsetY={node.data.height / 2}
+        rotation={rotation}
+      >
+        {isSelected ? (
+          <Rect
+            x={-4}
+            y={-4}
+            width={node.data.width + 8}
+            height={node.data.height + 8}
+            cornerRadius={16}
+            stroke={ACCENT_GLOW}
+            strokeWidth={8}
+            listening={false}
+          />
+        ) : null}
+        <Rect
+          width={node.data.width}
+          height={node.data.height}
+          cornerRadius={12}
+          fill="#ffffff"
+          stroke={isSelected ? ACCENT_COLOR : NEUTRAL_BORDER}
+          strokeWidth={isSelected ? 2 : 1}
+          dash={[6, 4]}
+        />
+        <Text
+          text={node.data.label}
+          x={8}
+          y={7}
+          width={node.data.width - 16}
+          fontSize={chairLabelFontSize}
+          fontStyle="bold"
+          fill="#334155"
+          ellipsis
+        />
 
-      {seatGeometries.map((chairGeometry) => {
-        const seatKey = `${node.id}:${chairGeometry.seat.id}`;
-        const isHovered = hoveredSeatKey === seatKey;
-        const isOccupied = Boolean(chairGeometry.seat.occupiedBy);
-        const showRemoveControl =
-          isOccupied && Boolean(chairGeometry.seat.occupiedBy) && (isHovered || isSelected);
-        const showDragHandle =
-          isHovered && isOccupied && Boolean(chairGeometry.seat.occupiedBy);
-        const localX = chairGeometry.x - node.position.x;
-        const localY = chairGeometry.y - node.position.y;
+        {seatGeometries.map((chairGeometry) => {
+          const seatKey = `${node.id}:${chairGeometry.seat.id}`;
+          const isHovered = hoveredSeatKey === seatKey;
+          const isSelectedSeat = selectedSeatKey === seatKey;
+          const isOccupied = Boolean(chairGeometry.seat.occupiedBy);
+          const showRemoveControl =
+            isOccupied && Boolean(chairGeometry.seat.occupiedBy) && (isHovered || isSelectedSeat);
+          const showDragHandle =
+            isOccupied && Boolean(chairGeometry.seat.occupiedBy) && (isHovered || isSelectedSeat);
+          const localX = chairGeometry.x - node.position.x;
+          const localY = chairGeometry.y - node.position.y;
+          const initials = getGuestInitials(chairGeometry.seat.occupiedByName);
 
-        return (
-          <Group
-            key={chairGeometry.seat.id}
-            x={localX}
-            y={localY}
-            onMouseEnter={() => onSeatHover(seatKey)}
-            onMouseLeave={onSeatLeave}
-          >
-            {isOccupied ? (
+          return (
+            <Group
+              key={chairGeometry.seat.id}
+              x={localX}
+              y={localY}
+              onMouseEnter={() => onSeatHover(seatKey)}
+              onMouseLeave={onSeatLeave}
+              onClick={(event) => {
+                event.cancelBubble = true;
+                onSelect(node.id);
+                onSeatSelect(seatKey);
+              }}
+              onTap={(event) => {
+                event.cancelBubble = true;
+                onSelect(node.id);
+                onSeatSelect(seatKey);
+              }}
+            >
+              {isHovered || isSelectedSeat ? (
+                <Rect
+                  x={-6}
+                  y={-6}
+                  width={CHAIR_SIZE + 12}
+                  height={CHAIR_SIZE + 12}
+                  cornerRadius={16}
+                  fill={isSelectedSeat ? "rgba(5,150,105,0.08)" : TRANSITION_GHOST_FILL}
+                />
+              ) : null}
               <Rect
-                x={-18}
-                y={-18}
-                width={CHAIR_SIZE + 44}
-                height={CHAIR_SIZE + 54}
-                cornerRadius={18}
-                fill="rgba(15,23,42,0.001)"
+                width={CHAIR_SIZE}
+                height={CHAIR_SIZE}
+                cornerRadius={10}
+                fill="#f8fafc"
+                stroke={NEUTRAL_BORDER}
+                strokeWidth={1}
               />
-            ) : null}
-            <Rect
-              width={CHAIR_SIZE}
-              height={CHAIR_SIZE}
-              cornerRadius={8}
-              fill={isOccupied ? "#dcfce7" : "#f1f5f9"}
-              stroke={isOccupied ? "#16a34a" : "#94a3b8"}
-              strokeWidth={2}
-            />
-            <Text
-              text={isOccupied ? "U" : "+"}
-              x={0}
-              y={11}
-              width={CHAIR_SIZE}
-              align="center"
-              fontSize={isOccupied ? 14 : 16}
-              fontStyle="bold"
-              fill={isOccupied ? "#166534" : "#64748b"}
-            />
+              {isSelectedSeat ? (
+                <Circle
+                  x={CHAIR_SIZE / 2}
+                  y={CHAIR_SIZE / 2}
+                  radius={seatRadius + 3}
+                  stroke={ACCENT_COLOR}
+                  strokeWidth={2}
+                  listening={false}
+                />
+              ) : null}
+              {isOccupied ? (
+                <>
+                  <Circle
+                    x={CHAIR_SIZE / 2}
+                    y={CHAIR_SIZE / 2}
+                    radius={seatRadius}
+                    fill="#ecfdf5"
+                    stroke="rgba(5,150,105,0.28)"
+                    strokeWidth={1}
+                  />
+                  <Text
+                    text={initials || "G"}
+                    x={(CHAIR_SIZE - TABLE_SEAT_SIZE) / 2}
+                    y={CHAIR_SIZE / 2 - 5}
+                    width={TABLE_SEAT_SIZE}
+                    align="center"
+                    fontSize={10}
+                    fontStyle="bold"
+                    fill="#065f46"
+                  />
+                </>
+              ) : (
+                <Text
+                  text="+"
+                  x={0}
+                  y={11}
+                  width={CHAIR_SIZE}
+                  align="center"
+                  fontSize={16}
+                  fontStyle="bold"
+                  fill="rgba(15,23,42,0.42)"
+                />
+              )}
 
-            {isOccupied && chairGeometry.seat.occupiedByName ? (
-              isExporting ? (
+              {isOccupied && chairGeometry.seat.occupiedByName && isExporting ? (
                 <ExportTextBadge
                   text={chairGeometry.seat.occupiedByName}
                   x={-36}
@@ -606,84 +751,74 @@ function ChairCanvasNodeInner({
                   height={30}
                   fontSize={chairGuestNameFontSize}
                 />
-              ) : (
-                <Text
-                  text={chairGeometry.seat.occupiedByName}
-                  x={-24}
-                  y={CHAIR_SIZE + 4}
-                  width={CHAIR_SIZE + 48}
-                  align="center"
-                  fontSize={chairGuestNameFontSize}
-                  fill="#334155"
-                />
-              )
-            ) : null}
+              ) : null}
 
-            {showDragHandle ? (
-              <>
-                <Rect
-                  x={-14}
-                  y={-13}
-                  width={24}
-                  height={24}
-                  cornerRadius={7}
-                  fill="#334155"
-                  onMouseDown={(event) =>
-                    onGuestHandleDown(
-                      event,
-                      chairGeometry.seat.occupiedBy!,
-                      chairGeometry.seat.occupiedByName ?? "",
-                      chairGeometry.seat.id,
-                      node.id,
-                    )
-                  }
-                />
-                <Text
-                  text="::"
-                  x={-14}
-                  y={-4}
-                  width={24}
-                  align="center"
-                  fontSize={10}
-                  fontStyle="bold"
-                  fill="#ffffff"
-                  listening={false}
-                />
-              </>
-            ) : null}
+              {showDragHandle ? (
+                <>
+                  <Rect
+                    x={-14}
+                    y={-13}
+                    width={24}
+                    height={24}
+                    cornerRadius={7}
+                    fill="#334155"
+                    onMouseDown={(event) =>
+                      onGuestHandleDown(
+                        event,
+                        chairGeometry.seat.occupiedBy!,
+                        chairGeometry.seat.occupiedByName ?? "",
+                        chairGeometry.seat.id,
+                        node.id,
+                      )
+                    }
+                  />
+                  <Text
+                    text="::"
+                    x={-14}
+                    y={-4}
+                    width={24}
+                    align="center"
+                    fontSize={10}
+                    fontStyle="bold"
+                    fill="#ffffff"
+                    listening={false}
+                  />
+                </>
+              ) : null}
 
-            {showRemoveControl ? (
-              <>
-                <Circle
-                  x={CHAIR_SIZE + 8}
-                  y={4}
-                  radius={10}
-                  fill="#ef4444"
-                  onMouseDown={(event) => {
-                    event.cancelBubble = true;
-                    onRemoveGuest(
-                      node.id,
-                      chairGeometry.seat.id,
-                      chairGeometry.seat.occupiedBy!,
-                    );
-                  }}
-                />
-                <Text
-                  text="x"
-                  x={CHAIR_SIZE}
-                  y={-4}
-                  width={16}
-                  align="center"
-                  fontSize={12}
-                  fontStyle="bold"
-                  fill="#ffffff"
-                  listening={false}
-                />
-              </>
-            ) : null}
-          </Group>
-        );
-      })}
+              {showRemoveControl ? (
+                <>
+                  <Circle
+                    x={CHAIR_SIZE + 8}
+                    y={4}
+                    radius={10}
+                    fill="#ef4444"
+                    onMouseDown={(event) => {
+                      event.cancelBubble = true;
+                      onRemoveGuest(
+                        node.id,
+                        chairGeometry.seat.id,
+                        chairGeometry.seat.occupiedBy!,
+                      );
+                    }}
+                  />
+                  <Text
+                    text="x"
+                    x={CHAIR_SIZE}
+                    y={-4}
+                    width={16}
+                    align="center"
+                    fontSize={12}
+                    fontStyle="bold"
+                    fill="#ffffff"
+                    listening={false}
+                  />
+                </>
+              ) : null}
+            </Group>
+          );
+        })}
+      </Group>
     </Group>
   );
 }
@@ -715,12 +850,16 @@ function PlannerMiniMapInner({
     maxY: venueHeightPx,
   };
   const contentBounds = nodes.reduce(
-    (bounds, node) => ({
-      minX: Math.min(bounds.minX, node.position.x),
-      minY: Math.min(bounds.minY, node.position.y),
-      maxX: Math.max(bounds.maxX, node.position.x + getNodeWidth(node)),
-      maxY: Math.max(bounds.maxY, node.position.y + getNodeHeight(node)),
-    }),
+    (bounds, node) => {
+      const nodeBounds = getNodeWorldBounds(node);
+
+      return {
+        minX: Math.min(bounds.minX, nodeBounds.left),
+        minY: Math.min(bounds.minY, nodeBounds.top),
+        maxX: Math.max(bounds.maxX, nodeBounds.right),
+        maxY: Math.max(bounds.maxY, nodeBounds.bottom),
+      };
+    },
     initialBounds,
   );
 
@@ -756,22 +895,28 @@ function PlannerMiniMapInner({
           stroke="#cbd5e1"
         />
         {nodes.map((node) => (
-          <rect
-            key={node.id}
-            x={node.position.x * scale + offsetX}
-            y={node.position.y * scale + offsetY}
-            width={Math.max(4, getNodeWidth(node) * scale)}
-            height={Math.max(4, getNodeHeight(node) * scale)}
-            rx={3}
-            fill={
-              node.type === "decorativeNode"
-                ? "#94a3b8"
-                : node.type === "chairNode"
-                  ? "#86efac"
-                  : "#facc15"
-            }
-            opacity={0.85}
-          />
+          (() => {
+            const nodeBounds = getNodeWorldBounds(node);
+
+            return (
+              <rect
+                key={node.id}
+                x={nodeBounds.left * scale + offsetX}
+                y={nodeBounds.top * scale + offsetY}
+                width={Math.max(4, (nodeBounds.right - nodeBounds.left) * scale)}
+                height={Math.max(4, (nodeBounds.bottom - nodeBounds.top) * scale)}
+                rx={3}
+                fill={
+                  node.type === "decorativeNode"
+                    ? "#94a3b8"
+                    : node.type === "chairNode"
+                      ? "#86efac"
+                      : "#facc15"
+                }
+                opacity={0.85}
+              />
+            );
+          })()
         ))}
         <rect
           x={viewportRect.x}
@@ -804,6 +949,7 @@ export const TableCanvasNode = memo(
     previous.node === next.node &&
     previous.isSelected === next.isSelected &&
     previous.hoveredSeatKey === next.hoveredSeatKey &&
+    previous.selectedSeatKey === next.selectedSeatKey &&
     previous.canInteract === next.canInteract &&
     previous.isExporting === next.isExporting,
 );
@@ -815,6 +961,7 @@ export const ChairCanvasNode = memo(
     previous.node === next.node &&
     previous.isSelected === next.isSelected &&
     previous.hoveredSeatKey === next.hoveredSeatKey &&
+    previous.selectedSeatKey === next.selectedSeatKey &&
     previous.canInteract === next.canInteract &&
     previous.isExporting === next.isExporting,
 );
